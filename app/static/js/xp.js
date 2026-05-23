@@ -18,43 +18,14 @@
     // ===== XP Startup Sound =====
     function playStartupSound() {
         try {
-            var ctx = new (window.AudioContext || window.webkitAudioContext)();
-            ctx.resume();
-            var notes = [
-                { f: 330, d: 0.15, t: 0 },       // E4
-                { f: 392, d: 0.12, t: 0.12 },     // G4
-                { f: 523, d: 0.12, t: 0.22 },     // C5
-                { f: 659, d: 0.10, t: 0.32 },     // E5
-                { f: 784, d: 0.10, t: 0.40 },     // G5
-                { f: 1047, d: 0.30, t: 0.48 },    // C6 (hold)
-                { f: 784, d: 0.20, t: 0.76 },     // G5
-                { f: 1047, d: 0.60, t: 0.92 }     // C6 (final)
-            ];
-            notes.forEach(function(n) {
-                var osc = ctx.createOscillator();
-                var gain = ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.value = n.f;
-                gain.gain.setValueAtTime(0, ctx.currentTime + n.t);
-                gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + n.t + 0.02);
-                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + n.t + n.d - 0.03);
-                gain.gain.linearRampToValueAtTime(0, ctx.currentTime + n.t + n.d);
-                // Add harmonic
-                var osc2 = ctx.createOscillator();
-                var gain2 = ctx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.value = n.f * 2;
-                gain2.gain.setValueAtTime(0, ctx.currentTime + n.t);
-                gain2.gain.linearRampToValueAtTime(0.08, ctx.currentTime + n.t + 0.02);
-                gain2.gain.linearRampToValueAtTime(0, ctx.currentTime + n.t + n.d);
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc2.connect(gain2); gain2.connect(ctx.destination);
-                osc.start(ctx.currentTime + n.t);
-                osc.stop(ctx.currentTime + n.t + n.d + 0.05);
-                osc2.start(ctx.currentTime + n.t);
-                osc2.stop(ctx.currentTime + n.t + n.d + 0.05);
-            });
-            setTimeout(function() { ctx.close(); }, 2300);
+            var audio = new Audio('/static/audio/xp-startup.mp3');
+            audio.volume = 0.7;
+            var playPromise = audio.play();
+            if (playPromise) {
+                playPromise.catch(function() {
+                    // Autoplay blocked, will retry on interaction
+                });
+            }
         } catch(e) {}
     }
 
