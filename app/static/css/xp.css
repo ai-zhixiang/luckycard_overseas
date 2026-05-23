@@ -344,3 +344,70 @@
 
 /* ===== Boot Screen Integration ===== */
 /* Boot screen already handles itself, just need XP desktop underneath */
+
+/* ===== Mobile Responsive (≤768px) ===== */
+@media (max-width: 768px) {
+    .xp-desktop { overflow: auto; }
+
+    /* Desktop icons → grid of touch cards */
+    .xp-desktop-icons {
+        position: relative; top: auto; left: auto;
+        flex-direction: row; flex-wrap: wrap;
+        justify-content: center; gap: 12px;
+        padding: 20px 10px;
+        z-index: 1;
+    }
+    .xp-icon {
+        width: 80px; padding: 12px 4px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 10px;
+        backdrop-filter: blur(4px);
+    }
+    .xp-icon .xp-icon-img { width: 44px; height: 44px; font-size: 32px; }
+    .xp-icon span { font-size: 10px; max-width: 72px; }
+
+    /* Taskbar — simplified */
+    .xp-taskbar { height: 48px; padding: 0; }
+    .xp-taskbar-divider { display: none; }
+    .xp-taskbar-tasks { display: none; }
+    #xp-start-btn {
+        height: 38px; padding: 0 18px;
+        font-size: 14px; border-radius: 0 12px 12px 0;
+    }
+    #xp-start-btn img { width: 22px; height: 22px; }
+    .xp-tray { height: 38px; padding: 0 12px; font-size: 13px; }
+
+    /* Start menu → full screen overlay */
+    .xp-start-menu {
+        bottom: 48px; left: 0; right: 0; width: 100%;
+        max-height: 70vh; overflow-y: auto;
+        border-radius: 12px 12px 0 0;
+    }
+    .xp-start-header { padding: 14px 16px; }
+    .xp-start-avatar { width: 40px; height: 40px; }
+    .xp-start-avatar img { width: 28px; height: 28px; }
+    .xp-start-user { font-size: 15px; }
+    .xp-start-body { flex-direction: column; }
+    .xp-start-system { width: 100%; border-left: none; border-top: 1px solid #B6C8D8; }
+    .xp-start-item { padding: 12px 20px; font-size: 15px; gap: 14px; }
+    .xp-start-item .si-icon { font-size: 22px; width: 30px; }
+    .xp-start-footer button { padding: 14px; font-size: 15px; }
+
+    /* Windows → full-screen modals */
+    #xp-windows { bottom: 48px; }
+    .xp-window {
+        top: 0 !important; left: 0 !important;
+        right: 0 !important; bottom: 0 !important;
+        width: auto !important; height: auto !important;
+        min-width: auto; min-height: auto;
+        border-radius: 0; border: none;
+    }
+    .xp-window-body { padding: 20px; font-size: 15px; }
+    .xp-titlebar { padding: 8px 12px; }
+    .xp-title-text { font-size: 15px; }
+    .xp-title-btns button {
+        width: 28px; height: 28px; font-size: 14px;
+    }
+    .xp-btn-min, .xp-btn-max { display: none; }
+    .xp-btn-close { margin-left: 0; }
+}
