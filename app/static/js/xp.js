@@ -145,6 +145,37 @@
         windows[id] = { el: win, taskBtn: tb, minimized: false, maximized: false };
 
         var titleBar = win.querySelector('.xp-titlebar');
+        // Title bar — drag to move
+        var isDragging = false, dragX = 0, dragY = 0;
+        titleBar.addEventListener('mousedown', function(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            if (win.classList.contains('maximized')) return;
+            isDragging = true;
+            dragX = e.clientX - win.offsetLeft;
+            dragY = e.clientY - win.offsetTop;
+            win.style.cursor = 'move';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            var newLeft = e.clientX - dragX;
+            var newTop = e.clientY - dragY;
+            newLeft = Math.max(-100, Math.min(newLeft, window.innerWidth - 200));
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - 80));
+            win.style.left = newLeft + 'px';
+            win.style.top = newTop + 'px';
+            win.style.right = 'auto';
+            win.style.bottom = 'auto';
+        });
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                win.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+
         var btns = titleBar.querySelectorAll('button');
         btns[0].onclick = function(e) { e.stopPropagation(); minimizeWindow(id); };
         btns[1].onclick = function(e) { e.stopPropagation(); toggleMaximize(id); };
