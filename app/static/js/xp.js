@@ -1,19 +1,20 @@
 // Lucky Card XP Shell — taskbar clock, start menu, window management
 (function() {
     'use strict';
-    // ===== Audio autoplay workaround =====
-    var _audioReady = false;
-    function _unlockAudio() {
-        if (_audioReady) return;
-        _audioReady = true;
-        playStartupSound();
-        document.removeEventListener('click', _unlockAudio);
-        document.removeEventListener('keydown', _unlockAudio);
-        document.removeEventListener('touchstart', _unlockAudio);
+    // ===== Audio autoplay: start muted, unmute on desktop =====
+    var _xpAudio = new Audio('/static/audio/xp-startup.mp3');
+    _xpAudio.volume = 0.7;
+    _xpAudio.muted = true;
+    _xpAudio.loop = false;
+    _xpAudio.play().catch(function(){});
+    var _xpAudioReady = false;
+    function playStartupSound() {
+        if (_xpAudioReady) return;
+        _xpAudioReady = true;
+        _xpAudio.muted = false;
+        _xpAudio.currentTime = 0;
+        _xpAudio.play().catch(function(){});
     }
-    document.addEventListener('click', _unlockAudio);
-    document.addEventListener('keydown', _unlockAudio);
-    document.addEventListener('touchstart', _unlockAudio);
 
     // ===== XP Startup Sound =====
     function playStartupSound() {
@@ -33,9 +34,7 @@
     var checkReady = setInterval(function() {
         if (!document.getElementById('bios-screen')) {
             clearInterval(checkReady);
-            if (_audioReady) {
-                playStartupSound();
-            }
+            playStartupSound();
         }
     }, 200);
 
