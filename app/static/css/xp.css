@@ -367,34 +367,34 @@
     .xp-icon span { font-size: 10px; max-width: 72px; }
 
     /* Taskbar — simplified */
-    .xp-taskbar { height: 48px; padding: 0; }
+    .xp-taskbar { height: 40px; padding: 0; }
     .xp-taskbar-divider { display: none; }
     .xp-taskbar-tasks { display: none; }
     #xp-start-btn {
-        height: 38px; padding: 0 18px;
-        font-size: 14px; border-radius: 0 12px 12px 0;
+        height: 30px; padding: 0 14px;
+        font-size: 12px; border-radius: 0 8px 8px 0;
     }
-    #xp-start-btn img { width: 22px; height: 22px; }
-    .xp-tray { height: 38px; padding: 0 12px; font-size: 13px; }
+    #xp-start-btn img { width: 18px; height: 18px; }
+    .xp-tray { height: 30px; padding: 0 8px; font-size: 11px; }
 
-    /* Start menu → full screen overlay */
+    /* Start menu → compact overlay */
     .xp-start-menu {
-        bottom: 48px; left: 0; right: 0; width: 100%;
-        max-height: 70vh; overflow-y: auto;
-        border-radius: 12px 12px 0 0;
+        bottom: 44px; left: 0; right: 0; width: 100%;
+        max-height: 55vh; overflow-y: auto;
+        border-radius: 8px 8px 0 0;
     }
-    .xp-start-header { padding: 14px 16px; }
-    .xp-start-avatar { width: 40px; height: 40px; }
-    .xp-start-avatar img { width: 28px; height: 28px; }
-    .xp-start-user { font-size: 15px; }
+    .xp-start-header { padding: 8px 12px; }
+    .xp-start-avatar { width: 28px; height: 28px; }
+    .xp-start-avatar img { width: 20px; height: 20px; }
+    .xp-start-user { font-size: 12px; }
     .xp-start-body { flex-direction: column; }
     .xp-start-system { width: 100%; border-left: none; border-top: 1px solid #B6C8D8; }
-    .xp-start-item { padding: 12px 20px; font-size: 15px; gap: 14px; }
-    .xp-start-item .si-icon { font-size: 22px; width: 30px; }
-    .xp-start-footer button { padding: 14px; font-size: 15px; }
+    .xp-start-item { padding: 7px 14px; font-size: 12px; gap: 8px; }
+    .xp-start-item .si-icon { font-size: 16px; width: 22px; }
+    .xp-start-footer button { padding: 8px; font-size: 12px; }
 
     /* Windows → full-screen modals */
-    #xp-windows { bottom: 48px; }
+    #xp-windows { bottom: 40px; }
     .xp-window {
         top: 0 !important; left: 0 !important;
         right: 0 !important; bottom: 0 !important;

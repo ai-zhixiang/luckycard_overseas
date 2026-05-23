@@ -65,7 +65,7 @@
         win.id = 'xp-win-' + id;
         var isMobile = window.innerWidth < 768;
         if (isMobile) {
-            win.style.cssText = 'top:0;left:0;right:0;bottom:48px;z-index:' + (++zIndex) + ';';
+            win.style.cssText = 'top:0;left:0;right:0;bottom:40px;z-index:' + (++zIndex) + ';';
         } else {
             win.style.cssText = 'top:60px;left:100px;width:600px;height:440px;z-index:' + (++zIndex) + ';';
         }
