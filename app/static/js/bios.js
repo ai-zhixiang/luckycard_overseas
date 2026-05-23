@@ -30,7 +30,7 @@
 
         // ===== Fan noise — muted autoplay trick =====
     var _fanAudio = new Audio('/static/audio/fan-noise.mp3');
-    _fanAudio.volume = 0.35;
+    _fanAudio.volume = 0.8;
     _fanAudio.muted = true;
     _fanAudio.loop = true;
     _fanAudio.play().catch(function(){});
