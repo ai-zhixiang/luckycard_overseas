@@ -40,8 +40,19 @@
         _fanAudio.play().catch(function(){});
     }
     function stopFan() {
-        _fanAudio.muted = true;
-        _fanAudio.pause();
+        var fadeSteps = 10;
+        var fadeInterval = 80;
+        var startVol = _fanAudio.volume;
+        var step = 0;
+        var fadeOut = setInterval(function() {
+            step++;
+            _fanAudio.volume = Math.max(0, startVol * (1 - step / fadeSteps));
+            if (step >= fadeSteps) {
+                clearInterval(fadeOut);
+                _fanAudio.pause();
+                _fanAudio.muted = true;
+            }
+        }, fadeInterval);
     }
 
     var biosLines = [
