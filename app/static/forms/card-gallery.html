@@ -1,0 +1,43 @@
+<div style="max-width:700px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:1.5rem">
+        <h2 style="font-family:Georgia,serif;margin:0">🖼️ Card Gallery</h2>
+        <p style="color:#888;font-size:0.85rem">Recent cards from the community</p>
+    </div>
+    <div id="gallery-list" style="display:flex;flex-direction:column;gap:12px">
+        <p style="text-align:center;color:#888;padding:2rem">Loading...</p>
+    </div>
+</div>
+
+<script>
+(function() {
+    var el = document.getElementById('gallery-list');
+    fetch('/api/cards/list?limit=20')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (!d.cards || d.cards.length === 0) {
+                el.innerHTML = '<div style="text-align:center;padding:3rem"><p style="font-size:2rem;margin-bottom:1rem">📭</p><p style="color:#888">No cards yet. Be the first to create one!</p></div>';
+                return;
+            }
+            el.innerHTML = d.cards.map(function(c) {
+                var poem = (c.poem || '').split('\n')[0];
+                if (poem.length > 100) poem = poem.substring(0, 100) + '...';
+                var date = '';
+                try { date = new Date(c.created_at).toLocaleDateString(); } catch(e) {}
+                return '<div style="background:linear-gradient(135deg,#fffaf5,#fef3e2);padding:1rem 1.2rem;border-radius:8px;border:1px solid #eee;cursor:pointer;transition:box-shadow 0.15s" ' +
+                    'onmouseover="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.08)\'" onmouseout="this.style.boxShadow=\'none\'" ' +
+                    'onclick="window.open(\'/card-share/' + c.id + '\',\'_blank\')">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+                        '<div><span style="font-weight:600">💌 ' + c.recipient_name + '</span> ' +
+                        '<span style="color:#888;font-size:0.85rem">from ' + c.sender_name + '</span></div>' +
+                        '<span style="color:#aaa;font-size:0.75rem">' + date + '</span>' +
+                    '</div>' +
+                    '<div style="font-family:Georgia,serif;font-size:0.9rem;color:#555;line-height:1.6">' + poem + '</div>' +
+                    '<div style="margin-top:6px;font-size:0.75rem;color:#aaa">👁 ' + (c.view_count||0) + ' views</div>' +
+                '</div>';
+            }).join('');
+        })
+        .catch(function() {
+            el.innerHTML = '<p style="text-align:center;color:#c33;padding:2rem">Failed to load cards.</p>';
+        });
+})();
+</script>

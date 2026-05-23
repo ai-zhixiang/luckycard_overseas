@@ -19,11 +19,11 @@
 
     <!-- Desktop Icons -->
     <div class="xp-desktop-icons">
-        <div class="xp-icon" ondblclick="XPShell.openWindow('create','Create Card','🃏','<p>Card creator coming soon.</p>')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('create','Create Card','🃏','/static/forms/card-create.html')">
             <div class="xp-icon-img">🃏</div>
             <span>Create Card</span>
         </div>
-        <div class="xp-icon" ondblclick="XPShell.openWindow('gallery','Gallery','🖼️','<p>Gallery coming soon.</p>')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('gallery','Gallery','🖼️','/api/cards/list\')">
             <div class="xp-icon-img">🖼️</div>
             <span>Gallery</span>
         </div>
@@ -52,10 +52,10 @@
         </div>
         <div class="xp-start-body">
             <div class="xp-start-programs">
-                <button class="xp-start-item" onclick="XPShell.openWindow('create','Create Card','🃏','<p>Card creator coming soon.</p>');XPShell.toggleStart()">
+                <button class="xp-start-item" onclick="XPShell.openWindow('create','Create Card','🃏','/static/forms/card-create.html');XPShell.toggleStart()">
                     <span class="si-icon">🃏</span><span class="si-label">Create Card</span>
                 </button>
-                <button class="xp-start-item" onclick="XPShell.openWindow('gallery','Gallery','🖼️','<p>Gallery coming soon.</p>');XPShell.toggleStart()">
+                <button class="xp-start-item" onclick="XPShell.openWindow('gallery','Gallery','🖼️','/api/cards/list\');XPShell.toggleStart()">
                     <span class="si-icon">🖼️</span><span class="si-label">Gallery</span>
                 </button>
                 <button class="xp-start-item" onclick="XPShell.openWindow('music','Music','🎵','<p>Music library coming soon.</p>');XPShell.toggleStart()">
@@ -109,6 +109,6 @@
         </div>
     </div>
 
-    <script src="/static/js/xp.js?v=8"></script>
+    <script src="/static/js/xp.js?v=9"></script>
 </body>
 </html>

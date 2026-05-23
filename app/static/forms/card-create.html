@@ -1,0 +1,117 @@
+<div style="max-width:500px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-size:2rem">🃏</div>
+        <h2 style="font-family:Georgia,serif;margin:0.5rem 0">Create a Lucky Card</h2>
+        <p style="color:#888;font-size:0.85rem">AI writes a poem. You send the magic.</p>
+    </div>
+
+    <div id="card-form">
+        <div style="margin-bottom:1rem">
+            <label style="display:block;font-weight:600;margin-bottom:4px;font-size:0.85rem">To <span style="color:#C41E3A">*</span></label>
+            <input id="cf-recipient" placeholder="e.g. Mom, Best Friend, Colleague"
+                style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.95rem;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:1rem">
+            <label style="display:block;font-weight:600;margin-bottom:4px;font-size:0.85rem">From <span style="color:#C41E3A">*</span></label>
+            <input id="cf-sender" placeholder="Your name"
+                style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.95rem;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:1rem">
+            <label style="display:block;font-weight:600;margin-bottom:4px;font-size:0.85rem">Occasion</label>
+            <select id="cf-occasion" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.95rem;box-sizing:border-box">
+                <option value="">Just Because</option>
+                <option value="Birthday">🎂 Birthday</option>
+                <option value="Thank You">🙏 Thank You</option>
+                <option value="Get Well">🌻 Get Well Soon</option>
+                <option value="Congratulations">🎉 Congratulations</option>
+                <option value="Love">❤️ Love</option>
+                <option value="Encouragement">💪 Encouragement</option>
+            </select>
+        </div>
+        <div style="margin-bottom:1.5rem">
+            <label style="display:block;font-weight:600;margin-bottom:4px;font-size:0.85rem">Your Message</label>
+            <textarea id="cf-message" rows="2" placeholder="What's on your mind?"
+                style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.95rem;box-sizing:border-box;resize:vertical"></textarea>
+        </div>
+
+        <button onclick="CardCreator.generate()" id="cf-generate-btn"
+            style="width:100%;padding:10px;background:linear-gradient(180deg,#2E82F0,#0058E6);color:#fff;border:none;border-radius:6px;font-size:1rem;font-weight:600;cursor:pointer;margin-bottom:1rem">
+            ✨ Generate Poem & Save
+        </button>
+
+        <div id="cf-result" style="display:none;text-align:center">
+            <div style="font-size:2rem;margin-bottom:0.5rem">💌</div>
+            <div id="cf-poem" style="white-space:pre-line;font-family:Georgia,serif;font-size:1.05rem;line-height:1.8;margin-bottom:1rem;background:linear-gradient(135deg,#fffaf5,#fef3e2);padding:1.5rem;border-radius:10px"></div>
+            <p style="color:#888;font-size:0.8rem;margin-bottom:0.5rem">Card created!</p>
+            <button onclick="CardCreator.copyLink()"
+                style="padding:8px 20px;background:#C41E3A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px">📋 Copy Link</button>
+            <button onclick="CardCreator.openCard()"
+                style="padding:8px 20px;background:#fff;color:#C41E3A;border:1.5px solid #C41E3A;border-radius:6px;cursor:pointer;font-weight:600">👁 View Card</button>
+            <p id="cf-link" style="font-size:0.75rem;color:#888;margin-top:0.5rem;word-break:break-all"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+window.CardCreator = {
+    cardId: null,
+    loading: false,
+
+    generate: function() {
+        if (this.loading) return;
+        var recipient = document.getElementById('cf-recipient').value.trim();
+        var sender = document.getElementById('cf-sender').value.trim();
+        if (!recipient || !sender) {
+            alert('Please fill in both "To" and "From" fields.');
+            return;
+        }
+
+        this.loading = true;
+        var btn = document.getElementById('cf-generate-btn');
+        btn.textContent = '✨ Generating...';
+        btn.disabled = true;
+
+        var self = this;
+        fetch('/api/cards/create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                recipient: recipient,
+                sender: sender,
+                occasion: document.getElementById('cf-occasion').value,
+                message: document.getElementById('cf-message').value.trim()
+            })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            self.cardId = d.card_id;
+            document.getElementById('cf-poem').textContent = d.poem;
+            document.getElementById('cf-link').textContent = 'https://hicard.world/card-share/' + d.card_id;
+            document.getElementById('cf-result').style.display = 'block';
+            document.getElementById('cf-generate-btn').style.display = 'none';
+            self.loading = false;
+        })
+        .catch(function() {
+            alert('Something went wrong. Please try again.');
+            btn.textContent = '✨ Generate Poem & Save';
+            btn.disabled = false;
+            self.loading = false;
+        });
+    },
+
+    copyLink: function() {
+        var url = 'https://hicard.world/card-share/' + this.cardId;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                alert('Link copied!');
+            });
+        } else {
+            prompt('Copy this link:', url);
+        }
+    },
+
+    openCard: function() {
+        window.open('https://hicard.world/card-share/' + this.cardId, '_blank');
+    }
+};
+</script>

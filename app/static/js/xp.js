@@ -94,6 +94,24 @@
             return;
         }
 
+        // If content is a URL, fetch it
+        if (contentHTML && (contentHTML.startsWith('/') || contentHTML.startsWith('http'))) {
+            var url = contentHTML;
+            _doOpen(id, title, icon, '<p style="text-align:center;padding:2rem;color:#888">Loading...</p>');
+            fetch(url).then(function(r) { return r.text(); }).then(function(html) {
+                var bodyEl = document.getElementById('xp-win-body-' + id);
+                if (bodyEl) bodyEl.innerHTML = html;
+            }).catch(function() {
+                var bodyEl = document.getElementById('xp-win-body-' + id);
+                if (bodyEl) bodyEl.innerHTML = '<p style="text-align:center;padding:2rem;color:#c33">Failed to load.</p>';
+            });
+            return;
+        }
+
+        _doOpen(id, title, icon, contentHTML);
+    }
+
+    function _doOpen(id, title, icon, contentHTML) {
         var win = document.createElement('div');
         win.className = 'xp-window';
         win.id = 'xp-win-' + id;
@@ -113,7 +131,7 @@
                     '<button class="xp-btn-close" title="Close">✕</button>' +
                 '</div>' +
             '</div>' +
-            '<div class="xp-window-body">' + contentHTML + '</div>';
+            '<div class="xp-window-body" id="xp-win-body-' + id + '">' + contentHTML + '</div>';
 
         windowsContainer.appendChild(win);
 
