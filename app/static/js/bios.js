@@ -28,6 +28,39 @@
     var xpBlocks = scr.querySelector('#xpBlocks');
     var wipeCurtain = scr.querySelector('#wipeCurtain');
 
+    // ===== Fan noise =====
+    var fanCtx = null;
+    var fanGain = null;
+    function startFan() {
+        try {
+            fanCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Brown-ish noise via buffer
+            var len = fanCtx.sampleRate * 2;
+            var buf = fanCtx.createBuffer(1, len, fanCtx.sampleRate);
+            var data = buf.getChannelData(0);
+            var last = 0;
+            for (var i = 0; i < len; i++) {
+                var white = Math.random() * 2 - 1;
+                last = (last + 0.02 * white) / 1.02;
+                data[i] = last * 3.5;
+            }
+            var src = fanCtx.createBufferSource();
+            src.buffer = buf; src.loop = true;
+            var filter = fanCtx.createBiquadFilter();
+            filter.type = 'lowpass'; filter.frequency.value = 200;
+            fanGain = fanCtx.createGain();
+            fanGain.gain.value = 0.04;
+            src.connect(filter); filter.connect(fanGain); fanGain.connect(fanCtx.destination);
+            src.start();
+        } catch(e) {}
+    }
+    function stopFan() {
+        if (fanGain) {
+            fanGain.gain.linearRampToValueAtTime(0, fanCtx.currentTime + 0.3);
+            setTimeout(function() { if (fanCtx) fanCtx.close(); }, 400);
+        }
+    }
+
     var biosLines = [
         { c: 'bios-brand', t: 'LuckyBIOS v1.0, An Energy Star Ally' },
         { c: 'bios-brand', t: 'Copyright (C) 2026, Lucky Card Technologies' },
@@ -69,6 +102,14 @@
         }
         next();
     }
+
+    // Start fan on first line
+    var fanStarted = false;
+    var origTypeLine = typeLine;
+    typeLine = function(text, cls, cb) {
+        if (!fanStarted) { fanStarted = true; startFan(); }
+        origTypeLine(text, cls, cb);
+    };
 
     // === BIOS → blink 5x → loading ===
     runSeq(biosLines, function() {
@@ -126,10 +167,12 @@
                 return;
             }
 
-            // === 100% — two-step wipe ===
-            // Step 1: black curtain wipes down covering all content
+            // Stop fan
+            stopFan();
+
+            // Step 1: black curtain wipes down
             wipeCurtain.classList.add('drop');
-            // Step 2: after wipe finishes, slide whole black screen down
+            // Step 2: slide whole screen down
             setTimeout(function() {
                 scr.classList.add('slide-down');
                 setTimeout(function() { scr.remove(); }, 600);

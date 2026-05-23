@@ -2,6 +2,57 @@
 (function() {
     'use strict';
 
+    // ===== XP Startup Sound =====
+    function playStartupSound() {
+        try {
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            var notes = [
+                { f: 330, d: 0.15, t: 0 },       // E4
+                { f: 392, d: 0.12, t: 0.12 },     // G4
+                { f: 523, d: 0.12, t: 0.22 },     // C5
+                { f: 659, d: 0.10, t: 0.32 },     // E5
+                { f: 784, d: 0.10, t: 0.40 },     // G5
+                { f: 1047, d: 0.30, t: 0.48 },    // C6 (hold)
+                { f: 784, d: 0.20, t: 0.76 },     // G5
+                { f: 1047, d: 0.60, t: 0.92 }     // C6 (final)
+            ];
+            notes.forEach(function(n) {
+                var osc = ctx.createOscillator();
+                var gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = n.f;
+                gain.gain.setValueAtTime(0, ctx.currentTime + n.t);
+                gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + n.t + 0.02);
+                gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + n.t + n.d - 0.03);
+                gain.gain.linearRampToValueAtTime(0, ctx.currentTime + n.t + n.d);
+                // Add harmonic
+                var osc2 = ctx.createOscillator();
+                var gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.value = n.f * 2;
+                gain2.gain.setValueAtTime(0, ctx.currentTime + n.t);
+                gain2.gain.linearRampToValueAtTime(0.08, ctx.currentTime + n.t + 0.02);
+                gain2.gain.linearRampToValueAtTime(0, ctx.currentTime + n.t + n.d);
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc2.connect(gain2); gain2.connect(ctx.destination);
+                osc.start(ctx.currentTime + n.t);
+                osc.stop(ctx.currentTime + n.t + n.d + 0.05);
+                osc2.start(ctx.currentTime + n.t);
+                osc2.stop(ctx.currentTime + n.t + n.d + 0.05);
+            });
+            setTimeout(function() { ctx.close(); }, 2300);
+        } catch(e) {}
+    }
+
+    // Play startup sound after boot (delay to let boot screen finish)
+    // Detect when desktop is visible (body no longer has boot screen overlay)
+    var checkReady = setInterval(function() {
+        if (!document.getElementById('bios-screen')) {
+            clearInterval(checkReady);
+            setTimeout(playStartupSound, 300);
+        }
+    }, 200);
+
     // ===== Clock =====
     var clockEl = document.getElementById('xp-clock');
     function tick() {
@@ -47,19 +98,17 @@
     // ===== Windows =====
     var windowsContainer = document.getElementById('xp-windows');
     var taskbarTasks = document.getElementById('xp-taskbar-tasks');
-    var windows = {};  // id -> { el, taskBtn, minimized, maximized }
+    var windows = {};
     var zIndex = 10;
     var activeWindow = null;
 
     function openWindow(id, title, icon, contentHTML) {
-        // If already open, focus it
         if (windows[id]) {
             focusWindow(id);
             if (windows[id].minimized) restoreWindow(id);
             return;
         }
 
-        // Create window element
         var win = document.createElement('div');
         win.className = 'xp-window';
         win.id = 'xp-win-' + id;
@@ -83,7 +132,6 @@
 
         windowsContainer.appendChild(win);
 
-        // Taskbar button
         var tb = document.createElement('button');
         tb.className = 'xp-task-btn active';
         tb.textContent = title;
@@ -92,14 +140,12 @@
 
         windows[id] = { el: win, taskBtn: tb, minimized: false, maximized: false };
 
-        // Title bar buttons
         var titleBar = win.querySelector('.xp-titlebar');
         var btns = titleBar.querySelectorAll('button');
         btns[0].onclick = function(e) { e.stopPropagation(); minimizeWindow(id); };
         btns[1].onclick = function(e) { e.stopPropagation(); toggleMaximize(id); };
         btns[2].onclick = function(e) { e.stopPropagation(); closeWindow(id); };
 
-        // Click to focus
         win.addEventListener('mousedown', function() { focusWindow(id); });
 
         focusWindow(id);
@@ -108,14 +154,11 @@
     function focusWindow(id) {
         if (!windows[id]) return;
         var win = windows[id];
-
-        // Deactivate previous
         if (activeWindow && activeWindow !== id && windows[activeWindow]) {
             windows[activeWindow].taskBtn.classList.remove('active');
             var prevTitle = document.getElementById('xp-title-' + activeWindow);
             if (prevTitle) prevTitle.classList.add('inactive');
         }
-
         activeWindow = id;
         win.el.style.zIndex = ++zIndex;
         win.taskBtn.classList.add('active');
@@ -160,19 +203,9 @@
         delete windows[id];
     }
 
-    function toggleStartMenu() {
-        if (menuOpen) {
-            menuOpen = false;
-            startMenu.classList.remove('show');
-            startBtn.classList.remove('open');
-        }
-    }
-
-    // Expose
     window.XPShell = {
         openWindow: openWindow,
         toggleStart: toggleStart,
-        toggleStartMenu: toggleStartMenu,
         focusWindow: focusWindow,
         closeWindow: closeWindow
     };
