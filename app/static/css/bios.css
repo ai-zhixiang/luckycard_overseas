@@ -1,0 +1,99 @@
+/* Lucky Card Boot Screen */
+#bios-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #000;
+    color: #33ff33;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    overflow: hidden;
+}
+
+/* Wipe curtain — black overlay drops from top */
+.wipe-curtain {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+    height: 0; background: #000;
+    transition: height 0.4s ease-in;
+}
+.wipe-curtain.drop {
+    height: 100%;
+}
+
+/* Step 2: slide whole black screen down */
+#bios-screen.slide-down {
+    animation: slideDown 0.5s ease-in forwards;
+}
+@keyframes slideDown {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(100vh); }
+}
+
+/* Layers */
+.boot-layer {
+    position: absolute; inset: 0;
+    padding: 2rem;
+    overflow: hidden;
+}
+.bios-layer { z-index: 1; }
+.logo-layer {
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* BIOS lines */
+.bios-line { white-space: pre; line-height: 1.65; }
+.bios-brand { color: #aaa; }
+.bios-mem { color: #fff; }
+.bios-ok { color: #33ff33; }
+.bios-warn { color: #ffff33; }
+.bios-cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: #33ff33; vertical-align: middle; margin-left: 2px;
+    animation: blink 0.5s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Logo */
+.boot-logo {
+    width: 80px; height: 80px; margin-bottom: 1.2rem;
+}
+.boot-brand {
+    font-family: 'Georgia', serif;
+    font-size: 1.6rem; font-weight: bold; color: #fff;
+    letter-spacing: 0.05em; margin-bottom: 0.4rem;
+}
+.boot-version {
+    font-size: 0.85rem; color: #888; letter-spacing: 0.04em;
+}
+
+/* XP Progress Bar — 3 blocks L→R marquee */
+.xp-progress-bar {
+    position: absolute; bottom: 60px; left: 50%;
+    transform: translateX(-50%); width: 200px; z-index: 3;
+}
+.xp-progress-track {
+    height: 14px; background: #111;
+    border: 1px solid #444; border-radius: 2px;
+    overflow: hidden; position: relative;
+}
+.xp-progress-blocks {
+    position: absolute; top: 0; left: 0;
+    height: 100%;
+    display: flex; gap: 8px;
+    animation: xpMarch 2.5s linear infinite;
+}
+.xp-progress-blocks .b {
+    width: 18px; height: 100%;
+    background: linear-gradient(180deg, #2ecc40 0%, #1a8a28 100%);
+    border-radius: 1px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+    flex-shrink: 0;
+}
+@keyframes xpMarch {
+    0%   { transform: translateX(-60px); }
+    100% { transform: translateX(200px); }
+}

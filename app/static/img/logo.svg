@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Card body -->
+  <rect x="4" y="4" width="56" height="56" rx="6" fill="#C41E3A" stroke="#8B0000" stroke-width="1.5"/>
+  <!-- Inner border -->
+  <rect x="9" y="9" width="46" height="46" rx="4" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  <!-- Lucky star -->
+  <polygon points="32,14 35,24 46,24 37,30 40,40 32,34 24,40 27,30 18,24 29,24" fill="#FFD700" opacity="0.95"/>
+  <!-- L letter -->
+  <text x="32" y="52" text-anchor="middle" font-family="Georgia,serif" font-size="16" font-weight="bold" fill="#fff" opacity="0.9">L</text>
+  <!-- Fortune glow -->
+  <circle cx="32" cy="29" r="18" fill="none" stroke="#FFD700" stroke-width="0.5" opacity="0.4"/>
+</svg>
