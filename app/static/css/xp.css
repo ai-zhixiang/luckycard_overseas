@@ -133,7 +133,7 @@
 
 /* Taskbar task buttons */
 .xp-taskbar-tasks {
-    flex: 1; display: flex; gap: 2px; overflow: hidden;
+    flex: 1; display: flex; gap: 2px; overflow-x: auto; overflow-y: hidden;
 }
 .xp-task-btn {
     height: 28px; padding: 0 12px; min-width: 120px; max-width: 220px;
@@ -370,6 +370,7 @@
     .xp-taskbar { height: 40px; padding: 0; }
     .xp-taskbar-divider { display: none; }
     .xp-taskbar-tasks { display: none; }
+    .xp-taskbar-tasks.has-windows { display: flex; overflow-x: auto; }
     #xp-start-btn {
         height: 30px; padding: 0 14px;
         font-size: 12px; border-radius: 0 8px 8px 0;

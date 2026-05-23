@@ -122,6 +122,7 @@
         tb.textContent = title;
         tb.onclick = function() { focusWindow(id); if (windows[id] && windows[id].minimized) restoreWindow(id); };
         taskbarTasks.appendChild(tb);
+        taskbarTasks.classList.add('has-windows');
 
         windows[id] = { el: win, taskBtn: tb, minimized: false, maximized: false };
 
@@ -186,6 +187,9 @@
         windows[id].taskBtn.remove();
         if (activeWindow === id) activeWindow = null;
         delete windows[id];
+        if (Object.keys(windows).length === 0) {
+            taskbarTasks.classList.remove('has-windows');
+        }
     }
 
     window.XPShell = {
