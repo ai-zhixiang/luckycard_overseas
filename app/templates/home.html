@@ -6,36 +6,37 @@
     <title>Lucky Card — Professional Edition</title>
     <meta name="description" content="Create beautiful AI-powered greeting cards. Send luck across the world.">
     <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
-    <link rel="stylesheet" href="/static/css/xp.css?v=4">
+    <link rel="stylesheet" href="/static/css/xp.css?v=5">
     <link rel="stylesheet" href="/static/css/bios.css?v=10">
 </head>
 <body class="xp-desktop">
 
     <!-- Boot Screen -->
     <script src="/static/js/bios.js?v=23"></script>
+    <audio id="xpreal-audio" src="/static/audio/xpreal.mp3" preload="auto" style="display:none"></audio>
 
     <!-- Bliss Wallpaper -->
     <div class="xp-wallpaper"></div>
 
     <!-- Desktop Icons -->
     <div class="xp-desktop-icons">
-        <div class="xp-icon" onclick="XPShell.openWindow('create','Create Card','🃏','/static/forms/card-create.html')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('create','Create Card','🃏','/static/forms/card-create.html')">
             <div class="xp-icon-img">🃏</div>
             <span>Create Card</span>
         </div>
-        <div class="xp-icon" onclick="XPShell.openWindow('gallery','Gallery','🖼️','/static/forms/card-gallery.html')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('gallery','Gallery','🖼️','/static/forms/card-gallery.html')">
             <div class="xp-icon-img">🖼️</div>
             <span>Gallery</span>
         </div>
-        <div class="xp-icon" onclick="XPShell.openWindow('mycards','My Cards','📁','<p>Your cards will appear here.</p>')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('mycards','My Cards','📁','/static/forms/my-cards.html')">
             <div class="xp-icon-img">📁</div>
             <span>My Cards</span>
         </div>
-        <div class="xp-icon" onclick="XPShell.openWindow('music','Music','🎵','<p>Music library coming soon.</p>')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('music','Music','🎵','/static/forms/music-player.html')">
             <div class="xp-icon-img">🎵</div>
             <span>Music</span>
         </div>
-        <div class="xp-icon" style="margin-top:20px" onclick="XPShell.openWindow('recycle','Recycle Bin','🗑️','<div style=&quot;text-align:center;padding:2rem&quot;><p style=&quot;font-size:3rem&quot;>🗑️</p><p style=&quot;font-size:1.2rem;font-family:Georgia,serif&quot;>The Recycle Bin is empty.</p><p style=&quot;color:#888;margin-top:1rem&quot;>Your luck never goes to waste.</p></div>')">
+        <div class="xp-icon" style="margin-top:20px" ondblclick="XPShell.openWindow('recycle','Recycle Bin','🗑️','<div style=&quot;text-align:center;padding:2rem&quot;><p style=&quot;font-size:3rem&quot;>🗑️</p><p style=&quot;font-size:1.2rem;font-family:Georgia,serif&quot;>The Recycle Bin is empty.</p><p style=&quot;color:#888;margin-top:1rem&quot;>Your luck never goes to waste.</p></div>')">
             <div class="xp-icon-img">🗑️</div>
             <span>Recycle Bin</span>
         </div>
@@ -43,6 +44,31 @@
 
     <!-- Windows Container -->
     <div id="xp-windows"></div>
+
+    <!-- Run Dialog -->
+    <div id="xp-run-dlg" class="xp-run-dialog" style="display:none">
+        <div class="xp-run-titlebar">
+            <span class="xp-run-icon">▶️</span>
+            <span class="xp-run-title">Run</span>
+            <button class="xp-run-close" onclick="XPShell.closeRun()">✕</button>
+        </div>
+        <div class="xp-run-body">
+            <div class="xp-run-row">
+                <img src="/static/img/logo.svg" style="width:32px;height:32px;margin-right:12px;">
+                <div class="xp-run-label" data-lang="run_prompt">Type the name of a program, folder, document, or Internet resource, and Lucky Card will open it for you.</div>
+            </div>
+            <div class="xp-run-row" style="margin-top:12px;">
+                <label class="xp-run-open-label" data-lang="run_open">Open:</label>
+                <input id="xp-run-input" class="xp-run-input" type="text" placeholder="card | gallery | music | control | notepad | cmd | https://..."
+                       onkeydown="if(event.key==='Enter')XPShell.runCommand()">
+            </div>
+            <div class="xp-run-buttons">
+                <button class="xp-btn xp-btn-ok" onclick="XPShell.runCommand()">OK</button>
+                <button class="xp-btn xp-btn-cancel" onclick="XPShell.closeRun()" data-lang="run_cancel">Cancel</button>
+                <button class="xp-btn xp-btn-browse" onclick="XPShell.closeRun()" data-lang="run_browse">Browse...</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Start Menu -->
     <div id="xp-start-menu" class="xp-start-menu">
@@ -58,7 +84,7 @@
                 <button class="xp-start-item" onclick="XPShell.openWindow('gallery','Gallery','🖼️','/static/forms/card-gallery.html');XPShell.toggleStart()">
                     <span class="si-icon">🖼️</span><span class="si-label">Gallery</span>
                 </button>
-                <button class="xp-start-item" onclick="XPShell.openWindow('music','Music','🎵','<p>Music library coming soon.</p>');XPShell.toggleStart()">
+                <button class="xp-start-item" onclick="XPShell.openWindow('music','Music','🎵','/static/forms/music-player.html');XPShell.toggleStart()">
                     <span class="si-icon">🎵</span><span class="si-label">Music</span>
                 </button>
                 <button class="xp-start-item">
@@ -80,8 +106,11 @@
                     <span class="si-icon">🎵</span><span class="si-label">My Music</span>
                 </button>
                 <div style="border-top:1px solid #B6C8D8;margin:4px 0"></div>
-                <button class="xp-start-item">
+                <button class="xp-start-item" onclick="XPShell.openControlPanel();XPShell.toggleStart()">
                     <span class="si-icon">⚙️</span><span class="si-label">Control Panel</span>
+                </button>
+                <button class="xp-start-item" onclick="XPShell.openRun();XPShell.toggleStart()">
+                    <span class="si-icon">▶️</span><span class="si-label">Run...</span>
                 </button>
                 <button class="xp-start-item">
                     <span class="si-icon">🔍</span><span class="si-label">Search</span>
@@ -92,9 +121,9 @@
             </div>
         </div>
         <div class="xp-start-footer">
-            <button >🔒 Log Off</button>
+            <button onclick="XPShell.logOff()">🔒 Log Off</button>
             <div class="sf-divider"></div>
-            <button >⏻ Shut Down</button>
+            <button onclick="XPShell.shutDown()">⏻ Shut Down</button>
         </div>
     </div>
 
@@ -109,6 +138,6 @@
         </div>
     </div>
 
-    <script src="/static/js/xp.js?v=11"></script>
+    <script src="/static/js/xp.js?v=128"></script>
 </body>
 </html>

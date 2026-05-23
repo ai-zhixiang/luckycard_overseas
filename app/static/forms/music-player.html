@@ -1,0 +1,94 @@
+<div style="max-width:500px;margin:0 auto;text-align:center">
+    <div style="margin-bottom:1.5rem">
+        <h2 style="font-family:Georgia,serif;margin:0">🎵 Music Player</h2>
+        <p style="color:#888;font-size:0.85rem">Relax while you create</p>
+    </div>
+    
+    <div id="music-player" style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:2rem 1.5rem;color:#fff">
+        <div style="font-size:3rem;margin-bottom:1rem" id="mp-icon">🎧</div>
+        <div style="font-size:1.1rem;font-weight:600;margin-bottom:4px" id="mp-title">Lofi Chill</div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.5)" id="mp-artist">Background Music</div>
+        
+        <div style="margin:1.5rem 0">
+            <input type="range" id="mp-seek" min="0" max="100" value="0" style="width:100%;accent-color:#FFB347">
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:rgba(255,255,255,0.4);font-family:monospace">
+                <span id="mp-cur">0:00</span><span id="mp-dur">0:00</span>
+            </div>
+        </div>
+        
+        <div style="display:flex;justify-content:center;align-items:center;gap:20px">
+            <button onclick="MPlayer.prev()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer">⏮</button>
+            <button id="mp-play" onclick="MPlayer.toggle()" style="width:50px;height:50px;border-radius:50%;border:none;background:linear-gradient(135deg,#FFB347,#FF6B6B);color:#fff;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 20px rgba(255,179,71,0.4)">▶️</button>
+            <button onclick="MPlayer.next()" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer">⏭</button>
+        </div>
+    </div>
+    
+    <p style="color:#888;font-size:0.7rem;margin-top:1rem">Music provided by <a href="https://pixabay.com/music/" target="_blank" style="color:#FFB347">Pixabay</a></p>
+</div>
+
+<script>
+window.MPlayer = {
+    tracks: [
+        {title:'Lofi Chill', artist:'Background Music', src:'https://cdn.pixabay.com/audio/2022/05/19/audio_640fea41a7.mp3'},
+        {title:'Ambient Dream', artist:'Calm Sounds', src:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8e0f2f9e5.mp3'},
+        {title:'Jazz Cafe', artist:'Smooth Vibes', src:'https://cdn.pixabay.com/audio/2022/01/18/audio_d0c6e02b62.mp3'}
+    ],
+    idx: 0,
+    audio: null,
+    
+    init: function() {
+        this.audio = new Audio();
+        this.loadTrack(0);
+        var self = this;
+        this.audio.addEventListener('timeupdate', function() {
+            var pct = self.audio.duration ? (self.audio.currentTime / self.audio.duration * 100) : 0;
+            document.getElementById('mp-seek').value = pct;
+            var c = self.audio.currentTime;
+            document.getElementById('mp-cur').textContent = Math.floor(c/60)+':'+String(Math.floor(c%60)).padStart(2,'0');
+        });
+        this.audio.addEventListener('loadedmetadata', function() {
+            var d = self.audio.duration || 0;
+            document.getElementById('mp-dur').textContent = Math.floor(d/60)+':'+String(Math.floor(d%60)).padStart(2,'0');
+        });
+        this.audio.addEventListener('ended', function() { self.next(); });
+        document.getElementById('mp-seek').addEventListener('input', function() {
+            if (self.audio.duration) self.audio.currentTime = (this.value / 100) * self.audio.duration;
+        });
+    },
+    
+    loadTrack: function(i) {
+        this.idx = i;
+        var t = this.tracks[i];
+        this.audio.src = t.src;
+        document.getElementById('mp-title').textContent = t.title;
+        document.getElementById('mp-artist').textContent = t.artist;
+        document.getElementById('mp-seek').value = 0;
+    },
+    
+    toggle: function() {
+        if (this.audio.paused) {
+            this.audio.play().catch(function(){});
+            document.getElementById('mp-play').textContent = '⏸️';
+        } else {
+            this.audio.pause();
+            document.getElementById('mp-play').textContent = '▶️';
+        }
+    },
+    
+    next: function() {
+        var i = (this.idx + 1) % this.tracks.length;
+        this.loadTrack(i);
+        this.audio.play().catch(function(){});
+        document.getElementById('mp-play').textContent = '⏸️';
+    },
+    
+    prev: function() {
+        var i = (this.idx - 1 + this.tracks.length) % this.tracks.length;
+        this.loadTrack(i);
+        this.audio.play().catch(function(){});
+        document.getElementById('mp-play').textContent = '⏸️';
+    }
+};
+
+MPlayer.init();
+</script>

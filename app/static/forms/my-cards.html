@@ -1,0 +1,42 @@
+<div style="max-width:600px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:1.5rem">
+        <h2 style="font-family:Georgia,serif;margin:0">📁 My Cards</h2>
+        <p style="color:#888;font-size:0.85rem">Cards you've created</p>
+    </div>
+    <div id="mycards-list" style="display:flex;flex-direction:column;gap:10px">
+        <p style="text-align:center;color:#888;padding:2rem">Loading...</p>
+    </div>
+</div>
+
+<script>
+(function() {
+    var el = document.getElementById('mycards-list');
+    try {
+        var cards = JSON.parse(localStorage.getItem('lc_my_cards') || '[]');
+    } catch(e) {
+        cards = [];
+    }
+    
+    if (!cards || cards.length === 0) {
+        el.innerHTML = '<div style="text-align:center;padding:3rem"><p style="font-size:2rem;margin-bottom:1rem">📭</p><p style="color:#888">No cards yet.</p><p style="color:#888;font-size:0.85rem">Create your first card and it will appear here!</p></div>';
+        return;
+    }
+    
+    el.innerHTML = cards.map(function(c) {
+        var poem = (c.poem_first || '').substring(0, 80);
+        var date = '';
+        try { date = new Date(c.created_at).toLocaleDateString(); } catch(e) {}
+        return '<div style="background:linear-gradient(135deg,#fffaf5,#fef3e2);padding:1rem 1.2rem;border-radius:8px;border:1px solid #eee;cursor:pointer;transition:box-shadow 0.15s" ' +
+            'onmouseover="this.style.boxShadow=\'0 4px 12px rgba(0,0,0,0.08)\'" onmouseout="this.style.boxShadow=\'none\'" ' +
+            'onclick="window.open(\'/api/card-share/' + c.id + '\',\'_blank\')">' +
+            '<div style="font-weight:600;margin-bottom:4px">💌 To: ' + (c.recipient || 'Friend') + '</div>' +
+            '<div style="font-family:Georgia,serif;font-size:0.9rem;color:#555;line-height:1.6">' + poem + '</div>' +
+            '<div style="margin-top:6px;font-size:0.75rem;color:#aaa">' + date + '</div>' +
+        '</div>';
+    }).join('');
+    
+    if (cards.length > 0) {
+        el.innerHTML += '<div style="text-align:center;margin-top:1rem"><button onclick="localStorage.removeItem(\'lc_my_cards\');location.reload();" style="background:none;border:1px solid #ddd;padding:4px 16px;border-radius:4px;color:#888;cursor:pointer;font-size:0.8rem">Clear All</button></div>';
+    }
+})();
+</script>

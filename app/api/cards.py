@@ -157,7 +157,7 @@ async def card_share_page(card_id: str, db: AsyncSession = Depends(get_db)):
     <meta property="og:title" content="{title}">
     <meta property="og:description" content="{poem_first}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://hicard.world/card-share/{card_id}">
+    <meta property="og:url" content="https://hicard.world/api/card-share/{card_id}">
     <script>
         window.__CARD_ID = "{card_id}";
     </script>

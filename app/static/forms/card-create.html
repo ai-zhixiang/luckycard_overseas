@@ -85,8 +85,15 @@ window.CardCreator = {
         .then(function(r) { return r.json(); })
         .then(function(d) {
             self.cardId = d.card_id;
+            // Save to My Cards (localStorage)
+            try {
+                var cards = JSON.parse(localStorage.getItem('lc_my_cards') || '[]');
+                cards.unshift({id: d.card_id, recipient: recipient, poem_first: d.poem.split('\n')[0], created_at: new Date().toISOString()});
+                if (cards.length > 50) cards = cards.slice(0, 50);
+                localStorage.setItem('lc_my_cards', JSON.stringify(cards));
+            } catch(e) {}
             document.getElementById('cf-poem').textContent = d.poem;
-            document.getElementById('cf-link').textContent = 'https://hicard.world/card-share/' + d.card_id;
+            document.getElementById('cf-link').textContent = 'https://hicard.world/api/card-share/' + d.card_id;
             document.getElementById('cf-result').style.display = 'block';
             document.getElementById('cf-generate-btn').style.display = 'none';
             self.loading = false;
@@ -100,7 +107,7 @@ window.CardCreator = {
     },
 
     copyLink: function() {
-        var url = 'https://hicard.world/card-share/' + this.cardId;
+        var url = 'https://hicard.world/api/card-share/' + this.cardId;
         if (navigator.clipboard) {
             navigator.clipboard.writeText(url).then(function() {
                 alert('Link copied!');
@@ -111,7 +118,7 @@ window.CardCreator = {
     },
 
     openCard: function() {
-        window.open('https://hicard.world/card-share/' + this.cardId, '_blank');
+        window.open('https://hicard.world/api/card-share/' + this.cardId, '_blank');
     }
 };
 </script>

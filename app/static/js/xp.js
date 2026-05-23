@@ -1,40 +1,101 @@
 // Lucky Card XP Shell — taskbar clock, start menu, window management
 (function() {
     'use strict';
-    // ===== Audio autoplay: start muted, unmute on desktop =====
-    var _xpAudio = new Audio('/static/audio/xp-startup.mp3');
-    _xpAudio.volume = 0.7;
-    _xpAudio.muted = true;
-    _xpAudio.loop = false;
-    _xpAudio.play().catch(function(){});
-    var _xpAudioReady = false;
-    function playStartupSound() {
-        if (_xpAudioReady) return;
-        _xpAudioReady = true;
-        _xpAudio.muted = false;
-        _xpAudio.currentTime = 0;
-        _xpAudio.play().catch(function(){});
+
+    // ===== Multi-language support =====
+    var _lang = (navigator.language || 'en').startsWith('zh') ? 'zh' : 'en';
+    var _t = {
+        en: {
+            control_panel: 'Control Panel',
+            language: 'Language',
+            display: 'Display',
+            system: 'System',
+            about: 'About Lucky Card',
+            version: 'Version 1.0 (Build 2600)',
+            registered: 'Registered to: Lucky Card User',
+            cpu: 'Intel(R) Pentium(R) 4 CPU 2.40GHz',
+            ram: '512 MB RAM',
+            lang_en: 'English',
+            lang_zh: '中文',
+            switch_lang: 'Switch Language',
+            current_lang: 'Current: English',
+            run_prompt: 'Type the name of a program, folder, document, or Internet resource, and Lucky Card will open it for you.',
+            run_open: 'Open:',
+            run_cancel: 'Cancel',
+            run_browse: 'Browse...',
+            run_title: 'Run',
+            notepad_title: 'Notepad',
+            cp_category_appearance: 'Appearance and Themes',
+            cp_category_network: 'Network and Internet Connections',
+            cp_category_sounds: 'Sounds, Speech, and Audio Devices',
+            cp_category_performance: 'Performance and Maintenance',
+            cp_category_printers: 'Printers and Other Hardware',
+            cp_category_accounts: 'User Accounts',
+            cp_category_date: 'Date, Time, Language, and Regional Options',
+            cp_category_accessibility: 'Accessibility Options',
+            cp_category_security: 'Security Center',
+        },
+        zh: {
+            control_panel: '控制面板',
+            language: '语言',
+            display: '显示',
+            system: '系统',
+            about: '关于 Lucky Card',
+            version: '版本 1.0 (Build 2600)',
+            registered: '注册用户: Lucky Card User',
+            cpu: 'Intel(R) Pentium(R) 4 CPU 2.40GHz',
+            ram: '512 MB 内存',
+            lang_en: 'English',
+            lang_zh: '中文',
+            switch_lang: '切换语言',
+            current_lang: '当前: 中文',
+            run_prompt: '请键入程序、文件夹、文档或 Internet 资源的名称，Lucky Card 将为您打开它。',
+            run_open: '打开:',
+            run_cancel: '取消',
+            run_browse: '浏览...',
+            run_title: '运行',
+            notepad_title: '记事本',
+            cp_category_appearance: '外观和主题',
+            cp_category_network: '网络和 Internet 连接',
+            cp_category_sounds: '声音、语音和音频设备',
+            cp_category_performance: '性能和维护',
+            cp_category_printers: '打印机和其它硬件',
+            cp_category_accounts: '用户帐户',
+            cp_category_date: '日期、时间、语言和区域选项',
+            cp_category_accessibility: '辅助功能选项',
+            cp_category_security: '安全中心',
+        }
+    };
+
+    function t(key) {
+        return (_t[_lang] && _t[_lang][key]) || (_t['en'][key]) || key;
     }
 
-    // ===== XP Startup Sound =====
+    // ===== Audio =====
+    var _xpStartup = new Audio('/static/audio/xp-startup.mp3');
+    _xpStartup.volume = 0.7;
+    _xpStartup.loop = false;
+    _xpStartup.muted = true;
+    _xpStartup.play().catch(function(){});
+    var _startupPlayed = false;
+
     function playStartupSound() {
-        try {
-            var audio = new Audio('/static/audio/xp-startup.mp3');
-            audio.volume = 0.7;
-            var playPromise = audio.play();
-            if (playPromise) {
-                playPromise.catch(function() {
-                    // Autoplay blocked, will retry on interaction
-                });
-            }
-        } catch(e) {}
+        if (_startupPlayed) return;
+        _startupPlayed = true;
+        _xpStartup.muted = false;
+        _xpStartup.currentTime = 0;
+        _xpStartup.play().catch(function(){});
     }
 
-    // Play startup sound after boot — but only if audio already unlocked
+    function playShutdownSound() {
+        var a = document.getElementById('xpreal-audio');
+        if (a) { a.volume = 0.9; a.currentTime = 0; a.play().catch(function(){}); }
+    }
+
     var checkReady = setInterval(function() {
         if (!document.getElementById('bios-screen')) {
             clearInterval(checkReady);
-            playStartupSound();
+            setTimeout(playStartupSound, 500);
         }
     }, 200);
 
@@ -80,6 +141,176 @@
         toggleStart();
     });
 
+    // ===== Run Dialog =====
+    function openRun() {
+        var dlg = document.getElementById('xp-run-dlg');
+        if (!dlg) return;
+        dlg.style.display = 'flex';
+        // Update translated labels
+        dlg.querySelector('[data-lang="run_prompt"]').textContent = t('run_prompt');
+        dlg.querySelector('[data-lang="run_open"]').textContent = t('run_open') + ' ';
+        dlg.querySelector('[data-lang="run_cancel"]').textContent = t('run_cancel');
+        dlg.querySelector('[data-lang="run_browse"]').textContent = t('run_browse');
+        var inp = document.getElementById('xp-run-input');
+        if (inp) { inp.value = ''; setTimeout(function() { inp.focus(); }, 100); }
+    }
+
+    function closeRun() {
+        var dlg = document.getElementById('xp-run-dlg');
+        if (dlg) dlg.style.display = 'none';
+    }
+
+    function runCommand() {
+        var inp = document.getElementById('xp-run-input');
+        var cmd = inp ? inp.value.trim().toLowerCase() : '';
+        closeRun();
+        if (!cmd) return;
+
+        // Command routing
+        var routes = {
+            'card':       ['create', 'Create Card', '🃏', '/static/forms/card-create.html'],
+            'create':     ['create', 'Create Card', '🃏', '/static/forms/card-create.html'],
+            'gallery':    ['gallery', 'Gallery', '🖼️', '/static/forms/card-gallery.html'],
+            'music':      ['music', 'Music', '🎵', '/static/forms/music-player.html'],
+            'mycards':    ['mycards', 'My Cards', '📁', '/static/forms/my-cards.html'],
+            'control':    ['control', t('control_panel'), '⚙️', buildControlPanelHTML()],
+            'notepad':    ['notepad', t('notepad_title'), '📝', buildNotepadHTML()],
+            'cmd':        ['cmd', 'Command Prompt', '💻', buildCmdHTML()],
+            'help':       ['help', 'Help', '❓', buildHelpHTML()],
+            'about':      ['about', t('about'), 'ℹ️', buildAboutHTML()],
+        };
+
+        if (cmd.startsWith('http://') || cmd.startsWith('https://')) {
+            window.open(cmd, '_blank');
+            return;
+        }
+
+        if (routes[cmd]) {
+            var r = routes[cmd];
+            XPShell.openWindow(r[0], r[1], r[2], r[3]);
+        } else {
+            XPShell.openWindow('run-result', 'Run', '▶️',
+                '<div style="text-align:center;padding:2rem">' +
+                '<p style="font-size:2rem">⚠️</p>' +
+                '<p style="margin-top:1rem">Cannot find <b>' + escHtml(cmd) + '</b></p>' +
+                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, control, notepad, cmd</p>' +
+                '</div>');
+        }
+    }
+
+    function escHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    // ===== Keyboard shortcuts =====
+    // Alt+R opens Run dialog (Win+R is reserved by OS)
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+            e.preventDefault();
+            openRun();
+        }
+    });
+
+    // ===== Control Panel =====
+    function buildControlPanelHTML() {
+        var cats = [
+            { icon: '🎨', key: 'cp_category_appearance' },
+            { icon: '🌐', key: 'cp_category_network' },
+            { icon: '🔊', key: 'cp_category_sounds' },
+            { icon: '⚡', key: 'cp_category_performance' },
+            { icon: '🖨️', key: 'cp_category_printers' },
+            { icon: '👤', key: 'cp_category_accounts' },
+            { icon: '📅', key: 'cp_category_date' },
+            { icon: '♿', key: 'cp_category_accessibility' },
+            { icon: '🛡️', key: 'cp_category_security' },
+        ];
+
+        var h = '<div class="cp-container">';
+        // Language switcher bar
+        h += '<div class="cp-lang-bar">';
+        h += '<span>' + t('current_lang') + '</span>';
+        h += '<button class="cp-lang-btn' + (_lang === 'en' ? ' active' : '') + '" onclick="XPShell.setLang(\'en\')">' + t('lang_en') + '</button>';
+        h += '<button class="cp-lang-btn' + (_lang === 'zh' ? ' active' : '') + '" onclick="XPShell.setLang(\'zh\')">' + t('lang_zh') + '</button>';
+        h += '</div>';
+
+        // Category grid
+        h += '<div class="cp-grid">';
+        for (var i = 0; i < cats.length; i++) {
+            h += '<div class="cp-cat">';
+            h += '<div class="cp-cat-icon">' + cats[i].icon + '</div>';
+            h += '<div class="cp-cat-label">' + t(cats[i].key) + '</div>';
+            h += '</div>';
+        }
+        h += '</div>';
+
+        // System info at bottom
+        h += '<div class="cp-sysinfo">';
+        h += '<div class="cp-sys-row"><span class="cp-sys-label">' + t('version') + '</span></div>';
+        h += '<div class="cp-sys-row"><span class="cp-sys-label">' + t('registered') + '</span></div>';
+        h += '<div class="cp-sys-row"><span class="cp-sys-label">' + t('cpu') + '</span></div>';
+        h += '<div class="cp-sys-row"><span class="cp-sys-label">' + t('ram') + '</span></div>';
+        h += '</div>';
+
+        h += '</div>';
+        return h;
+    }
+
+    function openControlPanel() {
+        XPShell.openWindow('control', t('control_panel'), '⚙️', buildControlPanelHTML());
+    }
+
+    function setLang(lang) {
+        _lang = lang;
+        // Refresh control panel if open
+        var cpBody = document.getElementById('xp-win-body-control');
+        if (cpBody) cpBody.innerHTML = buildControlPanelHTML();
+        // Refresh run dialog labels if open
+        var runDlg = document.getElementById('xp-run-dlg');
+        if (runDlg && runDlg.style.display !== 'none') {
+            runDlg.querySelector('[data-lang="run_prompt"]').textContent = t('run_prompt');
+            runDlg.querySelector('[data-lang="run_cancel"]').textContent = t('run_cancel');
+            runDlg.querySelector('[data-lang="run_browse"]').textContent = t('run_browse');
+        }
+    }
+
+    // ===== Notepad =====
+    function buildNotepadHTML() {
+        return '<textarea style="width:100%;height:100%;border:none;resize:none;padding:12px;font-family:Consolas,monospace;font-size:14px;background:#fff;outline:none" placeholder="Type here..."></textarea>';
+    }
+
+    // ===== Command Prompt =====
+    function buildCmdHTML() {
+        return '<div style="background:#000;color:#0f0;height:100%;padding:12px;font-family:Consolas,monospace;font-size:13px;overflow-y:auto">' +
+               '<div>Microsoft Windows XP [Version 5.1.2600]</div>' +
+               '<div>(C) Copyright 1985-2001 Microsoft Corp.</div>' +
+               '<div style="margin-top:8px">C:\\Documents and Settings\\User&gt;</div>' +
+               '<div style="color:#888">Type "help" for available commands.</div>' +
+               '</div>';
+    }
+
+    // ===== Help =====
+    function buildHelpHTML() {
+        return '<div style="padding:20px;font-family:Segoe UI,sans-serif">' +
+               '<h2 style="color:#003399;margin-bottom:12px">' + t('about') + '</h2>' +
+               '<p>Commands: <b>card, gallery, music, mycards, control, notepad, cmd</b></p>' +
+               '<p style="margin-top:8px">Run dialog: Start → Run... or <b>Alt+R</b></p>' +
+               '<p style="margin-top:8px">' + t('version') + '</p>' +
+               '</div>';
+    }
+
+    // ===== About =====
+    function buildAboutHTML() {
+        return '<div style="text-align:center;padding:2rem;font-family:Segoe UI,sans-serif">' +
+               '<img src="/static/img/logo.svg" style="width:64px;height:64px;margin-bottom:12px;">' +
+               '<h2 style="color:#003399">Lucky Card</h2>' +
+               '<p style="margin-top:8px">' + t('version') + '</p>' +
+               '<p style="margin-top:4px;color:#888">' + t('registered') + '</p>' +
+               '<p style="margin-top:16px;color:#888">Physical memory available to Windows: 523,760 KB</p>' +
+               '</div>';
+    }
+
     // ===== Windows =====
     var windowsContainer = document.getElementById('xp-windows');
     var taskbarTasks = document.getElementById('xp-taskbar-tasks');
@@ -94,13 +325,24 @@
             return;
         }
 
-        // If content is a URL, fetch it
         if (contentHTML && (contentHTML.startsWith('/') || contentHTML.startsWith('http'))) {
             var url = contentHTML;
             _doOpen(id, title, icon, '<p style="text-align:center;padding:2rem;color:#888">Loading...</p>');
             fetch(url).then(function(r) { return r.text(); }).then(function(html) {
                 var bodyEl = document.getElementById('xp-win-body-' + id);
-                if (bodyEl) bodyEl.innerHTML = html;
+                if (bodyEl) {
+                    bodyEl.innerHTML = html;
+                    var scripts = bodyEl.querySelectorAll('script');
+                    scripts.forEach(function(oldScript) {
+                        var newScript = document.createElement('script');
+                        if (oldScript.src) {
+                            newScript.src = oldScript.src;
+                        } else {
+                            newScript.textContent = oldScript.textContent;
+                        }
+                        oldScript.parentNode.replaceChild(newScript, oldScript);
+                    });
+                }
             }).catch(function() {
                 var bodyEl = document.getElementById('xp-win-body-' + id);
                 if (bodyEl) bodyEl.innerHTML = '<p style="text-align:center;padding:2rem;color:#c33">Failed to load.</p>';
@@ -145,7 +387,6 @@
         windows[id] = { el: win, taskBtn: tb, minimized: false, maximized: false };
 
         var titleBar = win.querySelector('.xp-titlebar');
-        // Title bar — drag to move
         var isDragging = false, dragX = 0, dragY = 0;
         titleBar.addEventListener('mousedown', function(e) {
             if (e.target.tagName === 'BUTTON') return;
@@ -241,11 +482,53 @@
         }
     }
 
+    function logOff() {
+        toggleStart();
+        playShutdownSound();
+        var overlay = document.createElement('div');
+        overlay.id = 'xp-logoff';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#1a3a6b;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:"Segoe UI",sans-serif;transition:opacity 0.3s';
+        overlay.innerHTML = '<div style="font-size:2rem;margin-bottom:2rem;font-weight:300;letter-spacing:1px;font-style:italic">Logging off…</div>';
+        document.body.appendChild(overlay);
+        setTimeout(function() {
+            overlay.innerHTML = '<div style="font-size:2rem;font-weight:300;letter-spacing:1px;font-style:italic">Welcome back!</div>';
+            setTimeout(function() {
+                overlay.style.opacity = '0';
+                setTimeout(function() { overlay.remove(); }, 300);
+            }, 1500);
+        }, 2000);
+    }
+
+    function powerOff() {
+        toggleStart();
+        playShutdownSound();
+        var overlay = document.createElement('div');
+        overlay.id = 'xp-poweroff';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;color:#fff;font-family:"Segoe UI",sans-serif';
+        overlay.innerHTML = '<div style="height:100px;background:#1a3a6b;flex-shrink:0"></div><div id="xp-po-msg" style="flex:1;background:#3b6fb6;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:300;letter-spacing:1px;font-style:italic">Logging off…</div><div style="height:100px;background:#1a3a6b;flex-shrink:0"></div>';
+        document.body.appendChild(overlay);
+        setTimeout(function() {
+            document.getElementById('xp-po-msg').textContent = 'LuckyCard OS is shutting down…';
+            setTimeout(function() {
+                overlay.style.background = '#000';
+                overlay.innerHTML = '';
+                setTimeout(function() { location.reload(); }, 5000);
+            }, 3000);
+        }, 2500);
+    }
+
     window.XPShell = {
         openWindow: openWindow,
         toggleStart: toggleStart,
         focusWindow: focusWindow,
-        closeWindow: closeWindow
+        closeWindow: closeWindow,
+        logOff: logOff,
+        shutDown: powerOff,
+        openRun: openRun,
+        closeRun: closeRun,
+        runCommand: runCommand,
+        openControlPanel: openControlPanel,
+        setLang: setLang,
     };
 
 })();
