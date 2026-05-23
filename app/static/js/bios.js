@@ -28,40 +28,20 @@
     var xpBlocks = scr.querySelector('#xpBlocks');
     var wipeCurtain = scr.querySelector('#wipeCurtain');
 
-    // ===== Fan noise =====
-    var fanCtx = null;
-    var fanGain = null;
-
-
+        // ===== Fan noise — muted autoplay trick =====
+    var _fanAudio = new Audio('/static/audio/fan-noise.mp3');
+    _fanAudio.volume = 0.15;
+    _fanAudio.muted = true;
+    _fanAudio.loop = true;
+    _fanAudio.play().catch(function(){});
     function startFan() {
-        try {
-            fanCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (fanCtx.state === 'suspended') fanCtx.resume();
-            // Brown-ish noise via buffer
-            var len = fanCtx.sampleRate * 2;
-            var buf = fanCtx.createBuffer(1, len, fanCtx.sampleRate);
-            var data = buf.getChannelData(0);
-            var last = 0;
-            for (var i = 0; i < len; i++) {
-                var white = Math.random() * 2 - 1;
-                last = (last + 0.02 * white) / 1.02;
-                data[i] = last * 3.5;
-            }
-            var src = fanCtx.createBufferSource();
-            src.buffer = buf; src.loop = true;
-            var filter = fanCtx.createBiquadFilter();
-            filter.type = 'lowpass'; filter.frequency.value = 200;
-            fanGain = fanCtx.createGain();
-            fanGain.gain.value = 0.04;
-            src.connect(filter); filter.connect(fanGain); fanGain.connect(fanCtx.destination);
-            src.start();
-        } catch(e) {}
+        _fanAudio.muted = false;
+        _fanAudio.currentTime = 0;
+        _fanAudio.play().catch(function(){});
     }
     function stopFan() {
-        if (fanGain) {
-            fanGain.gain.linearRampToValueAtTime(0, fanCtx.currentTime + 0.3);
-            setTimeout(function() { if (fanCtx) fanCtx.close(); }, 400);
-        }
+        _fanAudio.muted = true;
+        _fanAudio.pause();
     }
 
     var biosLines = [
