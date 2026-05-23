@@ -1,11 +1,25 @@
 // Lucky Card XP Shell — taskbar clock, start menu, window management
 (function() {
     'use strict';
+    // ===== Audio autoplay workaround =====
+    var _audioReady = false;
+    function _unlockAudio() {
+        if (_audioReady) return;
+        _audioReady = true;
+        playStartupSound();
+        document.removeEventListener('click', _unlockAudio);
+        document.removeEventListener('keydown', _unlockAudio);
+        document.removeEventListener('touchstart', _unlockAudio);
+    }
+    document.addEventListener('click', _unlockAudio);
+    document.addEventListener('keydown', _unlockAudio);
+    document.addEventListener('touchstart', _unlockAudio);
 
     // ===== XP Startup Sound =====
     function playStartupSound() {
         try {
             var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            ctx.resume();
             var notes = [
                 { f: 330, d: 0.15, t: 0 },       // E4
                 { f: 392, d: 0.12, t: 0.12 },     // G4
@@ -44,12 +58,13 @@
         } catch(e) {}
     }
 
-    // Play startup sound after boot (delay to let boot screen finish)
-    // Detect when desktop is visible (body no longer has boot screen overlay)
+    // Play startup sound after boot — but only if audio already unlocked
     var checkReady = setInterval(function() {
         if (!document.getElementById('bios-screen')) {
             clearInterval(checkReady);
-            setTimeout(playStartupSound, 300);
+            if (_audioReady) {
+                playStartupSound();
+            }
         }
     }, 200);
 

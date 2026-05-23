@@ -31,9 +31,24 @@
     // ===== Fan noise =====
     var fanCtx = null;
     var fanGain = null;
+    // ===== Audio autoplay workaround =====
+    var _pendingResume = true;
+    function _resumeAudio() {
+        if (!_pendingResume) return;
+        _pendingResume = false;
+        if (fanCtx && fanCtx.state === 'suspended') fanCtx.resume();
+        document.removeEventListener('click', _resumeAudio);
+        document.removeEventListener('keydown', _resumeAudio);
+        document.removeEventListener('touchstart', _resumeAudio);
+    }
+    document.addEventListener('click', _resumeAudio);
+    document.addEventListener('keydown', _resumeAudio);
+    document.addEventListener('touchstart', _resumeAudio);
+
     function startFan() {
         try {
             fanCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (fanCtx.state === 'suspended') fanCtx.resume();
             // Brown-ish noise via buffer
             var len = fanCtx.sampleRate * 2;
             var buf = fanCtx.createBuffer(1, len, fanCtx.sampleRate);
