@@ -3,96 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Card — AI Greeting Cards</title>
+    <title>Lucky Card — Professional Edition</title>
     <meta name="description" content="Create beautiful AI-powered greeting cards. Send luck across the world.">
     <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
-    <link rel="stylesheet" href="/static/css/home.css?v=3">
+    <link rel="stylesheet" href="/static/css/xp.css?v=1">
     <link rel="stylesheet" href="/static/css/bios.css?v=10">
 </head>
-<body>
+<body class="xp-desktop">
+
+    <!-- Boot Screen -->
     <script src="/static/js/bios.js?v=18"></script>
-    <nav class="nav">
-        <a href="/" class="logo"><img src="/static/img/logo.svg" alt="Lucky Card" class="logo-icon"> Lucky Card</a>
-        <div class="nav-links">
-            <a href="/create">Create</a>
-            <a href="/gallery">Gallery</a>
-            <a href="/login" class="btn-outline">Sign In</a>
-        </div>
-    </nav>
 
-    <section class="hero">
-        <div class="hero-text">
-            <h1>Send a little<br><span class="accent">luck</span> across<br>the world</h1>
-            <p>AI-powered greeting cards with poetry, music, and art.<br>For every moment that matters.</p>
-            <div class="hero-cta">
-                <a href="/create" class="btn-primary">✨ Create a Card</a>
-                <a href="/gallery" class="btn-ghost">Browse Gallery →</a>
-            </div>
-        </div>
-        <div class="hero-visual">
-            <div class="card-preview">
-                <div class="card-inner">
-                    <div class="card-seal">福</div>
-                    <div class="card-poem">May fortune find you<br>wherever you go</div>
-                    <div class="card-line"></div>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Bliss Wallpaper -->
+    <div class="xp-wallpaper"></div>
 
-    <section class="features">
-        <h2>How it works</h2>
-        <div class="feature-grid">
-            <div class="feature">
-                <div class="feature-icon">✍️</div>
-                <h3>Write with AI</h3>
-                <p>Describe the feeling. Our AI writes a personal poem — unique every time.</p>
+    <!-- Desktop Icons -->
+    <div class="xp-desktop-icons">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('create','Create Card','🃏','<p>Card creator coming soon.</p>')">
+            <div class="xp-icon-img">🃏</div>
+            <span>Create Card</span>
+        </div>
+        <div class="xp-icon" ondblclick="XPShell.openWindow('gallery','Gallery','🖼️','<p>Gallery coming soon.</p>')">
+            <div class="xp-icon-img">🖼️</div>
+            <span>Gallery</span>
+        </div>
+        <div class="xp-icon" ondblclick="XPShell.openWindow('mycards','My Cards','📁','<p>Your cards will appear here.</p>')">
+            <div class="xp-icon-img">📁</div>
+            <span>My Cards</span>
+        </div>
+        <div class="xp-icon" ondblclick="XPShell.openWindow('music','Music','🎵','<p>Music library coming soon.</p>')">
+            <div class="xp-icon-img">🎵</div>
+            <span>Music</span>
+        </div>
+        <div class="xp-icon" style="margin-top:20px">
+            <div class="xp-icon-img">🗑️</div>
+            <span>Recycle Bin</span>
+        </div>
+    </div>
+
+    <!-- Windows Container -->
+    <div id="xp-windows"></div>
+
+    <!-- Start Menu -->
+    <div id="xp-start-menu" class="xp-start-menu">
+        <div class="xp-start-header">
+            <div class="xp-start-avatar">🍀</div>
+            <div class="xp-start-user">Lucky Card User</div>
+        </div>
+        <div class="xp-start-body">
+            <div class="xp-start-programs">
+                <button class="xp-start-item" onclick="XPShell.openWindow('create','Create Card','🃏','<p>Card creator coming soon.</p>');XPShell.toggleStart()">
+                    <span class="si-icon">🃏</span><span class="si-label">Create Card</span>
+                </button>
+                <button class="xp-start-item" onclick="XPShell.openWindow('gallery','Gallery','🖼️','<p>Gallery coming soon.</p>');XPShell.toggleStart()">
+                    <span class="si-icon">🖼️</span><span class="si-label">Gallery</span>
+                </button>
+                <button class="xp-start-item" onclick="XPShell.openWindow('music','Music','🎵','<p>Music library coming soon.</p>');XPShell.toggleStart()">
+                    <span class="si-icon">🎵</span><span class="si-label">Music</span>
+                </button>
+                <button class="xp-start-item">
+                    <span class="si-icon">📋</span><span class="si-label">Templates</span>
+                </button>
+                <div style="border-top:1px solid #D0D0D0;margin:4px 0"></div>
+                <button class="xp-start-item">
+                    <span class="si-icon">🃏</span><span class="si-label">All Programs</span>
+                </button>
             </div>
-            <div class="feature">
-                <div class="feature-icon">🎨</div>
-                <h3>Style it</h3>
-                <p>Choose from ink wash, silk scroll, or modern minimal. Card looks beautiful.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🎵</div>
-                <h3>Add music</h3>
-                <p>Attach an AI-generated song. Your card plays music when opened.</p>
-            </div>
-            <div class="feature">
-                <div class="feature-icon">📤</div>
-                <h3>Share anywhere</h3>
-                <p>Send via WhatsApp, Messenger, email, or copy a link. No app needed.</p>
+            <div class="xp-start-system">
+                <button class="xp-start-item">
+                    <span class="si-icon">📁</span><span class="si-label">My Documents</span>
+                </button>
+                <button class="xp-start-item">
+                    <span class="si-icon">🖼️</span><span class="si-label">My Pictures</span>
+                </button>
+                <button class="xp-start-item">
+                    <span class="si-icon">🎵</span><span class="si-label">My Music</span>
+                </button>
+                <div style="border-top:1px solid #B6C8D8;margin:4px 0"></div>
+                <button class="xp-start-item">
+                    <span class="si-icon">⚙️</span><span class="si-label">Control Panel</span>
+                </button>
+                <button class="xp-start-item">
+                    <span class="si-icon">🔍</span><span class="si-label">Search</span>
+                </button>
+                <button class="xp-start-item">
+                    <span class="si-icon">❓</span><span class="si-label">Help & Support</span>
+                </button>
             </div>
         </div>
-    </section>
-
-    <section class="showcase">
-        <h2>Cards that feel like gifts</h2>
-        <div class="card-row">
-            <div class="showcase-card"><div class="sc-inner">🌸<br>Happy<br>Birthday</div></div>
-            <div class="showcase-card"><div class="sc-inner">🎋<br>Thank<br>You</div></div>
-            <div class="showcase-card"><div class="sc-inner">🏮<br>Get Well<br>Soon</div></div>
-            <div class="showcase-card"><div class="sc-inner">🎐<br>Just<br>Because</div></div>
+        <div class="xp-start-footer">
+            <button onclick="XPShell.toggleStart()">🔒 Log Off</button>
+            <div class="sf-divider"></div>
+            <button onclick="XPShell.toggleStart()">⏻ Shut Down</button>
         </div>
-    </section>
+    </div>
 
-    <section class="cta-section">
-        <h2>Ready to make someone's day?</h2>
-        <p>First card is free. No sign-up required.</p>
-        <a href="/create" class="btn-primary btn-lg">✨ Create Your First Card</a>
-    </section>
-
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-brand"><img src="/static/img/logo.svg" alt="" class="footer-logo-icon"> Lucky Card</div>
-            <div class="footer-links">
-                <a href="/about">About</a>
-                <a href="/privacy">Privacy</a>
-                <a href="/terms">Terms</a>
-                <a href="mailto:hello@hicard.world">Contact</a>
-            </div>
+    <!-- Taskbar -->
+    <div class="xp-taskbar">
+        <button id="xp-start-btn" onclick="XPShell.toggleStart()">🍀 Start</button>
+        <div class="xp-taskbar-divider"></div>
+        <div class="xp-taskbar-tasks" id="xp-taskbar-tasks"></div>
+        <div class="xp-tray">
+            <span>🔊</span>
+            <span id="xp-clock">00:00</span>
         </div>
-        <p class="footer-copy">© 2026 Lucky Card. Made with ❤️ in Hong Kong.</p>
-    </footer>
+    </div>
+
+    <script src="/static/js/xp.js?v=1"></script>
 </body>
 </html>
