@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    # PayPal
+    paypal_client_id: str = ""
+    paypal_client_secret: str = ""
+    paypal_webhook_id: str = ""
     database_url: str = "postgresql+asyncpg://lucky:lucky_pass@localhost:5432/luckycards"
     secret_key: str = "luckycards-overseas-2026"
     domain: str = "hicard.world"
@@ -10,7 +14,13 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
-    
+
+    # Lemon Squeezy
+    ls_api_key: str = ""
+    ls_store_id: str = ""
+    ls_webhook_secret: str = ""
+    ls_premium_variant_id: int = 0
+
     class Config:
         env_file = ".env"
 

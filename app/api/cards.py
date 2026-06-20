@@ -161,7 +161,7 @@ async def card_share_page(card_id: str, db: AsyncSession = Depends(get_db)):
     <script>
         window.__CARD_ID = "{card_id}";
     </script>
-    <link rel="stylesheet" href="/static/css/xp.css?v=4">
+    <link rel="stylesheet" href="/static/css/xp.css?v=10">
 </head>
 <body class="xp-desktop" style="display:flex;align-items:center;justify-content:center;min-height:100vh">
     <div style="text-align:center;padding:2rem;max-width:500px">

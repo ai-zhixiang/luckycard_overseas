@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="board" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E8E8E8"/>
+    </linearGradient>
+    <linearGradient id="pen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5B8DEF"/>
+      <stop offset="100%" stop-color="#3168D5"/>
+    </linearGradient>
+  </defs>
+  <!-- Clipboard body -->
+  <rect x="8" y="6" width="44" height="50" rx="3" fill="url(#board)" stroke="#999" stroke-width="1.5"/>
+  <!-- Top clip -->
+  <rect x="18" y="2" width="24" height="8" rx="2" fill="#666" stroke="#555" stroke-width="0.5"/>
+  <!-- Lines on clipboard -->
+  <rect x="16" y="18" width="28" height="3" rx="1" fill="#DDD"/>
+  <rect x="16" y="25" width="24" height="3" rx="1" fill="#EEE"/>
+  <rect x="16" y="32" width="20" height="3" rx="1" fill="#EEE"/>
+  <!-- Checkmark -->
+  <polyline points="16,42 22,50 32,38" fill="none" stroke="#F1C40F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Pen -->
+  <g transform="rotate(45, 18, 52)">
+    <rect x="18" y="20" width="6" height="28" rx="2" fill="url(#pen)"/>
+    <rect x="18" y="48" width="6" height="2" fill="#111"/> <!-- tip -->
+    <rect x="18" y="18" width="6" height="4" rx="1" fill="#E74C3C"/> <!-- eraser -->
+  </g>
+</svg>

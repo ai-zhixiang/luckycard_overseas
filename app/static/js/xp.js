@@ -3,7 +3,7 @@
     'use strict';
 
     // ===== Multi-language support =====
-    var _lang = (navigator.language || 'en').startsWith('zh') ? 'zh' : 'en';
+    var _lang = 'en';
     var _t = {
         en: {
             control_panel: 'Control Panel',
@@ -73,7 +73,7 @@
 
     // ===== Audio =====
     var _xpStartup = new Audio('/static/audio/xp-startup.mp3');
-    _xpStartup.volume = 0.7;
+    _xpStartup.volume = 0.3;
     _xpStartup.loop = false;
     _xpStartup.muted = true;
     _xpStartup.play().catch(function(){});
@@ -89,7 +89,7 @@
 
     function playShutdownSound() {
         var a = document.getElementById('xpreal-audio');
-        if (a) { a.volume = 0.9; a.currentTime = 0; a.play().catch(function(){}); }
+        if (a) { a.volume = 0.3; a.currentTime = 0; a.play().catch(function(){}); }
     }
 
     var checkReady = setInterval(function() {
@@ -145,10 +145,15 @@
     function openRun() {
         var dlg = document.getElementById('xp-run-dlg');
         if (!dlg) return;
+        // Position like a window (absolute, not fixed centered)
         dlg.style.display = 'flex';
+        dlg.style.position = 'absolute';
+        dlg.style.top = '120px';
+        dlg.style.left = '200px';
+        dlg.style.transform = 'none';
         // Update translated labels
         dlg.querySelector('[data-lang="run_prompt"]').textContent = t('run_prompt');
-        dlg.querySelector('[data-lang="run_open"]').textContent = t('run_open') + ' ';
+        dlg.querySelector('[data-lang="run_open"]').textContent = t('run_open') + ':';
         dlg.querySelector('[data-lang="run_cancel"]').textContent = t('run_cancel');
         dlg.querySelector('[data-lang="run_browse"]').textContent = t('run_browse');
         var inp = document.getElementById('xp-run-input');
@@ -173,15 +178,29 @@
             'gallery':    ['gallery', 'Gallery', '🖼️', '/static/forms/card-gallery.html'],
             'music':      ['music', 'Music', '🎵', '/static/forms/music-player.html'],
             'mycards':    ['mycards', 'My Cards', '📁', '/static/forms/my-cards.html'],
-            'control':    ['control', t('control_panel'), '⚙️', buildControlPanelHTML()],
+            'control':    ['control', t('control_panel'), '<img src="/static/img/xp_controlpanel_24.png" style="width:18px;height:18px;vertical-align:middle">', buildControlPanelHTML()],
             'notepad':    ['notepad', t('notepad_title'), '📝', buildNotepadHTML()],
             'cmd':        ['cmd', 'Command Prompt', '💻', buildCmdHTML()],
             'help':       ['help', 'Help', '❓', buildHelpHTML()],
             'about':      ['about', t('about'), 'ℹ️', buildAboutHTML()],
+            'sysinfo':    ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
+            'sys':        ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
         };
 
         if (cmd.startsWith('http://') || cmd.startsWith('https://')) {
             window.open(cmd, '_blank');
+            return;
+        }
+
+        // Handle explorer.exe → restore shell
+        if (cmd === 'explorer' || cmd === 'explorer.exe') {
+            if (_shellHidden) restoreShell();
+            return;
+        }
+
+        // Handle taskmgr → open Task Manager
+        if (cmd === 'taskmgr' || cmd === 'taskman') {
+            openTaskManager();
             return;
         }
 
@@ -211,6 +230,11 @@
             e.preventDefault();
             openRun();
         }
+        // Ctrl+Alt+. (simulated Ctrl+Alt+Del) → Task Manager
+        if (e.ctrlKey && e.altKey && e.key === '.') {
+            e.preventDefault();
+            openTaskManager();
+        }
     });
 
     // ===== Control Panel =====
@@ -223,8 +247,8 @@
             { icon: '🖨️', key: 'cp_category_printers' },
             { icon: '👤', key: 'cp_category_accounts' },
             { icon: '📅', key: 'cp_category_date' },
-            { icon: '♿', key: 'cp_category_accessibility' },
-            { icon: '🛡️', key: 'cp_category_security' },
+            { icon: '<img src="/static/img/xp_access_48.png" style="width:48px;height:48px;">', key: 'cp_category_accessibility' },
+            { icon: '<img src="/static/img/xp_shield_48.png" style="width:48px;height:48px;">', key: 'cp_category_security' },
         ];
 
         var h = '<div class="cp-container">';
@@ -258,7 +282,7 @@
     }
 
     function openControlPanel() {
-        XPShell.openWindow('control', t('control_panel'), '⚙️', buildControlPanelHTML());
+        XPShell.openWindow('control', t('control_panel'), '<img src="/static/img/xp_controlpanel_24.png" style="width:18px;height:18px;vertical-align:middle">', buildControlPanelHTML());
     }
 
     function setLang(lang) {
@@ -280,14 +304,87 @@
         return '<textarea style="width:100%;height:100%;border:none;resize:none;padding:12px;font-family:Consolas,monospace;font-size:14px;background:#fff;outline:none" placeholder="Type here..."></textarea>';
     }
 
-    // ===== Command Prompt =====
+    // ===== Interactive Command Prompt =====
     function buildCmdHTML() {
-        return '<div style="background:#000;color:#0f0;height:100%;padding:12px;font-family:Consolas,monospace;font-size:13px;overflow-y:auto">' +
-               '<div>Microsoft Windows XP [Version 5.1.2600]</div>' +
-               '<div>(C) Copyright 1985-2001 Microsoft Corp.</div>' +
-               '<div style="margin-top:8px">C:\\Documents and Settings\\User&gt;</div>' +
-               '<div style="color:#888">Type "help" for available commands.</div>' +
-               '</div>';
+        var h = '<div style="display:flex;flex-direction:column;height:100%;background:#000;color:#0f0;font-family:Consolas,monospace;font-size:13px">';
+        h += '<div id="cmdOutput" style="flex:1;overflow-y:auto;padding:12px;white-space:pre-wrap">';
+        h += 'Microsoft Windows XP [Version 5.1.2600]<br>';
+        h += '(C) Copyright 1985-2001 Microsoft Corp.<br><br>';
+        h += 'C:\\Documents and Settings\\User&gt;<span id="cmdInputLine"></span>';
+        h += '</div>';
+        h += '<div style="display:flex;padding:0 12px 8px 12px">';
+        h += '<span style="color:#0f0;line-height:24px">C:\\&gt;</span>';
+        h += '<input id="cmdInput" style="flex:1;background:transparent;border:none;color:#0f0;font-family:Consolas,monospace;font-size:13px;outline:none;margin-left:4px" autofocus autocomplete="off" spellcheck="false">';
+        h += '</div>';
+        h += '</div>';
+        h += '<script>if(window.XPShell)_initCmdWindow();<\/script>';
+        return h;
+    }
+
+    // ===== Cmd initialization (defined outside string to avoid escaping hell) =====
+    function _initCmdWindow() {
+        var out = document.getElementById('cmdOutput');
+        var inp = document.getElementById('cmdInput');
+        if (!out || !inp) return;
+        var cmdHistory = []; var histIdx = -1;
+        function print(s) { out.innerHTML += '<br>' + s.replace(/</g, '&lt;'); out.scrollTop = out.scrollHeight; }
+        function run(cmd) {
+            var c = cmd.trim().toLowerCase();
+            out.innerHTML += '<br><span style="color:#0f0">C:\\&gt;' + cmd.replace(/</g, '&lt;') + '</span>';
+            if (c === '') return;
+            cmdHistory.push(cmd); histIdx = cmdHistory.length;
+            if (c === 'help') {
+                print('RMCARDS    Remove all saved cards');
+                print('DIR        List cards directory');
+                print('CLS        Clear screen');
+                print('VER        Display version');
+                print('DATE/TIME  Show current date/time');
+                print('ECHO       Print a message');
+                print('COLOR      Change text color (0A,0B,0C,0E)');
+                print('CARD       Open Create Card');
+                print('GALLERY    Open Gallery');
+                print('MUSIC      Open Music Player');
+                print('SHUTDOWN   Shut down Lucky Card OS');
+                print('EXIT       Close command prompt');
+            } else if (c === 'rmcards') {
+                var cards = JSON.parse(localStorage.getItem('lucky_cards') || '[]');
+                if (cards.length === 0) { print('No cards found.'); }
+                else { localStorage.removeItem('lucky_cards'); print('Removed ' + cards.length + ' card(s).'); }
+            } else if (c === 'dir') {
+                var cards = JSON.parse(localStorage.getItem('lucky_cards') || '[]');
+                print(' Volume in drive C is LuckyCard');
+                print(' Volume Serial Number is LUCK-0420');
+                print('');
+                print(' Directory of C:\\Documents and Settings\\User\\My Cards');
+                print('');
+                for (var i = 0; i < cards.length; i++) {
+                    var ts = cards[i].created || '';
+                    print((ts ? ts.substring(0, 10) : '----/--/--') + '  ' + cards[i].id);
+                }
+                print('       ' + cards.length + ' File(s)    524,288 bytes free');
+            } else if (c === 'cls') { out.innerHTML = ''; }
+            else if (c === 'ver') { print(''); print('Lucky Card [Version 1.0.2600]'); }
+            else if (c === 'date') { print('The current date is: ' + new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})); }
+            else if (c === 'time') { print('The current time is: ' + new Date().toLocaleTimeString('en-US', {hour12: true})); }
+            else if (c.startsWith('echo ')) { print(cmd.substring(5)); }
+            else if (c.startsWith('color ')) {
+                var cols = {}; cols['0a'] = '#0f0'; cols['0b'] = '#0ff'; cols['0c'] = '#f00'; cols['0e'] = '#ff0'; cols['0f'] = '#fff';
+                var col = cols[c.substring(6)] || '#0f0';
+                out.style.color = col; inp.style.color = col;
+            } else if (c === 'card') { window.XPShell && window.XPShell.openWindow('create', 'Create Card', '🃏', '/static/forms/card-create.html'); }
+            else if (c === 'gallery') { window.XPShell && window.XPShell.openWindow('gallery', 'Gallery', '🖼️', '/static/forms/card-gallery.html'); }
+            else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '🎵', '/static/forms/music-player.html'); }
+            else if (c === 'shutdown' || c === 'poweroff') { window.XPShell && window.XPShell.shutDown(); }
+            else if (c === 'exit') { window.XPShell && window.XPShell.closeWindow('cmd'); }
+            else { print('"' + c + '" is not recognized as an internal or external command, operable program or batch file.'); }
+            out.scrollTop = out.scrollHeight;
+        }
+        inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { var v = inp.value; inp.value = ''; run(v); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); if (histIdx > 0) { histIdx--; inp.value = cmdHistory[histIdx]; } }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); if (histIdx < cmdHistory.length - 1) { histIdx++; inp.value = cmdHistory[histIdx]; } else { histIdx = cmdHistory.length; inp.value = ''; } }
+        });
+        setTimeout(function() { inp.focus(); }, 200);
     }
 
     // ===== Help =====
@@ -311,6 +408,21 @@
                '</div>';
     }
 
+    // ===== System Information =====
+    function buildSysInfoHTML() {
+        return '<div style=\"padding:1.5rem;font-family:Segoe UI,sans-serif;\">' +
+               '<table style=\"width:100%;border-collapse:collapse;\">' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">OS Name</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">Lucky Card XP</td></tr>' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">Version</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">' + t('version') + '</td></tr>' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">System Name</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">LUCKY-CARD-PC</td></tr>' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">Processor</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">' + t('cpu') + '</td></tr>' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">RAM</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">' + t('ram') + '</td></tr>' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">BIOS Version</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">Lucky Card BIOS v1.0</td></tr>' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">Registered To</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">' + t('registered') + '</td></tr>' +
+               '<tr><td style=\"padding:6px 12px;background:#e8e8e8;font-weight:bold;border:1px solid #ccc;\">Available Memory</td><td style=\"padding:6px 12px;border:1px solid #ccc;\">523,760 KB</td></tr>' +
+               '</table></div>';
+    }
+
     // ===== Windows =====
     var windowsContainer = document.getElementById('xp-windows');
     var taskbarTasks = document.getElementById('xp-taskbar-tasks');
@@ -320,8 +432,11 @@
 
     function openWindow(id, title, icon, contentHTML) {
         if (windows[id]) {
+            // Force bring to front
+            windows[id].el.classList.remove('minimized');
+            windows[id].minimized = false;
+            windows[id].el.style.zIndex = ++zIndex;
             focusWindow(id);
-            if (windows[id].minimized) restoreWindow(id);
             return;
         }
 
@@ -351,6 +466,8 @@
         }
 
         _doOpen(id, title, icon, contentHTML);
+        // Live refresh task manager if open
+        if (id !== 'taskmgr' && windows['taskmgr']) setTimeout(refreshTaskMgr, 50);
     }
 
     function _doOpen(id, title, icon, contentHTML) {
@@ -377,45 +494,93 @@
 
         windowsContainer.appendChild(win);
 
+        // Re-execute scripts in content (innerHTML doesn't run <script> tags)
+        (function() {
+            var bodyEl = document.getElementById('xp-win-body-' + id);
+            if (!bodyEl) return;
+            var scripts = bodyEl.querySelectorAll('script');
+            scripts.forEach(function(oldScript) {
+                var newScript = document.createElement('script');
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+        })();
+
         var tb = document.createElement('button');
         tb.className = 'xp-task-btn active';
         tb.textContent = title;
-        tb.onclick = function() { focusWindow(id); if (windows[id] && windows[id].minimized) restoreWindow(id); };
+        tb.onclick = function(e) {
+            e.stopPropagation();
+            if (!windows[id]) return;
+            // Force window to front: remove minimized, bring to front
+            windows[id].el.classList.remove('minimized');
+            windows[id].minimized = false;
+            windows[id].el.style.zIndex = ++zIndex;
+            focusWindow(id);
+        };
         taskbarTasks.appendChild(tb);
         taskbarTasks.classList.add('has-windows');
 
-        windows[id] = { el: win, taskBtn: tb, minimized: false, maximized: false };
+        windows[id] = { el: win, taskBtn: tb, title: title, minimized: false, maximized: false };
 
         var titleBar = win.querySelector('.xp-titlebar');
         var isDragging = false, dragX = 0, dragY = 0;
-        titleBar.addEventListener('mousedown', function(e) {
-            if (e.target.tagName === 'BUTTON') return;
-            if (win.classList.contains('maximized')) return;
-            isDragging = true;
-            dragX = e.clientX - win.offsetLeft;
-            dragY = e.clientY - win.offsetTop;
-            win.style.cursor = 'move';
-            document.body.style.userSelect = 'none';
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', function(e) {
+        var _dragTargetX = 0, _dragTargetY = 0;
+        var _dragRafId = null;
+        function applyDragPosition() {
+            _dragRafId = null;
             if (!isDragging) return;
-            var newLeft = e.clientX - dragX;
-            var newTop = e.clientY - dragY;
-            newLeft = Math.max(-100, Math.min(newLeft, window.innerWidth - 200));
-            newTop = Math.max(0, Math.min(newTop, window.innerHeight - 80));
+            var newLeft = Math.max(-100, Math.min(_dragTargetX, window.innerWidth - 200));
+            var newTop = Math.max(0, Math.min(_dragTargetY, window.innerHeight - 80));
             win.style.left = newLeft + 'px';
             win.style.top = newTop + 'px';
             win.style.right = 'auto';
             win.style.bottom = 'auto';
-        });
-        document.addEventListener('mouseup', function() {
+        }
+        function scheduleDrag(cx, cy) {
+            _dragTargetX = cx - dragX;
+            _dragTargetY = cy - dragY;
+            if (!_dragRafId) {
+                _dragRafId = requestAnimationFrame(applyDragPosition);
+            }
+        }
+        function startDrag(cx, cy) {
+            if (win.classList.contains('maximized')) return;
+            isDragging = true;
+            dragX = cx - win.offsetLeft;
+            dragY = cy - win.offsetTop;
+            _dragTargetX = cx - dragX;
+            _dragTargetY = cy - dragY;
+            win.style.cursor = 'move';
+            document.body.style.userSelect = 'none';
+        }
+        function endDrag() {
             if (isDragging) {
                 isDragging = false;
                 win.style.cursor = '';
                 document.body.style.userSelect = '';
+                if (_dragRafId) { cancelAnimationFrame(_dragRafId); _dragRafId = null; }
+                // Final position
+                applyDragPosition();
             }
+        }
+        titleBar.addEventListener('mousedown', function(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            e.preventDefault();
+            startDrag(e.clientX, e.clientY);
         });
+        titleBar.addEventListener('touchstart', function(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        }, {passive: false});
+        document.addEventListener('mousemove', function(e) { scheduleDrag(e.clientX, e.clientY); });
+        document.addEventListener('touchmove', function(e) { scheduleDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
 
         var btns = titleBar.querySelectorAll('button');
         btns[0].onclick = function(e) { e.stopPropagation(); minimizeWindow(id); };
@@ -462,17 +627,35 @@
         var win = windows[id];
         if (win.maximized) {
             win.el.classList.remove('maximized');
-            win.el.style.cssText = 'top:60px;left:100px;width:600px;height:440px;z-index:' + (++zIndex) + ';';
+            // Restore saved position
+            if (win._savedStyle) {
+                win.el.style.cssText = win._savedStyle;
+            } else {
+                win.el.style.cssText = 'top:60px;left:100px;width:600px;height:440px;z-index:' + (++zIndex) + ';';
+            }
             win.maximized = false;
+            // Update button icon
+            var maxBtn = win.el.querySelector('.xp-btn-max');
+            if (maxBtn) maxBtn.textContent = '□';
         } else {
+            // Save current position before maximizing
+            var el = win.el;
+            win._savedStyle = 'top:' + el.style.top + ';left:' + el.style.left + ';width:' + el.style.width + ';height:' + el.style.height + ';z-index:' + (++zIndex) + ';';
             win.el.classList.add('maximized');
             win.maximized = true;
+            // Update button icon
+            var maxBtn = win.el.querySelector('.xp-btn-max');
+            if (maxBtn) maxBtn.textContent = '❐';
         }
         focusWindow(id);
     }
 
     function closeWindow(id) {
         if (!windows[id]) return;
+        if (id === 'taskmgr' && _taskMgrTimer) {
+            clearInterval(_taskMgrTimer);
+            _taskMgrTimer = null;
+        }
         windows[id].el.remove();
         windows[id].taskBtn.remove();
         if (activeWindow === id) activeWindow = null;
@@ -480,6 +663,123 @@
         if (Object.keys(windows).length === 0) {
             taskbarTasks.classList.remove('has-windows');
         }
+        // Live refresh task manager if still open
+        if (windows['taskmgr']) setTimeout(refreshTaskMgr, 50);
+    }
+
+    function showShutdownDialog() {
+        toggleStart();
+        // Remove any existing dialog
+        var old = document.getElementById('xp-shutdown-dlg');
+        if (old) old.remove();
+
+        var overlay = document.createElement('div');
+        overlay.id = 'xp-shutdown-dlg';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-family:"Segoe UI",Tahoma,sans-serif';
+        overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+        overlay.innerHTML =
+            '<div style="background:linear-gradient(180deg,#3168D5,#1A3A8A);border:2px solid #0054E3;border-radius:12px;padding:0;width:420px;box-shadow:0 8px 32px rgba(0,0,0,0.5);overflow:hidden;position:relative">' +
+                '<div style="position:absolute;top:12px;right:16px;display:flex;gap:6px">' +
+                    '<div style="width:18px;height:18px;background:#F5C842;border-radius:50%;opacity:0.7"></div>' +
+                '</div>' +
+                '<div style="padding:24px 32px 0 32px;text-align:center">' +
+                    '<div style="font-size:1.3rem;font-weight:bold;color:#fff;letter-spacing:0.5px;margin-bottom:24px">Turn off computer</div>' +
+                    '<div style="display:flex;justify-content:center;gap:20px;margin-bottom:10px">' +
+                        '<button class="xp-sd-btn" data-action="standby" style="display:flex;flex-direction:column;align-items:center;background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;transition:background 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'none\'">' +
+                            '<img src="/static/img/xp_standby_btn_72.png" style="width:72px;height:72px;margin-bottom:6px">' +
+                            '<span style="color:#fff;font-size:13px">Standby</span>' +
+                            '<span style="color:rgba(255,255,255,0.5);font-size:11px">(S)</span>' +
+                        '</button>' +
+                        '<button class="xp-sd-btn" data-action="shutdown" style="display:flex;flex-direction:column;align-items:center;background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;transition:background 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'none\'">' +
+                            '<img src="/static/img/xp_shutdown_btn_72.png" style="width:72px;height:72px;margin-bottom:6px">' +
+                            '<span style="color:#fff;font-size:13px">Turn Off</span>' +
+                            '<span style="color:rgba(255,255,255,0.5);font-size:11px">(U)</span>' +
+                        '</button>' +
+                        '<button class="xp-sd-btn" data-action="restart" style="display:flex;flex-direction:column;align-items:center;background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;transition:background 0.2s" onmouseover="this.style.background=\'rgba(255,255,255,0.1)\'" onmouseout="this.style.background=\'none\'">' +
+                            '<img src="/static/img/xp_restart_btn_72.png" style="width:72px;height:72px;margin-bottom:6px">' +
+                            '<span style="color:#fff;font-size:13px">Restart</span>' +
+                            '<span style="color:rgba(255,255,255,0.5);font-size:11px">(R)</span>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:flex-end;align-items:center;padding:12px 32px;background:rgba(0,0,0,0.1);gap:12px;margin-top:8px">' +
+                    '<div style="margin-right:auto">' +
+                        '<img src="/static/img/xp-flag.svg" style="width:50px;height:35px;opacity:0.85">' +
+                    '</div>' +
+                    '<button id="xp-sd-cancel" style="background:#fff;border:1px solid #999;border-radius:4px;padding:6px 24px;font-size:13px;cursor:pointer;font-family:\'Segoe UI\',Tahoma,sans-serif" onclick="document.getElementById(\'xp-shutdown-dlg\').remove()">Cancel</button>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+
+        // Button click handlers
+        overlay.querySelectorAll('.xp-sd-btn').forEach(function(btn) {
+            btn.onclick = function() {
+                var action = this.getAttribute('data-action');
+                overlay.remove();
+                if (action === 'standby') doStandby();
+                else if (action === 'shutdown') doShutdown();
+                else if (action === 'restart') doRestart();
+            };
+        });
+
+        // Keyboard shortcuts
+        function kd(e) {
+            if (e.key === 's' || e.key === 'S') { document.removeEventListener('keydown', kd); overlay.remove(); doStandby(); }
+            else if (e.key === 'u' || e.key === 'U') { document.removeEventListener('keydown', kd); overlay.remove(); doShutdown(); }
+            else if (e.key === 'r' || e.key === 'R') { document.removeEventListener('keydown', kd); overlay.remove(); doRestart(); }
+            else if (e.key === 'Escape') { document.removeEventListener('keydown', kd); overlay.remove(); }
+        }
+        document.addEventListener('keydown', kd);
+
+        // Focus cancel button
+        setTimeout(function() {
+            var cancelBtn = document.getElementById('xp-sd-cancel');
+            if (cancelBtn) cancelBtn.focus();
+        }, 100);
+    }
+
+    function doStandby() {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#000;display:flex;align-items:center;justify-content:center;color:#fff;font-family:"Segoe UI",sans-serif;transition:opacity 0.4s';
+        overlay.innerHTML = '<div style="text-align:center"><div style="font-size:2rem;font-weight:300;letter-spacing:1px">Entering standby…</div></div>';
+        document.body.appendChild(overlay);
+        setTimeout(function() {
+            overlay.style.opacity = '0';
+            setTimeout(function() { overlay.remove(); }, 400);
+        }, 1500);
+    }
+
+    function doShutdown() {
+        playShutdownSound();
+        var overlay = document.createElement('div');
+        overlay.id = 'xp-poweroff';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;color:#fff;font-family:"Segoe UI",sans-serif';
+        overlay.innerHTML = '<div style="height:100px;background:#1a3a6b;flex-shrink:0"></div><div id="xp-po-msg" style="flex:1;background:#3b6fb6;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:300;letter-spacing:1px;font-style:italic">Logging off…</div><div style="height:100px;background:#1a3a6b;flex-shrink:0"></div>';
+        document.body.appendChild(overlay);
+        setTimeout(function() {
+            document.getElementById('xp-po-msg').textContent = 'LuckyCard OS is shutting down…';
+            setTimeout(function() {
+                overlay.style.transition = 'background 1.5s';
+                overlay.style.background = '#000';
+                overlay.innerHTML = '';
+            }, 3000);
+        }, 2500);
+    }
+
+    function doRestart() {
+        playShutdownSound();
+        var overlay = document.createElement('div');
+        overlay.id = 'xp-poweroff';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;color:#fff;font-family:"Segoe UI",sans-serif';
+        overlay.innerHTML = '<div style="height:100px;background:#1a3a6b;flex-shrink:0"></div><div id="xp-po-msg" style="flex:1;background:#3b6fb6;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:300;letter-spacing:1px;font-style:italic">Logging off…</div><div style="height:100px;background:#1a3a6b;flex-shrink:0"></div>';
+        document.body.appendChild(overlay);
+        setTimeout(function() {
+            document.getElementById('xp-po-msg').textContent = 'LuckyCard OS is shutting down…';
+            setTimeout(function() {
+                location.reload();
+            }, 2000);
+        }, 2000);
     }
 
     function logOff() {
@@ -499,22 +799,384 @@
         }, 2000);
     }
 
-    function powerOff() {
-        toggleStart();
-        playShutdownSound();
-        var overlay = document.createElement('div');
-        overlay.id = 'xp-poweroff';
-        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;color:#fff;font-family:"Segoe UI",sans-serif';
-        overlay.innerHTML = '<div style="height:100px;background:#1a3a6b;flex-shrink:0"></div><div id="xp-po-msg" style="flex:1;background:#3b6fb6;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:300;letter-spacing:1px;font-style:italic">Logging off…</div><div style="height:100px;background:#1a3a6b;flex-shrink:0"></div>';
-        document.body.appendChild(overlay);
+    // === Run Dialog — make draggable ===
+    (function() {
+        var dlg = document.getElementById('xp-run-dlg');
+        if (!dlg) return;
+        var titleBar = dlg.querySelector('.xp-run-titlebar');
+        if (!titleBar) return;
+        var isDragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+        titleBar.addEventListener('mousedown', function(e) {
+            if (e.target.tagName === 'BUTTON') return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = dlg.offsetLeft;
+            startTop = dlg.offsetTop;
+            dlg.style.cursor = 'move';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            var dx = e.clientX - startX;
+            var dy = e.clientY - startY;
+            dlg.style.left = Math.max(0, startLeft + dx) + 'px';
+            dlg.style.top = Math.max(0, startTop + dy) + 'px';
+        });
+        document.addEventListener('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                dlg.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    })();
+
+    // Simulated system processes
+    var _sysProcesses = [
+        { name: 'System Idle Process', pid: 0, critical: false },
+        { name: 'System', pid: 4, critical: true },
+        { name: 'smss.exe', pid: 356, critical: true },
+        { name: 'csrss.exe', pid: 452, critical: true },
+        { name: 'winlogon.exe', pid: 480, critical: true },
+        { name: 'services.exe', pid: 536, critical: true },
+        { name: 'lsass.exe', pid: 548, critical: true },
+        { name: 'svchost.exe', pid: 748, critical: true },
+        { name: 'svchost.exe', pid: 816, critical: true },
+        { name: 'explorer.exe', pid: 1892, critical: false },
+    ];
+    var _taskMgrTimer = null;
+    var _taskMgrSelected = null;
+
+    // Shell (explorer.exe) state
+    var _shellHidden = false;
+
+    function hideShell() {
+        _shellHidden = true;
+        var icons = document.querySelector('.xp-desktop-icons');
+        var taskbar = document.querySelector('.xp-taskbar');
+        var startMenu = document.getElementById('xp-start-menu');
+        if (icons) icons.style.display = 'none';
+        if (taskbar) taskbar.style.display = 'none';
+        if (startMenu) startMenu.style.display = 'none';
+        // Show notification in taskmgr
+        refreshTaskMgr();
+    }
+
+    function restoreShell() {
+        _shellHidden = false;
+        var icons = document.querySelector('.xp-desktop-icons');
+        var taskbar = document.querySelector('.xp-taskbar');
+        var startMenu = document.getElementById('xp-start-menu');
+        if (icons) icons.style.display = '';
+        if (taskbar) taskbar.style.display = '';
+        refreshTaskMgr();
+        // Close the shell notification overlay if present
+        var shellMsg = document.getElementById('xp-shell-notice');
+        if (shellMsg) shellMsg.remove();
+    }
+
+    function showBSOD(stopCode, errorName, moduleName) {
+        stopCode = stopCode || '0x000000D1';
+        errorName = errorName || 'DRIVER_IRQL_NOT_LESS_OR_EQUAL';
+        moduleName = moduleName || 'ntoskrnl.exe';
+        var bsod = document.createElement('div');
+        bsod.id = 'xp-bsod';
+        bsod.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#00008B;color:#fff;font-family:Lucida Console,monospace;font-size:13px;padding:50px 40px;line-height:1.5;letter-spacing:0.5px';
+        bsod.innerHTML =
+            '<div style="margin-bottom:20px">A problem has been detected and Windows has been shut down to prevent damage to your computer.</div>' +
+            '<div style="margin-bottom:16px;font-size:14px;font-weight:bold">' + errorName + '</div>' +
+            '<div style="margin-bottom:16px">If this is the first time you\'ve seen this Stop error screen, restart your computer. If this screen appears again, follow these steps:</div>' +
+            '<div style="margin-bottom:16px">Check to make sure any new hardware or software is properly installed. If this is a new installation, ask your hardware or software manufacturer for any Windows updates you might need.</div>' +
+            '<div style="margin-bottom:16px">If problems continue, disable or remove any newly installed hardware or software. Disable BIOS memory options such as caching or shadowing. If you need to use Safe Mode to remove or disable components, restart your computer, press F8 to select Advanced Startup Options, and then select Safe Mode.</div>' +
+            '<div style="margin-bottom:4px;font-weight:bold">Technical information:</div>' +
+            '<div style="margin-bottom:2px;color:#ddd">*** STOP: ' + stopCode + ' (0x00000000, 0x00000000, 0x00000000, 0x00000000)</div>' +
+            '<div style="margin-bottom:16px;color:#ddd">*** ' + moduleName + ' - Address 0x804F35C2 base at 0x80400000, DateStamp 0x3f3d5c10</div>' +
+            '<div style="margin-bottom:4px">Beginning dump of physical memory</div>' +
+            '<div style="margin-bottom:20px;color:#aaa">Physical memory dump complete.</div>' +
+            '<div style="margin-top:20px">Contact your system administrator or technical support group for further assistance.</div>';
+        document.body.appendChild(bsod);
+        // Any key → restart
+        document.addEventListener('keydown', function bsodRestart() {
+            document.removeEventListener('keydown', bsodRestart);
+            location.reload();
+        });
+    }
+
+    function endSystemProcess(name, idx) {
+        // explorer.exe = shell → hide, not BSOD
+        if (idx === 9) {
+            hideShell();
+            return;
+        }
+        // Close task manager first
+        if (windows['taskmgr']) closeWindow('taskmgr');
+        if (_taskMgrTimer) { clearInterval(_taskMgrTimer); _taskMgrTimer = null; }
+        showBSOD('0x000000EF', 'CRITICAL_PROCESS_DIED', name);
+    }
+
+    function buildTaskMgrContent() {
+        var allItems = [];
+        // System processes
+        _sysProcesses.forEach(function(sp, idx) {
+            // Hide explorer from list when shell is terminated
+            if (idx === 9 && _shellHidden) return;
+            allItems.push({
+                id: '_sys_' + idx,
+                name: sp.name,
+                pid: sp.pid,
+                status: 'Running',
+                type: 'system',
+                critical: sp.critical,
+            });
+        });
+        // User windows
+        Object.keys(windows).forEach(function(wid) {
+            if (wid === 'taskmgr') return;
+            allItems.push({
+                id: wid,
+                name: windows[wid].title,
+                pid: 3000 + Math.floor(Math.random() * 1000),
+                status: 'Running',
+                type: 'user',
+                critical: false,
+            });
+        });
+        return allItems;
+    }
+
+    function renderTaskMgr(items) {
+        var html = '<div style="padding:0;background:#fff;font-family:Tahoma,sans-serif;height:100%;display:flex;flex-direction:column">';
+        // Tab bar
+        html += '<div style="display:flex;border-bottom:1px solid #A0A0A0;background:#ECE9D8;padding:4px 8px 0 8px;flex-shrink:0">';
+        html += '<div style="padding:4px 16px;background:#fff;border:1px solid #A0A0A0;border-bottom:1px solid #fff;margin-bottom:-1px;font-size:11px;font-weight:bold;cursor:default">Applications</div>';
+        html += '<div style="padding:4px 16px;font-size:11px;color:#666;cursor:default">Processes</div>';
+        html += '<div style="padding:4px 16px;font-size:11px;color:#666;cursor:default">Performance</div>';
+        html += '</div>';
+        // List header
+        html += '<div style="display:flex;background:#fff;padding:2px 4px;border-bottom:1px solid #D0D0D0;font-size:11px;font-weight:bold;flex-shrink:0">';
+        html += '<span style="flex:1;padding:2px 4px">Task</span>';
+        html += '<span style="width:60px;text-align:right;padding:2px 4px">PID</span>';
+        html += '<span style="width:70px;text-align:right;padding:2px 4px">Status</span>';
+        html += '<span style="width:70px;padding:2px 4px"></span>';
+        html += '</div>';
+        // Items
+        html += '<div style="flex:1;overflow-y:auto;min-height:0">';
+        items.forEach(function(item) {
+            var sel = (_taskMgrSelected === item.id) ? 'background:#3168D5;color:#fff' : '';
+            var cls = item.type === 'system' ? ' style="color:#666"' : '';
+            html += '<div class="tmi-row" data-id="' + item.id + '" style="display:flex;align-items:center;padding:2px 4px;font-size:11px;border-bottom:1px solid #f0f0f0;cursor:default;' + sel + '" onclick="XPShell.selectTask(\'' + item.id + '\')">';
+            html += '<span' + cls + ' style="flex:1;padding:2px 4px">' + (item.type === 'system' ? '🔧 ' : '') + item.name + '</span>';
+            html += '<span style="width:60px;text-align:right;padding:2px 4px;color:#888">' + item.pid + '</span>';
+            html += '<span style="width:70px;text-align:right;padding:2px 4px;color:#0a0">' + item.status + '</span>';
+            html += '<span style="width:70px;text-align:right;padding:2px 4px">';
+            html += '<button style="font-size:10px;padding:1px 6px;cursor:pointer;font-family:Tahoma,sans-serif" onclick="event.stopPropagation();XPShell.endTask(\'' + item.id + '\')">End Task</button>';
+            html += '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+        // Bottom buttons
+        html += '<div style="padding:6px 8px;border-top:1px solid #D0D0D0;display:flex;gap:6px;align-items:center;background:#ECE9D8;flex-shrink:0">';
+        if (_shellHidden) {
+            html += '<button style="padding:2px 14px;font-size:11px;cursor:pointer;font-family:Tahoma,sans-serif;background:#FFE0B0;border:1px solid #CA8;border-radius:2px;font-weight:bold" onclick="XPShell.restoreShell()">Restart Explorer</button>';
+            html += '<span style="font-size:10px;color:#c66;flex:1">⚠ Explorer terminated</span>';
+        } else {
+            html += '<span style="font-size:10px;color:#888;flex:1"></span>';
+        }
+        html += '<button style="padding:2px 14px;font-size:11px;cursor:pointer;font-family:Tahoma,sans-serif" onclick="XPShell.newTask()">New Task...</button>';
+        html += '<button style="padding:2px 14px;font-size:11px;cursor:pointer;font-family:Tahoma,sans-serif" onclick="XPShell.endTask(\'' + (_taskMgrSelected || '') + '\')">End Task</button>';
+        html += '<button style="padding:2px 14px;font-size:11px;cursor:pointer;font-family:Tahoma,sans-serif" onclick="XPShell.closeWindow(\'taskmgr\')">Cancel</button>';
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    function refreshTaskMgr() {
+        var bodyEl = document.getElementById('xp-win-body-taskmgr');
+        if (!bodyEl) return;
+        // Save scroll position
+        var scrollEl = bodyEl.querySelector('div[style*="overflow-y:auto"]');
+        var savedScroll = scrollEl ? scrollEl.scrollTop : 0;
+        var items = buildTaskMgrContent();
+        bodyEl.innerHTML = renderTaskMgr(items);
+        // Restore scroll position
+        var newScrollEl = bodyEl.querySelector('div[style*="overflow-y:auto"]');
+        if (newScrollEl) newScrollEl.scrollTop = savedScroll;
+    }
+
+    function openTaskManager() {
+        if (windows['taskmgr']) {
+            windows['taskmgr'].el.classList.remove('minimized');
+            windows['taskmgr'].minimized = false;
+            windows['taskmgr'].el.style.zIndex = ++zIndex;
+            focusWindow('taskmgr');
+            return;
+        }
+        _taskMgrSelected = null;
+        var items = buildTaskMgrContent();
+        openWindow('taskmgr', 'Task Manager', '<img src=\"/static/img/xp_taskmgr_24.png\" style=\"width:18px;height:18px;vertical-align:middle\">', renderTaskMgr(items));
+        // Start auto-refresh
+        if (_taskMgrTimer) clearInterval(_taskMgrTimer);
+        _taskMgrTimer = setInterval(refreshTaskMgr, 2000);
+    }
+
+    function endTask(id) {
+        if (!id) return;
+        // Check if it's a system process
+        if (id.indexOf('_sys_') === 0) {
+            var idx = parseInt(id.replace('_sys_', ''));
+            // explorer.exe already handled inside endSystemProcess
+            endSystemProcess(_sysProcesses[idx].name, idx);
+            return;
+        }
+        // User window - just close it and refresh taskmgr in place
+        if (windows[id]) closeWindow(id);
+        _taskMgrSelected = null;
+        refreshTaskMgr();
+        if (windows['taskmgr']) focusWindow('taskmgr');
+    }
+
+    function selectTask(id) {
+        _taskMgrSelected = id;
+        refreshTaskMgr();
+    }
+
+    // Hook into openWindow/closeWindow to refresh task manager
+    (function() {
+        var origOpen = window.XPShell ? window.XPShell.openWindow : null;
+        var origClose = window.XPShell ? window.XPShell.closeWindow : null;
+        // We'll handle it via interval polling instead
+    })();
+
+    // Task Manager: File → New Task (Run...)
+    function newTask() {
+        openRun();
+    }
+
+    // === Taskbar Context Menu ===
+    var taskbarMenu = document.getElementById('xp-taskbar-menu');
+    function showTaskbarMenu(e) {
+        e.preventDefault();
+        hideTaskbarMenu();
+        taskbarMenu.style.display = 'block';
+        // Position above taskbar
+        var menuHeight = taskbarMenu.offsetHeight || 280;
+        taskbarMenu.style.left = Math.min(e.clientX - 4, window.innerWidth - 210) + 'px';
+        taskbarMenu.style.bottom = (window.innerHeight - e.clientY + 10) + 'px';
+        // Click outside to close
         setTimeout(function() {
-            document.getElementById('xp-po-msg').textContent = 'LuckyCard OS is shutting down…';
-            setTimeout(function() {
-                overlay.style.background = '#000';
-                overlay.innerHTML = '';
-                setTimeout(function() { location.reload(); }, 5000);
-            }, 3000);
-        }, 2500);
+            document.addEventListener('click', hideTaskbarMenuOnClick);
+            document.addEventListener('contextmenu', hideTaskbarMenu);
+        }, 0);
+    }
+    function hideTaskbarMenu() {
+        taskbarMenu.style.display = 'none';
+        document.removeEventListener('click', hideTaskbarMenuOnClick);
+        document.removeEventListener('contextmenu', hideTaskbarMenu);
+    }
+    function hideTaskbarMenuOnClick(e) {
+        if (!taskbarMenu.contains(e.target)) hideTaskbarMenu();
+    }
+    // Attach right-click to taskbar — dual detection for cross-browser compatibility
+    // Primary: mousedown+button=2 (reliable in ALL browsers, fires before contextmenu)
+    // Backup: contextmenu (handles keyboard trigger Shift+F10)
+    var taskbarEl = document.querySelector('.xp-taskbar');
+    if (taskbarEl) {
+        taskbarEl.addEventListener('mousedown', function(e) {
+            if (e.button === 2) {
+                e.preventDefault();
+                showTaskbarMenu(e);
+            }
+        });
+        taskbarEl.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            // Only show if mousedown didn't already handle it (e.g., keyboard trigger)
+            if (taskbarMenu.style.display !== 'block') {
+                showTaskbarMenu(e);
+            }
+        });
+        // Mobile: long press → right-click
+        var _tbTouchTimer = null;
+        var _tbTouchStartX = 0, _tbTouchStartY = 0;
+        taskbarEl.addEventListener('touchstart', function(e) {
+            _tbTouchStartX = e.touches[0].clientX;
+            _tbTouchStartY = e.touches[0].clientY;
+            _tbTouchTimer = setTimeout(function() {
+                _tbTouchTimer = null;
+                // Simulate right-click at touch position
+                showTaskbarMenu({ preventDefault: function(){}, clientX: _tbTouchStartX, clientY: _tbTouchStartY });
+            }, 600);
+        }, { passive: true });
+        taskbarEl.addEventListener('touchmove', function() {
+            if (_tbTouchTimer) { clearTimeout(_tbTouchTimer); _tbTouchTimer = null; }
+        }, { passive: true });
+        taskbarEl.addEventListener('touchend', function() {
+            if (_tbTouchTimer) { clearTimeout(_tbTouchTimer); _tbTouchTimer = null; }
+        }, { passive: true });
+    }
+    // Menu item clicks
+    if (taskbarMenu) {
+        taskbarMenu.addEventListener('click', function(e) {
+            var item = e.target.closest('.xp-tbm-item');
+            if (!item || item.classList.contains('xp-tbm-disabled')) return;
+            var action = item.getAttribute('data-action');
+            if (!action) return;
+            hideTaskbarMenu();
+            switch (action) {
+                case 'cascade':
+                    var wids = Object.keys(windows);
+                    var top = 60, left = 100;
+                    wids.forEach(function(id) {
+                        windows[id].el.style.top = top + 'px';
+                        windows[id].el.style.left = left + 'px';
+                        top += 25; left += 25;
+                    });
+                    break;
+                case 'tile-h':
+                    (function() {
+                        var wids = Object.keys(windows);
+                        var n = wids.length || 1;
+                        var w = Math.floor((window.innerWidth - 40) / n);
+                        var h = window.innerHeight - 80;
+                        wids.forEach(function(id, i) {
+                            windows[id].el.style.top = '40px';
+                            windows[id].el.style.left = (i * w + 20) + 'px';
+                            windows[id].el.style.width = (w - 10) + 'px';
+                            windows[id].el.style.height = h + 'px';
+                        });
+                    })();
+                    break;
+                case 'tile-v':
+                    (function() {
+                        var wids = Object.keys(windows);
+                        var n = wids.length || 1;
+                        var h = Math.floor((window.innerHeight - 80) / n);
+                        var ww = window.innerWidth - 40;
+                        wids.forEach(function(id, i) {
+                            windows[id].el.style.top = (i * h + 40) + 'px';
+                            windows[id].el.style.left = '20px';
+                            windows[id].el.style.width = ww + 'px';
+                            windows[id].el.style.height = (h - 10) + 'px';
+                        });
+                    })();
+                    break;
+                case 'show-desktop':
+                    Object.keys(windows).forEach(function(id) {
+                        windows[id].el.style.display = 'none';
+                        windows[id].minimized = true;
+                    });
+                    break;
+                case 'taskmgr': openTaskManager(); break;
+                case 'properties':
+                    openWindow('tbp', 'Taskbar and Start Menu Properties', '⚙️',
+                        '<div style="padding:16px;font-family:Tahoma,sans-serif;font-size:12px">' +
+                        '<h3 style="margin:0 0 12px 0">Taskbar and Start Menu Properties</h3>' +
+                        '<p style="color:#666">Taskbar appearance settings are not available in this edition.</p>' +
+                        '<p style="color:#666">The taskbar is locked. To unlock, use a real XP machine.</p></div>');
+                    break;
+            }
+        });
     }
 
     window.XPShell = {
@@ -523,12 +1185,19 @@
         focusWindow: focusWindow,
         closeWindow: closeWindow,
         logOff: logOff,
-        shutDown: powerOff,
+        shutDown: showShutdownDialog,
         openRun: openRun,
         closeRun: closeRun,
         runCommand: runCommand,
         openControlPanel: openControlPanel,
         setLang: setLang,
+        openTaskManager: openTaskManager,
+        endTask: endTask,
+        showTaskbarMenu: showTaskbarMenu,
+        selectTask: selectTask,
+        refreshTaskMgr: refreshTaskMgr,
+        restoreShell: restoreShell,
+        newTask: newTask,
     };
 
 })();

@@ -44,16 +44,123 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* ===== BIOS SETUP SCREEN ===== */
+.setup-layer {
+    z-index: 5;
+    background: #000066;
+    color: #fff;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-size: 13px;
+    padding: 0;
+}
+.setup-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.setup-header {
+    background: #0000aa;
+    color: #fff;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #fff;
+}
+.setup-tabs {
+    display: flex;
+    background: #000088;
+    border-bottom: 1px solid #aaa;
+}
+.setup-tab {
+    padding: 8px 20px;
+    cursor: pointer;
+    color: #aaa;
+    font-size: 13px;
+    border-right: 1px solid #555;
+    user-select: none;
+}
+.setup-tab:hover { color: #fff; background: #0000aa; }
+.setup-tab.active {
+    color: #000;
+    background: #aaa;
+    font-weight: bold;
+}
+.setup-body {
+    flex: 1;
+    padding: 12px 20px;
+    overflow-y: auto;
+}
+.setup-footer {
+    background: #0000aa;
+    color: #aaa;
+    display: flex;
+    justify-content: space-around;
+    padding: 6px 0;
+    font-size: 11px;
+    border-top: 2px solid #fff;
+}
+.setup-footer span {
+    color: #aaa;
+}
+
+/* Mobile BOOT OS button */
+.setup-boot-btn {
+    color: #0f0 !important;
+    background: #005500;
+    padding: 6px 16px !important;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 13px !important;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid #0a0;
+}
+.setup-boot-btn:active {
+    background: #007700;
+}
+
 /* BIOS lines */
 .bios-line { white-space: pre; line-height: 1.65; }
 .bios-brand { color: #aaa; }
 .bios-mem { color: #fff; }
 .bios-ok { color: #33ff33; }
 .bios-warn { color: #ffff33; }
+
+/* SETUP prompt — blinking */
+.bios-setup-prompt {
+    color: #ffff33;
+    
+    margin-top: 4px;
+}
+
 .bios-cursor {
     display: inline-block; width: 8px; height: 14px;
     background: #33ff33; vertical-align: middle; margin-left: 2px;
     animation: blink 0.5s step-end infinite;
+}
+
+/* Error screen cursor — white */
+.error-cursor {
+    display: inline-block; width: 10px; height: 18px;
+    background: #fff; vertical-align: middle; margin-left: 4px;
+    animation: blink 0.5s step-end infinite;
+}
+.error-layer {
+    z-index: 6;
+    padding: 0 !important;
+}
+/* BSOD responsive — smaller padding on mobile */
+@media (max-width: 768px) {
+    .error-layer > div {
+        padding: 20px 16px !important;
+        font-size: 11px !important;
+    }
+}
+/* Clickable setup rows */
+.setup-clickable:hover {
+    background: #0000aa;
 }
 @keyframes blink { 50% { opacity: 0; } }
 

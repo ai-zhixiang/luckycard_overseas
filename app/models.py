@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, Float
+from sqlalchemy import Column, String, Integer, DateTime, Text, Boolean, Float, ForeignKey
 from .database import Base
 
 def gen_id():
@@ -15,6 +15,13 @@ class User(Base):
     nickname = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
+    # Subscription
+    is_premium = Column(Boolean, default=False)
+    premium_until = Column(DateTime, nullable=True)
+    ls_customer_id = Column(String(100), nullable=True)
+    ls_subscription_id = Column(String(100), nullable=True)
+    ls_order_id = Column(String(100), nullable=True)
+    paypal_subscription_id = Column(String(100), nullable=True)
 
 class GreetingCard(Base):
     __tablename__ = "greeting_cards"
@@ -40,3 +47,23 @@ class MusicTrack(Base):
     duration_sec = Column(Integer, default=60)
     play_count = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
+
+class PaymentTransaction(Base):
+    gateway = Column(String(20), nullable=True)  # lemon_squeezy, paypal
+    gateway_order_id = Column(String(100), nullable=True)
+    gateway_capture_id = Column(String(100), nullable=True)
+    """Lemon Squeezy payment records"""
+    __tablename__ = "payment_transactions"
+    id = Column(String(12), primary_key=True, default=gen_id)
+    user_id = Column(String(12), nullable=True)
+    ls_order_id = Column(String(100), unique=True, nullable=True)
+    paypal_subscription_id = Column(String(100), nullable=True)
+    ls_subscription_id = Column(String(100), nullable=True)
+    ls_customer_id = Column(String(100), nullable=True)
+    variant_id = Column(Integer, nullable=True)
+    product_name = Column(String(100), nullable=True)
+    status = Column(String(50), default="pending")  # pending, paid, cancelled, expired
+    amount_cents = Column(Integer, default=0)
+    currency = Column(String(3), default="USD")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

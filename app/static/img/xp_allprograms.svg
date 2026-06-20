@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F8D34E"/>
+      <stop offset="100%" stop-color="#D4A017"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FDE87A"/>
+      <stop offset="100%" stop-color="#F0C820"/>
+    </linearGradient>
+  </defs>
+  <path d="M1,5 L1,27 A2,2 0 0,0 3,29 L22,29 L22,3 L3,3 A2,2 0 0,0 1,5Z" fill="url(#bg)" stroke="#B8940E" stroke-width="0.5"/>
+  <path d="M22,3 L22,11 L29,11 L29,3Z" fill="url(#fold)" stroke="#B8940E" stroke-width="0.5"/>
+  <!-- Arrow inside folder -->
+  <polygon points="10,11 21,16 10,21" fill="white" opacity="0.8"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 56" width="80" height="56">
+  <defs>
+    <clipPath id="flagClip">
+      <path d="M0,4 Q20,0 40,4 Q60,8 80,4 L80,52 Q60,48 40,52 Q20,56 0,52 Z"/>
+    </clipPath>
+  </defs>
+  <rect width="80" height="56" fill="#fff" rx="2"/>
+  <g clip-path="url(#flagClip)">
+    <rect x="0" y="4" width="40" height="24" fill="#E74C3C"/>
+    <rect x="40" y="4" width="40" height="24" fill="#2ECC71"/>
+    <rect x="0" y="28" width="40" height="24" fill="#3498DB"/>
+    <rect x="40" y="28" width="40" height="24" fill="#F1C40F"/>
+  </g>
+</svg>
