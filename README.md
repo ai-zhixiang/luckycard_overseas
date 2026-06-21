@@ -17,7 +17,7 @@
 
 ## 🖥️ Screenshot
 
-![Lucky Card XP Desktop](https://hicard.world/static/img/logo.svg)
+![Lucky Card XP Desktop](https://hicard.world/static/img/screenshot.png)
 
 ## 🚀 Tech Stack
 
