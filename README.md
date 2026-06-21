@@ -12,7 +12,7 @@
 - 📁 **My Cards** — Save and manage your own creations
 - 🎵 **Built-in Music Player** — Listen to music while you create
 - 🔐 **User Authentication** — Secure login and account management
-- 🌐 **Multi-language Support** — English & 中文 中文
+- 🌐 **Multi-language Support** — English & 中文
 - 💳 **Payment Integration** — PayPal payment support
 
 ## 🖥️ Screenshot
