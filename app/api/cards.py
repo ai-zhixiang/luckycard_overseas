@@ -14,7 +14,7 @@ router = APIRouter()
 
 # DeepSeek API
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
-DEEPSEEK_KEY = getattr(settings, 'DEEPSEEK_API_KEY', 'sk-e8e8c93bc2244941a9984f19750cb2f0')
+DEEPSEEK_KEY = settings.DEEPSEEK_API_KEY or ""
 
 async def generate_poem(recipient: str, occasion: str = "", message: str = "") -> str:
     """Generate an English poem/greeting using DeepSeek."""

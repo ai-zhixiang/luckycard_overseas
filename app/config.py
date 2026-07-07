@@ -5,8 +5,8 @@ class Settings(BaseSettings):
     paypal_client_id: str = ""
     paypal_client_secret: str = ""
     paypal_webhook_id: str = ""
-    database_url: str = "postgresql+asyncpg://lucky:lucky_pass@localhost:5432/luckycards"
-    secret_key: str = "luckycards-overseas-2026"
+    database_url: str = "postgresql+asyncpg://lucky:CHANGEME@localhost:5432/luckycards"
+    secret_key: str = ""
     domain: str = "hicard.world"
     debug: bool = False
     openai_api_key: str = ""
