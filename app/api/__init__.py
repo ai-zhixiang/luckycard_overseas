@@ -1,0 +1,1 @@
+"""Lucky Card API routes."""

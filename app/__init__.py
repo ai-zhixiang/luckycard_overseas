@@ -1,1 +1,1 @@
-
+"""Lucky Card application package."""
