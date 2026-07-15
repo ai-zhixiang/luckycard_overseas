@@ -27,25 +27,25 @@ async def generate_poem(recipient: str, occasion: str = "", message: str = "") -
 
     if has_chinese:
         prompt = (
-            f"你是一位祝福诗诗人。请为【{recipient}】写一首简短温馨的祝福诗（4-6行）。\n"
-            f"【{recipient}】是一个人的名字或称呼，不要把TA的名字当成主题。"
+            f"写一首祝福诗，送给一位叫【{recipient}】的人。\n"
+            f"要求：诗里要出现TA的名字【{recipient}】，诗的内容要温馨真挚（4-6行）。"
         )
         if occasion:
             prompt += f"\n场合：{occasion}"
         if message:
-            prompt += f"\n想说的话：{message}"
-        prompt += "\n要求：真挚、简洁，全部用中文。不要markdown，只要诗正文。"
+            prompt += f"\n可以把这段话的意思融进诗里：{message}"
+        prompt += "\n直接输出诗本身，不要加标题、不要加引号、不要markdown。"
         fallback_lang = "zh"
     else:
         prompt = (
-            f"You are a greeting poet. Write a short warm poem (4-6 lines) FOR {recipient}.\n"
-            f"IMPORTANT: {recipient} is a person's name. Do NOT write a poem ABOUT their name."
+            f"Write a short warm greeting poem for a person named {recipient}.\n"
+            f"The poem must include {recipient}'s name naturally."
         )
         if occasion:
             prompt += f"\nOccasion: {occasion}"
         if message:
-            prompt += f"\nTheir message to include: {message}"
-        prompt += "\nKeep it heartfelt, simple, in English. No markdown, just the poem."
+            prompt += f"\nIncorporate this sentiment naturally: {message}"
+        prompt += "\nOutput just the poem, no title, no quotes, no markdown."
         fallback_lang = "en"
 
     # Try DeepSeek first, then ARK, then fallback
