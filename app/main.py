@@ -46,6 +46,10 @@ async def download_source():
 async def stylize_page(request: Request):
     return templates.TemplateResponse("stylize.html", {"request": request})
 
+@app.get("/win11lpc")
+async def win11lpc_page(request: Request):
+    return templates.TemplateResponse("win11lpc.html", {"request": request})
+
 @app.post("/api/stylize")
 async def stylize_image(
     file: UploadFile = File(...),
