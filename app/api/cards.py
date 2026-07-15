@@ -21,31 +21,37 @@ ARK_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
 ARK_KEY = settings.ark_api_key or ""
 
 async def generate_poem(recipient: str, occasion: str = "", message: str = "") -> str:
-    """Generate a poem using ARK (Doubao) or DeepSeek in the appropriate language."""
+    """Generate a poem using DeepSeek (primary) or ARK (fallback)."""
     # Detect if input contains Chinese characters
     has_chinese = bool(re.search(r'[\u4e00-\u9fff]', recipient + occasion + message))
 
     if has_chinese:
-        prompt = f"写一首简短温馨的祝福诗（4-6行），送给{recipient}"
+        prompt = (
+            f"你是一位祝福诗诗人。请为【{recipient}】写一首简短温馨的祝福诗（4-6行）。\n"
+            f"【{recipient}】是一个人的名字或称呼，不要把TA的名字当成主题。"
+        )
         if occasion:
-            prompt += f"，为了{occasion}"
+            prompt += f"\n场合：{occasion}"
         if message:
-            prompt += f"。主题：{message}"
-        prompt += "。要真挚、简洁，用中文。不要markdown，只要诗。"
+            prompt += f"\n想说的话：{message}"
+        prompt += "\n要求：真挚、简洁，全部用中文。不要markdown，只要诗正文。"
         fallback_lang = "zh"
     else:
-        prompt = f"Write a short, warm greeting poem (4-6 lines) for {recipient}"
+        prompt = (
+            f"You are a greeting poet. Write a short warm poem (4-6 lines) FOR {recipient}.\n"
+            f"IMPORTANT: {recipient} is a person's name. Do NOT write a poem ABOUT their name."
+        )
         if occasion:
-            prompt += f" for {occasion}"
+            prompt += f"\nOccasion: {occasion}"
         if message:
-            prompt += f". Theme: {message}"
-        prompt += ". Keep it heartfelt, simple, and in English. No markdown, just the poem."
+            prompt += f"\nTheir message to include: {message}"
+        prompt += "\nKeep it heartfelt, simple, in English. No markdown, just the poem."
         fallback_lang = "en"
 
-    # Try ARK first, then DeepSeek, then fallback
+    # Try DeepSeek first, then ARK, then fallback
     for url, key, model in [
-        (ARK_URL, ARK_KEY, "doubao-1-5-vision-pro-32k-250115"),
         (DEEPSEEK_URL, DEEPSEEK_KEY, "deepseek-chat"),
+        (ARK_URL, ARK_KEY, "doubao-1-5-vision-pro-32k-250115"),
     ]:
         if not key:
             continue
