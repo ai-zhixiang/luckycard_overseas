@@ -954,13 +954,10 @@
             var _cnDetected = false;
             function _cnShow() { if (!_cnDetected) { _cnDetected = true; setTimeout(function(){ showChinaNotice(); }, 2000); } }
 
-            // Method 1: ip-api.com
-            fetch('https://ip-api.com/json/?fields=countryCode').then(function(r){return r.json();}).then(function(d){if(d.countryCode==='CN')_cnShow();}).catch(function(){});
+            // Method 1: server-side proxy (avoids CORS/403)
+            fetch('/api/check-country').then(function(r){return r.json();}).then(function(d){if(d.country==='CN')_cnShow();}).catch(function(){});
 
-            // Method 2: ipinfo.io
-            fetch('https://ipinfo.io/json').then(function(r){return r.json();}).then(function(d){if(d.country==='CN')_cnShow();}).catch(function(){});
-
-            // Method 3: timezone
+            // Method 2: timezone
             setTimeout(function(){
                 try {
                     var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
