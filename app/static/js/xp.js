@@ -177,6 +177,8 @@
             'create':     ['create', 'Create Card', '🃏', '/static/forms/card-create.html'],
             'gallery':    ['gallery', 'Gallery', '🖼️', '/static/forms/card-gallery.html'],
             'music':      ['music', 'Music', '🎵', '/static/forms/music-player.html'],
+            'stylize':    ['stylizer', 'AI Stylizer', '🎨', '/static/forms/ai-stylizer.html'],
+            'stylizer':   ['stylizer', 'AI Stylizer', '🎨', '/static/forms/ai-stylizer.html'],
             'mycards':    ['mycards', 'My Cards', '📁', '/static/forms/my-cards.html'],
             'control':    ['control', t('control_panel'), '<img src="/static/img/xp_controlpanel_24.png" style="width:18px;height:18px;vertical-align:middle">', buildControlPanelHTML()],
             'notepad':    ['notepad', t('notepad_title'), '📝', buildNotepadHTML()],
@@ -225,7 +227,7 @@
                 '<div style="text-align:center;padding:2rem">' +
                 '<p style="font-size:2rem">⚠️</p>' +
                 '<p style="margin-top:1rem">Cannot find <b>' + escHtml(cmd) + '</b></p>' +
-                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, control, notepad, cmd, windos</p>' +
+                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, stylizer, control, notepad, cmd, windos</p>' +
                 '</div>');
         }
     }
