@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from .database import engine, Base
 from .api import cards, music, auth, payment, paypal
+from .config import settings
 
 app = FastAPI(title="Lucky Card", version="1.0.0")
 
@@ -63,11 +64,14 @@ async def stylize_image(
         img_b64 = base64.b64encode(tmp_path.read_bytes()).decode()
 
         # Run stylize pipeline
+        env = os.environ.copy()
+        env["ARK_API_KEY"] = settings.ark_api_key or ""
         proc = subprocess.run(
             ["python3", "stylize_pipeline.py"],
             input=f"STYLE:{style}\nSTYLE_PROMPT:{style_prompt}\n{img_b64}\n",
             capture_output=True, text=True, timeout=300,
             cwd="/home/ubuntu/luckycardeng",
+            env=env,
         )
         if proc.returncode != 0:
             return {"status": "error", "message": proc.stderr.strip() or "Pipeline failed"}
@@ -114,7 +118,7 @@ async def card_art(text: str = Form(...), style: str = Form("watercolor")):
         }
         import urllib.request
 
-        api_key = os.environ.get("ARK_API_KEY", "")
+        api_key = settings.ark_api_key
         if not api_key:
             return {"status": "error", "message": "API key not configured"}
 

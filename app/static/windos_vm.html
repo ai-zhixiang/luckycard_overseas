@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WinDOS VM</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+#screen_container { width:720px; height:480px; background:#111; }
+#screen_container canvas { width:100%; height:100%; image-rendering:pixelated; }
+#msg { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); color:#0a0; font-family:monospace; font-size:14px; z-index:10; text-align:center; }
+#status { position:fixed; bottom:8px; right:8px; color:#555; font:11px monospace; z-index:10; }
+.toolbar { position:fixed; bottom:40px; left:50%; transform:translateX(-50%); display:flex; gap:8px; }
+.toolbar button { background:#222; color:#aaa; border:1px solid #444; padding:6px 14px; border-radius:3px; cursor:pointer; font:12px sans-serif; }
+.toolbar button:hover { background:#333; color:#fff; }
+</style>
+</head>
+<body>
+<div id="screen_container"></div>
+<div id="msg">Loading WinDOS...<br>▌</div>
+<div id="status">init</div>
+<div class="toolbar">
+<button onclick="if(window.__e)window.__e.rh()">🔄 Restart</button>
+<button id="pause-btn" onclick="togglePause()">⏸️ Pause</button>
+</div>
+
+<script src="/static/js/v86/v86_all.js"></script>
+<script>
+var c = document.getElementById('screen_container');
+var m = document.getElementById('msg');
+var s = document.getElementById('status');
+var paused = false;
+
+function togglePause() {
+    if (!window.__e) return;
+    var btn = document.getElementById('pause-btn');
+    if (paused) {
+        window.__e.Zf();
+        paused = false;
+        btn.textContent = '⏸️ Pause';
+    } else {
+        window.__e.stop();
+        paused = true;
+        btn.textContent = '▶️ Resume';
+    }
+}
+
+function start() {
+    if (typeof V86 === 'undefined') { setTimeout(start, 200); return; }
+    s.textContent = 'starting...';
+    try {
+        var e = new V86({
+            ej: '/static/js/v86/v86.wasm',
+            screen: { Ac: c },
+            bios: { url: '/static/js/v86/seabios-qemu.bin' },
+            vga_bios: { url: '/static/js/v86/vgabios-qemu.bin' },
+            fda: { url: '/static/WinDOS.img', async: true },
+            G: 32 * 1024 * 1024,
+            uj: true
+        });
+        s.textContent = 'v86 created';
+
+        // Register events via v.register
+        e.v.register('emulator-ready', function() {
+            m.style.display = 'none';
+            s.textContent = 'running';
+            paused = false;
+        }, e);
+
+        // Use ze.send events for download progress (from WASM loader)
+        // The WASM loader sends via ze, but the image loader sends via v
+        e.v.register('download-progress', function(ev) {
+            if (ev.loaded < ev.total) {
+                var p = Math.round(ev.loaded / ev.total * 100);
+                m.innerHTML = 'Downloading WinDOS... ' + p + '%<br>▌';
+                s.textContent = 'dl ' + p + '%';
+            }
+        }, e);
+
+        window.__e = e;
+    } catch(ex) {
+        m.innerHTML = 'Error: ' + (ex.message || ex);
+        s.textContent = 'ERROR';
+        console.error(ex);
+    }
+}
+start();
+</script>
+</body>
+</html>
