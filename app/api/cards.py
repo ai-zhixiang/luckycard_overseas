@@ -12,41 +12,72 @@ import re
 
 router = APIRouter()
 
-# DeepSeek API
+# DeepSeek API (fallback)
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 DEEPSEEK_KEY = settings.deepseek_api_key or ""
 
-async def generate_poem(recipient: str, occasion: str = "", message: str = "") -> str:
-    """Generate an English poem/greeting using DeepSeek."""
-    prompt = f"Write a short, warm greeting poem (4-6 lines) for {recipient}"
-    if occasion:
-        prompt += f" for {occasion}"
-    if message:
-        prompt += f". Theme: {message}"
-    prompt += ". Keep it heartfelt, simple, and in English. No markdown, just the poem."
+# ARK (Volcengine/Doubao) API
+ARK_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
+ARK_KEY = settings.ark_api_key or ""
 
-    try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            resp = await client.post(DEEPSEEK_URL, json={
-                "model": "deepseek-chat",
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 200,
-                "temperature": 0.8
-            }, headers={"Authorization": f"Bearer {DEEPSEEK_KEY}"})
-            data = resp.json()
-            poem = data["choices"][0]["message"]["content"].strip()
-            # Clean markdown
-            poem = re.sub(r'[\*\_\#\`]', '', poem)
-            return poem
-    except Exception as e:
-        # Fallback poems
-        fallbacks = [
-            f"May every day bring you joy,\nAnd every night bring you peace.\nYou deserve all the happiness\nThat this world can release.",
-            f"Like a gentle breeze on a summer day,\nMay this card bring a smile your way.\nWishing you laughter, love, and light,\nToday and every night.",
-            f"A little card, a simple thought,\nTo remind you of the joy you've brought.\nInto the lives of those you meet,\nYou make this world a bit more sweet."
-        ]
-        import random
-        return random.choice(fallbacks)
+async def generate_poem(recipient: str, occasion: str = "", message: str = "") -> str:
+    """Generate a poem using ARK (Doubao) or DeepSeek in the appropriate language."""
+    # Detect if input contains Chinese characters
+    has_chinese = bool(re.search(r'[\u4e00-\u9fff]', recipient + occasion + message))
+
+    if has_chinese:
+        prompt = f"写一首简短温馨的祝福诗（4-6行），送给{recipient}"
+        if occasion:
+            prompt += f"，为了{occasion}"
+        if message:
+            prompt += f"。主题：{message}"
+        prompt += "。要真挚、简洁，用中文。不要markdown，只要诗。"
+        fallback_lang = "zh"
+    else:
+        prompt = f"Write a short, warm greeting poem (4-6 lines) for {recipient}"
+        if occasion:
+            prompt += f" for {occasion}"
+        if message:
+            prompt += f". Theme: {message}"
+        prompt += ". Keep it heartfelt, simple, and in English. No markdown, just the poem."
+        fallback_lang = "en"
+
+    # Try ARK first, then DeepSeek, then fallback
+    for url, key, model in [
+        (ARK_URL, ARK_KEY, "doubao-1-5-vision-pro-32k-250115"),
+        (DEEPSEEK_URL, DEEPSEEK_KEY, "deepseek-chat"),
+    ]:
+        if not key:
+            continue
+        try:
+            async with httpx.AsyncClient(timeout=20) as client:
+                resp = await client.post(url, json={
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 200,
+                    "temperature": 0.8
+                }, headers={"Authorization": f"Bearer {key}"})
+                data = resp.json()
+                poem = data["choices"][0]["message"]["content"].strip()
+                poem = re.sub(r'[\*\_\#\`]', '', poem)
+                if poem:
+                    return poem
+        except Exception:
+            continue
+
+    # Hardcoded fallback
+    fallbacks_en = [
+        f"May every day bring you joy,\nAnd every night bring you peace.\nYou deserve all the happiness\nThat this world can release.",
+        f"Like a gentle breeze on a summer day,\nMay this card bring a smile your way.\nWishing you laughter, love, and light,\nToday and every night.",
+        f"A little card, a simple thought,\nTo remind you of the joy you've brought.\nInto the lives of those you meet,\nYou make this world a bit more sweet."
+    ]
+    fallbacks_zh = [
+        f"愿你每一天都充满欢笑，\n每一个夜晚都恬静安宁。\n所有的美好都如期而至，\n所有的幸福都与你同行。",
+        f"简单的卡片，真诚的心意，\n跨越千山万水来见你。\n祝你笑容常开，喜乐常在，\n每一天都过得精彩。",
+        f"缘分让我们相遇相识，\n温暖在字里行间流淌。\n愿这份祝福如春风般温柔，\n陪伴你走过每个晨昏。"
+    ]
+    import random
+    return random.choice(fallbacks_zh if fallback_lang == "zh" else fallbacks_en)
 
 
 def gen_id():
