@@ -9,6 +9,7 @@ from .database import engine, Base
 from .api import cards, music, auth, payment, paypal
 from .config import settings
 from pydantic import BaseModel
+import httpx
 
 app = FastAPI(title="Lucky Card", version="1.0.0")
 
@@ -46,6 +47,20 @@ async def download_source():
 @app.get("/stylize")
 async def stylize_page(request: Request):
     return templates.TemplateResponse("stylize.html", {"request": request})
+
+@app.get("/api/check-country")
+async def check_country(request: Request):
+    """Server-side IP country check to avoid CORS/403 issues."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                "https://ip-api.com/json/?fields=countryCode",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+            data = resp.json()
+            return {"country": data.get("countryCode", "")}
+    except Exception:
+        return {"country": ""}
 
 @app.get("/win11lpc")
 async def win11lpc_page(request: Request):
