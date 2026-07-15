@@ -34,6 +34,18 @@
                 style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.95rem;box-sizing:border-box;resize:vertical"></textarea>
         </div>
 
+        <div style="margin-bottom:1.5rem;display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="cf-stylize" style="width:18px;height:18px;accent-color:#7a4aff">
+            <label for="cf-stylize" style="font-size:0.85rem;cursor:pointer">🎨 <b>AI Stylize</b> — Generate an AI artwork for this card</label>
+            <select id="cf-style" style="margin-left:auto;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.8rem">
+                <option value="watercolor">Watercolor</option>
+                <option value="anime">Anime</option>
+                <option value="oilpainting">Oil Painting</option>
+                <option value="sketch">Sketch</option>
+                <option value="cinematic">Cinematic</option>
+            </select>
+        </div>
+
         <button onclick="CardCreator.generate()" id="cf-generate-btn"
             style="width:100%;padding:10px;background:linear-gradient(180deg,#2E82F0,#0058E6);color:#fff;border:none;border-radius:6px;font-size:1rem;font-weight:600;cursor:pointer;margin-bottom:1rem">
             ✨ Generate Poem & Save
@@ -42,6 +54,14 @@
         <div id="cf-result" style="display:none;text-align:center">
             <div style="font-size:2rem;margin-bottom:0.5rem">💌</div>
             <div id="cf-poem" style="white-space:pre-line;font-family:Georgia,serif;font-size:1.05rem;line-height:1.8;margin-bottom:1rem;background:linear-gradient(135deg,#fffaf5,#fef3e2);padding:1.5rem;border-radius:10px"></div>
+            <div id="cf-artwork" style="display:none;margin-bottom:1rem">
+                <img id="cf-art-img" style="width:100%;max-width:400px;border-radius:10px;border:2px solid #e0d0c0;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
+                <p style="color:#888;font-size:0.75rem;margin-top:4px">✨ AI-generated artwork</p>
+            </div>
+            <div id="cf-stylizing" style="display:none;padding:1rem;color:#888;font-size:0.85rem">
+                <span class="spinner" style="display:inline-block;width:12px;height:12px;border:2px solid #ddd;border-top-color:#7a4aff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle"></span>
+                Generating AI artwork...
+            </div>
             <p style="color:#888;font-size:0.8rem;margin-bottom:0.5rem">Card created!</p>
             <button onclick="CardCreator.copyLink()"
                 style="padding:8px 20px;background:#C41E3A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px">📋 Copy Link</button>
@@ -97,6 +117,27 @@ window.CardCreator = {
             document.getElementById('cf-result').style.display = 'block';
             document.getElementById('cf-generate-btn').style.display = 'none';
             self.loading = false;
+
+            // If AI Stylize is checked, generate artwork
+            if (document.getElementById('cf-stylize').checked) {
+                var style = document.getElementById('cf-style').value;
+                document.getElementById('cf-stylizing').style.display = 'block';
+                var fd = new FormData();
+                fd.append('text', d.poem);
+                fd.append('style', style);
+                fetch('/api/card-art', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(art) {
+                    document.getElementById('cf-stylizing').style.display = 'none';
+                    if (art.status === 'ok') {
+                        document.getElementById('cf-art-img').src = art.result_url;
+                        document.getElementById('cf-artwork').style.display = 'block';
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('cf-stylizing').style.display = 'none';
+                });
+            }
         })
         .catch(function() {
             alert('Something went wrong. Please try again.');

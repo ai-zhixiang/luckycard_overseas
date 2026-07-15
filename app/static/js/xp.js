@@ -204,6 +204,19 @@
             return;
         }
 
+        // WinDOS easter egg 🥚 — download via Run dialog
+        if (cmd === 'windos' || cmd === 'windos.exe' || cmd === 'win dos') {
+            window.open('/dl/windos-build.zip?dl=1');
+            XPShell.openWindow('windos-dl', 'WinDOS', '💾',
+                '<div style="text-align:center;padding:2rem;font-family:Tahoma,sans-serif">' +
+                '<p style="font-size:3rem;margin-bottom:0.5rem">🖥️💾</p>' +
+                '<p style="font-size:1.3rem;font-weight:bold;margin-bottom:0.5rem">Downloading WinDOS…</p>' +
+                '<p style="color:#666;font-size:0.9rem">A lightweight Windows-like OS</p>' +
+                '<p style="color:#888;margin-top:1rem;font-size:0.85rem">Build 20260621</p>' +
+                '</div>');
+            return;
+        }
+
         if (routes[cmd]) {
             var r = routes[cmd];
             XPShell.openWindow(r[0], r[1], r[2], r[3]);
@@ -212,7 +225,7 @@
                 '<div style="text-align:center;padding:2rem">' +
                 '<p style="font-size:2rem">⚠️</p>' +
                 '<p style="margin-top:1rem">Cannot find <b>' + escHtml(cmd) + '</b></p>' +
-                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, control, notepad, cmd</p>' +
+                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, control, notepad, cmd, windos</p>' +
                 '</div>');
         }
     }

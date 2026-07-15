@@ -23,24 +23,45 @@
         </div>
     </div>
     
-    <p style="color:#888;font-size:0.7rem;margin-top:1rem">Music provided by <a href="https://pixabay.com/music/" target="_blank" style="color:#FFB347">Pixabay</a></p>
+    <p style="color:#888;font-size:0.7rem;margin-top:1rem">Classical music from <a href="https://musopen.org/" target="_blank" style="color:#FFB347">Musopen</a> (public domain)</p>
 </div>
 
 <script>
 window.MPlayer = {
-    tracks: [
-        {title:'Lofi Chill', artist:'Background Music', src:'https://cdn.pixabay.com/audio/2022/05/19/audio_640fea41a7.mp3'},
-        {title:'Ambient Dream', artist:'Calm Sounds', src:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8e0f2f9e5.mp3'},
-        {title:'Jazz Cafe', artist:'Smooth Vibes', src:'https://cdn.pixabay.com/audio/2022/01/18/audio_d0c6e02b62.mp3'}
-    ],
+    tracks: [],
     idx: 0,
     audio: null,
     
     init: function() {
         this.audio = new Audio();
-        this.loadTrack(0);
         var self = this;
+        // Fetch tracks from our server
+        fetch('/api/music/list').then(function(r){return r.json()}).then(function(d){
+            self.tracks = d.tracks.map(function(t){return {title:t.title, artist:t.composer, src:t.file};});
+            if (self.tracks.length > 0) {
+                self.loadTrack(0);
+            } else {
+                document.getElementById('mp-title').textContent = 'No tracks';
+            }
+        }).catch(function(){
+            document.getElementById('mp-title').textContent = 'Failed to load';
+        });
+        
         this.audio.addEventListener('timeupdate', function() {
+            var pct = self.audio.duration ? (self.audio.currentTime / self.audio.duration * 100) : 0;
+            document.getElementById('mp-seek').value = pct;
+            var c = self.audio.currentTime;
+            document.getElementById('mp-cur').textContent = Math.floor(c/60)+':'+String(Math.floor(c%60)).padStart(2,'0');
+        });
+        this.audio.addEventListener('loadedmetadata', function() {
+            var d = self.audio.duration || 0;
+            document.getElementById('mp-dur').textContent = Math.floor(d/60)+':'+String(Math.floor(d%60)).padStart(2,'0');
+        });
+        this.audio.addEventListener('ended', function() { self.next(); });
+        document.getElementById('mp-seek').addEventListener('input', function() {
+            if (self.audio.duration) self.audio.currentTime = (this.value / 100) * self.audio.duration;
+        });
+    },
             var pct = self.audio.duration ? (self.audio.currentTime / self.audio.duration * 100) : 0;
             document.getElementById('mp-seek').value = pct;
             var c = self.audio.currentTime;

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Stylize — Photo to Art | hicard.world</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0a0a0f;
+  color:#c8c8d0;
+  font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;
+}
+.topbar{
+  background:#10101a;border-bottom:1px solid #222240;
+  padding:12px 20px;display:flex;align-items:center;gap:12px;
+}
+.topbar .logo{font-size:18px;font-weight:700;color:#e0e0f0}
+.topbar a{color:#888;font-size:13px;text-decoration:none;margin-left:auto}
+.topbar a:hover{color:#aaf}
+.container{max-width:900px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;font-weight:600;margin-bottom:4px;text-align:center}
+.sub{text-align:center;font-size:13px;color:#888;margin-bottom:20px}
+.card{background:#0d0d18;border:1px solid #1e1e35;border-radius:10px;padding:24px;margin-bottom:16px}
+.upload-zone{
+  border:2px dashed #333360;border-radius:10px;
+  padding:40px 20px;cursor:pointer;transition:.2s;text-align:center;position:relative;
+}
+.upload-zone:hover,.upload-zone.dragover{border-color:#6a6aff;background:#14142a}
+.upload-zone .icon{font-size:40px;margin-bottom:8px}
+.upload-zone .label{font-size:14px;color:#aaa}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.preview-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:600px){.preview-row{grid-template-columns:1fr}}
+.preview-box{background:#080812;border:1px solid #1e1e35;border-radius:8px;overflow:hidden}
+.preview-box .head{padding:8px 12px;font-size:12px;color:#888;background:#111120;border-bottom:1px solid #1e1e35}
+.preview-box img{width:100%;height:auto;display:block}
+.preview-box .placeholder{display:flex;align-items:center;justify-content:center;min-height:200px;color:#555;font-size:13px}
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:16px}
+.style-opt{
+  padding:8px;border:2px solid #2a2a45;border-radius:8px;
+  text-align:center;cursor:pointer;transition:.15s;font-size:12px;color:#aaa;
+}
+.style-opt:hover{border-color:#4a4aff;background:#14142a}
+.style-opt.selected{border-color:#6a6aff;background:#1a1a35;color:#fff}
+.style-opt .emoji{font-size:24px;display:block;margin-bottom:4px}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-primary{background:linear-gradient(135deg,#4a4aff,#7a4aff);color:#fff}
+.btn-primary:hover{filter:brightness(1.15)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;filter:none}
+#status{padding:12px;border-radius:8px;font-size:13px;display:none;margin-top:12px}
+#status.success{background:#0a2a1a;border:1px solid #2a6a3a;color:#8f8;display:block}
+#status.error{background:#2a0a0a;border:1px solid #6a2a2a;color:#f88;display:block}
+#status.info{background:#0a0a2a;border:1px solid #2a2a6a;color:#88f;display:block}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #666;border-top-color:#88f;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.loading-overlay .text{color:#aaa;font-size:14px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="logo">🎨 AI Stylize</span>
+  <a href="/">← Back to home</a>
+</div>
+<div class="container">
+  <h1>Turn Your Photos into Art</h1>
+  <p class="sub">Upload a photo, pick a style — AI redraws it beautifully</p>
+
+  <div class="card">
+    <div class="upload-zone" id="drop-zone">
+      <div class="icon">📤</div>
+      <div class="label">Drop a photo or click to browse</div>
+      <input type="file" id="file-input" accept="image/*">
+    </div>
+  </div>
+
+  <div class="preview-row" id="preview-row" style="display:none">
+    <div class="preview-box">
+      <div class="head">Original</div>
+      <img id="original-preview">
+    </div>
+    <div class="preview-box">
+      <div class="head">Stylized</div>
+      <img id="result-preview" style="display:none">
+      <div class="placeholder" id="result-placeholder">Pick a style & generate ✨</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="head" style="font-size:13px;color:#aaa;margin-bottom:8px">Choose a style</div>
+    <div class="style-grid">
+      <div class="style-opt selected" data-style="watercolor" onclick="pickStyle(this)">
+        <span class="emoji">🎨</span>Watercolor
+      </div>
+      <div class="style-opt" data-style="anime" onclick="pickStyle(this)">
+        <span class="emoji">🌸</span>Anime
+      </div>
+      <div class="style-opt" data-style="oilpainting" onclick="pickStyle(this)">
+        <span class="emoji">🖼️</span>Oil Painting
+      </div>
+      <div class="style-opt" data-style="pixelart" onclick="pickStyle(this)">
+        <span class="emoji">🟦</span>Pixel Art
+      </div>
+      <div class="style-opt" data-style="sketch" onclick="pickStyle(this)">
+        <span class="emoji">✏️</span>Sketch
+      </div>
+      <div class="style-opt" data-style="cinematic" onclick="pickStyle(this)">
+        <span class="emoji">🎬</span>Cinematic
+      </div>
+    </div>
+    <button class="btn btn-primary" id="gen-btn" onclick="generate()" disabled>✨ Generate</button>
+    <div id="status"></div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading">
+  <div style="font-size:40px">🎨</div>
+  <div class="spinner" style="width:30px;height:30px;border-width:3px"></div>
+  <div class="text">AI is painting your photo...</div>
+  <div class="text" style="font-size:11px;color:#555" id="loading-sub">Step 1: Understanding your image</div>
+</div>
+
+<script>
+let selectedFile = null;
+let currentStyle = 'watercolor';
+
+const dz = document.getElementById('drop-zone');
+const fi = document.getElementById('file-input');
+
+fi.addEventListener('change', function(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  selectedFile = f;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('original-preview').src = ev.target.result;
+    document.getElementById('preview-row').style.display = 'grid';
+    document.getElementById('result-preview').style.display = 'none';
+    document.getElementById('result-placeholder').style.display = 'flex';
+    document.getElementById('gen-btn').disabled = false;
+    document.getElementById('status').style.display = 'none';
+  };
+  reader.readAsDataURL(f);
+});
+
+dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', function() { dz.classList.remove('dragover'); });
+dz.addEventListener('drop', function(e) {
+  e.preventDefault(); dz.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) { fi.files = e.dataTransfer.files; fi.dispatchEvent(new Event('change')); }
+});
+
+function pickStyle(el) {
+  document.querySelectorAll('.style-opt').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  currentStyle = el.dataset.style;
+}
+
+const STYLE_PROMPTS = {
+  watercolor: 'watercolor painting style, soft colors, painted on paper, artistic brush strokes',
+  anime: 'anime art style, vibrant colors, cel-shaded, Japanese animation style',
+  oilpainting: 'oil painting style, thick brush strokes, canvas texture, classical painting',
+  pixelart: 'pixel art style, 8-bit retro game graphics, blocky pixels, limited color palette',
+  sketch: 'pencil sketch style, black and white, hand-drawn, rough lines',
+  cinematic: 'cinematic photography style, dramatic lighting, film grain, professional photo'
+};
+
+async function generate() {
+  if (!selectedFile) return;
+  const btn = document.getElementById('gen-btn');
+  const loading = document.getElementById('loading');
+  const status = document.getElementById('status');
+  const subStep = document.getElementById('loading-sub');
+
+  btn.disabled = true;
+  loading.classList.add('show');
+
+  try {
+    // Step 1: Upload
+    subStep.textContent = 'Step 1: Analyzing your photo...';
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+    fd.append('style', currentStyle);
+    fd.append('style_prompt', STYLE_PROMPTS[currentStyle]);
+
+    const r = await fetch('/api/stylize', { method: 'POST', body: fd });
+    const d = await r.json();
+
+    loading.classList.remove('show');
+    if (d.status === 'ok') {
+      document.getElementById('result-preview').src = d.result_url;
+      document.getElementById('result-preview').style.display = 'block';
+      document.getElementById('result-placeholder').style.display = 'none';
+      status.className = 'success';
+      status.innerHTML = '✅ Done! <a href="' + d.result_url + '" download style="color:#88f">Download</a>';
+    } else {
+      status.className = 'error';
+      status.innerHTML = '❌ ' + (d.message || 'Generation failed');
+    }
+  } catch(e) {
+    loading.classList.remove('show');
+    status.className = 'error';
+    status.innerHTML = '❌ Error: ' + e.message;
+  }
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>

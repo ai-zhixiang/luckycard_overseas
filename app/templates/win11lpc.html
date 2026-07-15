@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>_Win11LPC — Chinese Programming Language | hicard.world</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#0a0a0f;
+  color:#c8c8d0;
+  font-family:'Segoe UI',system-ui,sans-serif;
+  min-height:100vh;
+}
+.topbar{
+  background:#10101a;
+  border-bottom:1px solid #222240;
+  padding:12px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.topbar .logo{font-size:18px;font-weight:700;color:#e0e0f0}
+.topbar .logo small{font-size:12px;font-weight:400;color:#666;margin-left:6px}
+.topbar .links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.topbar .links a{color:#6a6aff;font-size:13px;text-decoration:none}
+.topbar .links a:hover{text-decoration:underline;color:#8a8aff}
+.container{max-width:1200px;margin:0 auto;padding:16px 16px 40px}
+.tagline{text-align:center;padding:14px 0 6px;font-size:14px;color:#888}
+.tagline strong{color:#aaf;font-weight:600}
+/* ── Editor Pane ── */
+.editor-pane{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:14px;
+}
+@media(max-width:800px){.editor-pane{grid-template-columns:1fr}}
+.editor-box{
+  background:#0d0d18;
+  border:1px solid #1e1e35;
+  border-radius:8px;
+  overflow:hidden;
+}
+.editor-box .head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 12px;
+  background:#121220;
+  border-bottom:1px solid #1e1e35;
+  font-size:12px;
+  color:#888;
+}
+.editor-box .head .label{font-weight:600;color:#aaa}
+.editor-box .head .actions{display:flex;gap:6px}
+.editor-box .head .actions button{
+  background:transparent;
+  border:1px solid #2a2a45;
+  color:#888;
+  padding:3px 10px;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:11px;
+  transition:.15s;
+}
+.editor-box .head .actions button:hover{background:#1a1a30;color:#ddd}
+.editor-box textarea{
+  width:100%;
+  height:340px;
+  background:#0a0a15;
+  color:#c8d0d8;
+  border:none;
+  outline:none;
+  padding:12px;
+  font:13px/1.6 'Cascadia Code','Fira Code','JetBrains Mono',monospace;
+  resize:vertical;
+  tab-size:2;
+}
+.editor-box textarea::placeholder{color:#444}
+.editor-box .output{
+  width:100%;
+  height:340px;
+  background:#0a0a15;
+  padding:12px;
+  font:13px/1.6 'Cascadia Code','Fira Code','JetBrains Mono',monospace;
+  overflow:auto;
+  white-space:pre-wrap;
+  color:#8f8;
+}
+.editor-box .output.error{color:#f88}
+/* ── Controls ── */
+.controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-bottom:14px;
+}
+.btn{
+  padding:8px 20px;
+  border:none;
+  border-radius:6px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.15s;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#4a4aff,#7a4aff);
+  color:#fff;
+}
+.btn-primary:hover{filter:brightness(1.15)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;filter:none}
+.btn-sm{
+  background:#1a1a2a;
+  color:#aaa;
+  border:1px solid #2a2a45;
+  padding:5px 12px;
+  font-size:12px;
+  border-radius:4px;
+  cursor:pointer;
+}
+.btn-sm:hover{background:#222;color:#ddd}
+#status-bar{
+  font-size:12px;
+  color:#666;
+  margin-left:auto;
+}
+/* ── Doc ── */
+.doc-section{
+  background:#0d0d18;
+  border:1px solid #1e1e35;
+  border-radius:8px;
+  padding:20px;
+  margin-bottom:16px;
+}
+.doc-section h2{font-size:16px;color:#e0e0f0;margin-bottom:12px}
+.doc-section h2 small{font-weight:400;font-size:12px;color:#666;margin-left:8px}
+.doc-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:8px;
+}
+.doc-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 10px;
+  background:#11111e;
+  border-radius:4px;
+  font-size:13px;
+}
+.doc-item .w11{color:#7af;font-family:monospace;font-weight:600;min-width:100px}
+.doc-item .arrow{color:#555}
+.doc-item .cpp{color:#afa;font-family:monospace}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">_Win11LPC <small>v0.2</small></div>
+  <div class="links">
+    <a href="#" onclick="loadExample('hello')">📄 Hello Example</a>
+    <a href="#" onclick="loadExample('test')">🔥 Frankenstein Example</a>
+    <a href="/dl/win11lpc" class="btn-sm" style="display:none">⬇ Download Compiler</a>
+    <a href="/" style="color:#888">← Back to home</a>
+  </div>
+</div>
+
+<div class="container">
+  <p class="tagline">
+    A <strong>beginner-friendly</strong> programming language (for Chinese)
+    &nbsp;·&nbsp; Write in Chinese, transpiles to C++ → compiles to .exe
+  </p>
+  <p style="text-align:center;font-size:13px;color:#666;margin:-6px 0 14px;font-style:italic">
+    I know maybe you can't understand it, so we are programming the English version :D
+  </p>
+
+  <div class="editor-pane">
+    <div class="editor-box">
+      <div class="head">
+        <span class="label">📝 _Win11LPC (.w11)</span>
+        <span class="actions">
+          <button onclick="clearInput()">✕ Clear</button>
+        </span>
+      </div>
+      <textarea id="src-code" placeholder="Write your .w11 code...&#10;&#10;Try the 'Hello Example' or 'Frankenstein Example' above"></textarea>
+    </div>
+    <div class="editor-box">
+      <div class="head">
+        <span class="label">⚗ Generated C++</span>
+        <span class="actions">
+          <button onclick="copyOutput()">📋 Copy</button>
+        </span>
+      </div>
+      <div class="output" id="c-output">Hit「Transpile」to see the C++ output 👆</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-primary" id="compile-btn" onclick="compile()">⚗ Transpile</button>
+    <span id="status-bar">Ready</span>
+  </div>
+
+  <div class="doc-section">
+    <h2>📖 Syntax Reference <small><em>Chinese Keywords → C++</em></small></h2>
+    <div class="doc-grid">
+      <div class="doc-item"><span class="w11">输出 x</span><span class="arrow">→</span><span class="cpp">cout &lt;&lt; x &lt;&lt; endl;</span></div>
+      <div class="doc-item"><span class="w11">输入 x</span><span class="arrow">→</span><span class="cpp">cin &gt;&gt; x;</span></div>
+      <div class="doc-item"><span class="w11">让 x = 10</span><span class="arrow">→</span><span class="cpp">int x = 10;</span></div>
+      <div class="doc-item"><span class="w11">让 小数 x = 3.14</span><span class="arrow">→</span><span class="cpp">double x = 3.14;</span></div>
+      <div class="doc-item"><span class="w11">如果 x &gt; 5 {</span><span class="arrow">→</span><span class="cpp">if (x &gt; 5) {</span></div>
+      <div class="doc-item"><span class="w11">否则 {</span><span class="arrow">→</span><span class="cpp">} else {</span></div>
+      <div class="doc-item"><span class="w11">否则如果 x &gt; 3 {</span><span class="arrow">→</span><span class="cpp">} else if (x &gt; 3) {</span></div>
+      <div class="doc-item"><span class="w11">循环 i 从 0 到 4 {</span><span class="arrow">→</span><span class="cpp">for (int i = 0; i &lt;= 4; i++) {</span></div>
+      <div class="doc-item"><span class="w11">重复 5 次 {</span><span class="arrow">→</span><span class="cpp">for (int _i = 0; _i &lt; 5; _i++) {</span></div>
+      <div class="doc-item"><span class="w11">当 条件 {</span><span class="arrow">→</span><span class="cpp">while (条件) {</span></div>
+      <div class="doc-item"><span class="w11">返回 x</span><span class="arrow">→</span><span class="cpp">return x;</span></div>
+      <div class="doc-item"><span class="w11">真 / 假</span><span class="arrow">→</span><span class="cpp">1 / 0</span></div>
+      <div class="doc-item"><span class="w11">整形 / 小数 / 字符 / 无</span><span class="arrow">→</span><span class="cpp">int / double / char / void</span></div>
+      <div class="doc-item"><span class="w11">跳出</span><span class="arrow">→</span><span class="cpp">break;</span></div>
+      <div class="doc-item"><span class="w11">下一个</span><span class="arrow">→</span><span class="cpp">continue;</span></div>
+      <div class="doc-item"><span class="w11">导入 &lt;iostream&gt;</span><span class="arrow">→</span><span class="cpp">#include &lt;iostream&gt;</span></div>
+      <div class="doc-item"><span class="w11">使用标准命名空间</span><span class="arrow">→</span><span class="cpp">using namespace std;</span></div>
+      <div class="doc-item"><span class="w11">定义 函数名 为 无 参数...</span><span class="arrow">→</span><span class="cpp">void 函数名(...) { }</span></div>
+      <div class="doc-item"><span class="w11">初始化窗口 cls "标题" 800 600</span><span class="arrow">→</span><span class="cpp">Win32 窗口全套代码</span></div>
+    </div>
+  </div>
+
+  <div class="doc-section" style="padding:14px 20px">
+    <p style="font-size:13px;color:#888;line-height:1.7">
+      🔧 <strong>RAW Passthrough</strong>: Unknown syntax passes through as-is — freely mix C++ &amp; Chinese keywords.<br>
+      🔤 <strong>Fullwidth auto-conversion</strong>: <code>（）【】《》，；</code> → <code>()[]&lt;&gt;,;</code><br>
+      🎯 Auto-detects GUI calls (CreateWindow / MessageBox etc.) and adds <code>#define UNICODE</code><br>
+      📦 Full download includes <strong>MinGW</strong> toolchain — one command: <code>.w11 → .exe</code>
+    </p>
+  </div>
+</div>
+
+<script>
+// ===== 示例 =====
+const EXAMPLES = {
+  hello: `输出 "你好, _Win11LPC!"
+输出 1+2
+让 x = 10
+输出 x
+如果 x > 5 {
+    输出 "x大于5!"
+}`,
+  test: `#include bits/stdc++.h
+使用标准命名空间
+让 n【5】 = {3, 1, 4, 2, 5}
+sort(n, n + 5)
+循环 i 从 0 到 4 {
+    输出 n[i]
+}
+if (n【4】 == 5） {
+    cout << "石山";
+}`
+};
+
+function loadExample(name){
+  const ta = document.getElementById('src-code');
+  ta.value = EXAMPLES[name] || '';
+  ta.dispatchEvent(new Event('input'));
+  document.getElementById('c-output').textContent = 'Modify code then hit「Transpile」👆';
+  document.getElementById('c-output').className = 'output';
+  document.getElementById('status-bar').textContent = 'Example loaded';
+}
+
+function clearInput(){
+  document.getElementById('src-code').value = '';
+  document.getElementById('c-output').textContent = 'Hit「Transpile」to see the C++ output 👆';
+  document.getElementById('c-output').className = 'output';
+  document.getElementById('status-bar').textContent = 'Ready';
+}
+
+async function compile(){
+  const code = document.getElementById('src-code').value.trim();
+  if (!code) {
+    document.getElementById('c-output').textContent = '⚠️ Please enter .w11 code first';
+    document.getElementById('c-output').className = 'output error';
+    return;
+  }
+  const btn = document.getElementById('compile-btn');
+  const bar = document.getElementById('status-bar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Transpiling...';
+  bar.textContent = 'Transpiling...';
+
+  try {
+    const r = await fetch('/api/win11lpc/compile', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({code: code})
+    });
+    const d = await r.json();
+    const out = document.getElementById('c-output');
+    if (d.status === 'ok') {
+      out.textContent = d.cpp;
+      out.className = 'output';
+      bar.textContent = '✅ Done in ' + d.duration_ms + 'ms';
+    } else {
+      out.textContent = '❌ ' + (d.message || 'Transpile failed');
+      out.className = 'output error';
+      bar.textContent = '❌ Transpile failed';
+    }
+  } catch(e) {
+    document.getElementById('c-output').textContent = '❌ Network error: ' + e.message;
+    document.getElementById('c-output').className = 'output error';
+    bar.textContent = '❌ Request failed';
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⚗ Transpile';
+}
+
+async function copyOutput(){
+  const text = document.getElementById('c-output').textContent;
+  if (!text || text.startsWith('Hit') || text.startsWith('⚠️') || text.startsWith('❌')) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    document.getElementById('status-bar').textContent = '📋 Copied!';
+  } catch { /* fallback handled by OS */ }
+}
+
+// Ctrl+Enter to compile
+document.getElementById('src-code').addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    compile();
+  }
+});
+</script>
+</body>
+</html>

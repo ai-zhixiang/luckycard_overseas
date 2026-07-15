@@ -733,3 +733,74 @@
     background: none;
     color: #999;
 }
+
+/* ===== China Region Notice Dialog ===== */
+.xp-notice-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.xp-notice-dialog {
+    width: 420px;
+    background: #ECE9D8;
+    border: 2px solid #0054E3;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 4px 4px 20px rgba(0,0,0,0.5);
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 12px;
+    animation: xp-notice-fadein 0.3s ease;
+}
+@keyframes xp-notice-fadein {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+.xp-notice-titlebar {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    background: linear-gradient(180deg, #0A246A 0%, #3A6EA5 8%, #6196CF 45%, #A6CAF0 50%, #A6CAF0 100%);
+    color: #fff;
+    border-radius: 6px 6px 0 0;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: default;
+}
+.xp-notice-icon { margin-right: 6px; font-size: 14px; }
+.xp-notice-title { flex: 1; text-shadow: 1px 1px 0 rgba(0,0,0,0.5); }
+.xp-notice-close {
+    width: 18px; height: 18px;
+    background: #C75050;
+    color: #fff; border: none;
+    border-radius: 2px;
+    font-size: 10px;
+    cursor: pointer;
+    line-height: 16px;
+    text-align: center;
+}
+.xp-notice-close:hover { background: #E04343; }
+.xp-notice-body {
+    padding: 20px;
+    color: #000;
+    line-height: 1.5;
+}
+.xp-notice-body p { margin: 0; }
+.xp-notice-body a { text-decoration: underline; }
+.xp-notice-body a:hover { text-decoration: none; }
+.xp-notice-ok {
+    padding: 4px 24px;
+    background: #ECE9D8;
+    border: 1px solid #7F9DB9;
+    border-radius: 3px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #999;
+}
+.xp-notice-ok:hover { background: #E0DCC8; }
+.xp-notice-ok:active {
+    box-shadow: inset -1px -1px 0 #fff, inset 1px 1px 0 #999;
+}

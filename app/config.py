@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_base_url: str = "https://api.openai.com/v1"
     deepseek_api_key: str = ""
+    ark_api_key: str = ""
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
 

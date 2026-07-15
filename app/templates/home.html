@@ -48,6 +48,10 @@
             <div class="xp-icon-img"><img src="/static/img/internet_shortcut_32.png" alt=""></div>
             <span>Source Code</span>
         </div>
+        <div class="xp-icon" ondblclick="window.open('/stylize','_blank')">
+            <div class="xp-icon-img"><img src="/static/img/xp_mydocs.png" alt=""></div>
+            <span>AI Stylize</span>
+        </div>
     </div>
 
     <!-- Windows Container -->
@@ -100,6 +104,9 @@
                 </button>
                 <button class="xp-start-item" onclick="window.open('https://github.com/ai-zhixiang/luckycard_overseas');XPShell.toggleStart()">
                     <span class="si-icon"><img src="/static/img/internet_shortcut_32.png" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">Source Code</span>
+                </button>
+                <button class="xp-start-item" onclick="window.open('/win11lpc');XPShell.toggleStart()">
+                    <span class="si-icon"><img src="/static/img/xp_mydocs.png" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">_Win11LPC</span>
                 </button>
                 <div class="xp-start-sep"></div>
                 <button class="xp-start-item xp-start-all">
@@ -172,5 +179,50 @@
     </div>
 
     <script src="/static/js/xp.js?v=147"></script>
+
+<!-- Mobile view for small screens -->
+<style>
+@media (max-width: 768px) {
+  body.xp-desktop { background: #0a0a0f !important; }
+  .xp-wallpaper, .xp-desktop-icons, #xp-windows, #xp-start-menu,
+  #xp-taskbar, #xp-run-dlg, #xp-taskbar-menu { display: none !important; }
+  .mobile-home { display: flex !important; }
+}
+</style>
+<div class="mobile-home" style="display:none;flex-direction:column;min-height:100vh;padding:16px;background:linear-gradient(135deg,#0a0a1a,#12122a)">
+  <div style="text-align:center;padding:20px 0 10px">
+    <div style="font-size:28px;font-weight:700;color:#e0e0f0">🃏 Lucky Card</div>
+    <div style="font-size:12px;color:#666;margin-top:4px">AI-Powered Greeting Cards</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:10px 0">
+    <a href="/static/forms/card-create.html" class="mobile-btn" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141428;border:1px solid #2a2a45;border-radius:12px;padding:20px 10px;text-decoration:none;color:#ddd;gap:8px;transition:.15s">
+      <span style="font-size:32px">🃏</span>
+      <span style="font-size:13px;font-weight:600">Create Card</span>
+    </a>
+    <a href="/static/forms/card-gallery.html" class="mobile-btn" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141428;border:1px solid #2a2a45;border-radius:12px;padding:20px 10px;text-decoration:none;color:#ddd;gap:8px;transition:.15s">
+      <span style="font-size:32px">🖼️</span>
+      <span style="font-size:13px;font-weight:600">Gallery</span>
+    </a>
+    <a href="/static/forms/music-player.html" class="mobile-btn" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141428;border:1px solid #2a2a45;border-radius:12px;padding:20px 10px;text-decoration:none;color:#ddd;gap:8px;transition:.15s">
+      <span style="font-size:32px">🎵</span>
+      <span style="font-size:13px;font-weight:600">Music</span>
+    </a>
+    <a href="/qemu-windos" class="mobile-btn" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141428;border:1px solid #2a2a45;border-radius:12px;padding:20px 10px;text-decoration:none;color:#ddd;gap:8px;transition:.15s">
+      <span style="font-size:32px">🖥️</span>
+      <span style="font-size:13px;font-weight:600">WinDOS VM</span>
+    </a>
+    <a href="/stylize" class="mobile-btn" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141428;border:1px solid #2a2a45;border-radius:12px;padding:20px 10px;text-decoration:none;color:#ddd;gap:8px;transition:.15s">
+      <span style="font-size:32px">🎨</span>
+      <span style="font-size:13px;font-weight:600">AI Stylize</span>
+    </a>
+    <a href="https://github.com/ai-zhixiang/luckycard_overseas" class="mobile-btn" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141428;border:1px solid #2a2a45;border-radius:12px;padding:20px 10px;text-decoration:none;color:#ddd;gap:8px;transition:.15s">
+      <span style="font-size:32px">📂</span>
+      <span style="font-size:13px;font-weight:600">Source</span>
+    </a>
+  </div>
+  <div style="margin-top:auto;text-align:center;padding:16px 0;font-size:11px;color:#555">
+    hicard.world &copy; 2026 &middot; XP mode on desktop
+  </div>
+</div>
 </body>
 </html>
