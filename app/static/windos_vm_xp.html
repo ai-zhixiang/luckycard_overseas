@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<div id="windos-xp-container" style="width:100%;height:100%;background:#000;overflow:hidden;position:relative">
+    <div id="windos-xp-screen" style="width:100%;height:100%"></div>
+    <div id="windos-xp-msg" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#0a0;font-family:monospace;font-size:14px;text-align:center;z-index:10">
+        Loading WinDOS...<br><span style="animation:blink 0.8s infinite">\u258c</span>
+    </div>
+    <div id="windos-xp-status" style="position:absolute;bottom:4px;right:8px;font-size:10px;color:#444;z-index:10;font-family:monospace">init...</div>
+</div>
+
+<style>
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    #windos-xp-screen canvas { display:block; width:100%; height:100%; image-rendering:pixelated; }
+</style>
+
+<script>
+(function() {
+    var container = document.getElementById('windos-xp-screen');
+    var msg = document.getElementById('windos-xp-msg');
+    var status = document.getElementById('windos-xp-status');
+
+    function loadV86Script(src, callback) {
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = callback;
+        s.onerror = function() {
+            status.textContent = 'load error';
+            msg.innerHTML = 'Failed to load v86 engine.';
+        };
+        document.head.appendChild(s);
+    }
+
+    function startV86() {
+        if (typeof V86 === 'undefined') {
+            setTimeout(startV86, 100);
+            return;
+        }
+        status.textContent = 'starting...';
+
+        try {
+            var emu = new V86({
+                ej: '/static/js/v86/v86.wasm',
+                screen: { Ac: container },
+                bios: { url: '/static/js/v86/seabios-qemu.bin' },
+                vga_bios: { url: '/static/js/v86/vgabios-qemu.bin' },
+                fda: { url: '/static/WinDOS.img', async: true },
+                G: 32 * 1024 * 1024,
+                uj: true
+            });
+
+            emu.v.register('emulator-ready', function() {
+                msg.style.display = 'none';
+                status.textContent = 'running';
+            }, emu);
+
+            emu.v.register('download-progress', function(e) {
+                if (e.loaded < e.total) {
+                    var pct = Math.round(e.loaded / e.total * 100);
+                    msg.innerHTML = 'Downloading WinDOS... ' + pct + '%<br><span style="animation:blink 0.8s infinite">\u258c</span>';
+                    status.textContent = 'dl ' + pct + '%';
+                }
+            }, emu);
+
+            window.__windos_emu = emu;
+            window.__windos_restart = function() { emu && emu.rh(); };
+            window.__windos_pause = function() { emu && emu.stop(); };
+            window.__windos_resume = function() { emu && emu.Zf(); };
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) emu && emu.stop();
+                else emu && emu.Zf();
+            });
+
+        } catch(e) {
+            msg.innerHTML = 'Error: ' + e.message;
+            status.textContent = 'error';
+            console.error('v86 error:', e);
+        }
+    }
+
+    loadV86Script('/static/js/v86/v86_all.js', startV86);
+})();
+</script>
