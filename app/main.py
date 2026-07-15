@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 from .database import engine, Base
 from .api import cards, music, auth, payment, paypal
 from .config import settings
+from pydantic import BaseModel
 
 app = FastAPI(title="Lucky Card", version="1.0.0")
 
@@ -49,6 +50,44 @@ async def stylize_page(request: Request):
 @app.get("/win11lpc")
 async def win11lpc_page(request: Request):
     return templates.TemplateResponse("win11lpc.html", {"request": request})
+
+class Win11Code(BaseModel):
+    code: str
+
+@app.post("/api/win11lpc/compile")
+async def win11lpc_compile(body: Win11Code):
+    import time
+    t0 = time.time()
+    try:
+        w11_dir = Path("/home/ubuntu/luckycardeng/win11lpc")
+        tmp_path = w11_dir / f"tmp_{uuid.uuid4().hex[:8]}.w11"
+        tmp_path.write_text(body.code, encoding="utf-8")
+
+        proc = subprocess.run(
+            [str(w11_dir / "_Win11LPC"), str(tmp_path)],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(w11_dir),
+        )
+
+        cpp_path = tmp_path.with_suffix(".cpp")
+        if cpp_path.exists():
+            cpp = cpp_path.read_text(encoding="utf-8")
+            cpp_path.unlink(missing_ok=True)
+        else:
+            cpp = proc.stdout or proc.stderr or "(no output)"
+
+        tmp_path.unlink(missing_ok=True)
+
+        duration_ms = int((time.time() - t0) * 1000)
+
+        if proc.returncode != 0 and not cpp.strip():
+            return {"status": "error", "message": cpp.strip() or "Transpile failed"}
+
+        return {"status": "ok", "cpp": cpp, "duration_ms": duration_ms}
+    except subprocess.TimeoutExpired:
+        return {"status": "error", "message": "Transpile timed out (30s)"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.post("/api/stylize")
 async def stylize_image(
