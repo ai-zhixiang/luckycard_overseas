@@ -438,8 +438,30 @@
         var content = menu[action] ? menu[action]() : '<p>Coming soon...</p>';
         if (typeof content === 'function') content = content();
 
-        // Open a small sub-window for the control panel item
-        XPShell.openWindow('cp-' + action, titles[action] || action, '⚙️', content);
+        // Replace the control panel body with sub-content + back button
+        var bodyEl = document.getElementById('xp-win-body-control');
+        if (bodyEl) {
+            bodyEl.innerHTML =
+                '<div style="padding:4px 8px;background:#d6d0c4;border-bottom:1px solid #b7b09e;display:flex;align-items:center;gap:8px;font-size:11px">' +
+                '<button onclick="XPShell.backToControlPanel()" style="padding:2px 8px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;font-size:11px">◀ Back</button>' +
+                '<span style="color:#666">' + t('control_panel') + ' &gt; </span>' +
+                '<span style="font-weight:bold;color:#003399">' + (titles[action] || action) + '</span>' +
+                '</div>' +
+                content;
+            // Update title bar icon
+            var titleBar = document.getElementById('xp-title-control');
+            if (titleBar) {
+                var iconSpan = titleBar.querySelector('.xp-title-icon');
+                if (iconSpan) iconSpan.innerHTML = '⚙️';
+            }
+        }
+    }
+
+    function backToControlPanel() {
+        var bodyEl = document.getElementById('xp-win-body-control');
+        if (bodyEl) {
+            bodyEl.innerHTML = buildControlPanelHTML();
+        }
     }
 
     function openControlPanel() {
@@ -1393,6 +1415,7 @@
         openControlPanel: openControlPanel,
         setLang: setLang,
         openCPItem: openCPItem,
+        backToControlPanel: backToControlPanel,
         setTheme: setTheme,
         openTaskManager: openTaskManager,
         endTask: endTask,
