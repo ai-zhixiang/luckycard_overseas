@@ -84,7 +84,7 @@
         <div class="boot-layer bios-layer" id="biosLayer"></div>
         <div class="boot-layer logo-layer" id="logoLayer" style="display:none">
             <img src="/static/img/logo.svg" alt="Lucky Card" class="boot-logo">
-            <div class="boot-brand">Lucky Card Professional</div>
+            <div class="boot-brand">Lucky Card Professional Edition</div>
             <div class="boot-version" id="bootVer"></div>
         </div>
         <div class="boot-layer setup-layer" id="setupLayer" style="display:none"></div>
@@ -966,10 +966,10 @@
             }, 1000);
         }
         function updateProgress(p) {
-            if (p<50) verEl.textContent='Lucky Card Professional v1.0 — loading...';
-            else if (p<80) verEl.textContent='Lucky Card Professional v1.0 — starting services...';
-            else if (p<95) verEl.textContent='Lucky Card Professional v1.0 — almost there...';
-            else verEl.textContent='Lucky Card Professional v1.0 — ready.';
+            if (p<50) verEl.textContent='v16.1145 — loading...';
+            else if (p<80) verEl.textContent='v16.1145 — starting services...';
+            else if (p<95) verEl.textContent='v16.1145 — almost there...';
+            else verEl.textContent='v16.1145 — ready.';
         }
         requestAnimationFrame(tick);
     }
