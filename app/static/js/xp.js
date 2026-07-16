@@ -364,7 +364,7 @@
                     '  <label style="font-size:11px;display:block;margin-top:3px;cursor:pointer">' +
                     '    <input type="radio" name="perf"> Adjust for best performance</label>' +
                     '  <label style="font-size:11px;display:block;margin-top:3px;cursor:pointer">' +
-                    '    <input type="radio" name="perf"> Let Windows choose</label>' +
+                    '    <input type="radio" name="perf"> Let Lucky Card choose</label>' +
                     '</div>' +
                     '<button onclick="XPShell.openTaskManager()" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px">⚡ Open Task Manager</button></div>';
             },
@@ -491,8 +491,8 @@
     function buildCmdHTML() {
         var h = '<div style="display:flex;flex-direction:column;height:100%;background:#000;color:#0f0;font-family:Consolas,monospace;font-size:13px">';
         h += '<div id="cmdOutput" style="flex:1;overflow-y:auto;padding:12px;white-space:pre-wrap">';
-        h += 'Microsoft Windows XP [Version 5.1.2600]<br>';
-        h += '(C) Copyright 1985-2001 Microsoft Corp.<br><br>';
+        h += 'Lucky Card Command Prompt [Version 16.1145.2600]<br>';
+        h += '(C) Copyright 2026 Lucky Card Technologies. All rights reserved.<br><br>';
         h += 'C:\\Documents and Settings\\User&gt;<span id="cmdInputLine"></span>';
         h += '</div>';
         h += '<div style="display:flex;padding:0 12px 8px 12px">';
@@ -527,6 +527,7 @@
                 print('CARD       Open Create Card');
                 print('GALLERY    Open Gallery');
                 print('MUSIC      Open Music Player');
+                print('STYLIZE    Open AI Stylizer');
                 print('SHUTDOWN   Shut down Lucky Card OS');
                 print('EXIT       Close command prompt');
             } else if (c === 'rmcards') {
@@ -546,7 +547,7 @@
                 }
                 print('       ' + cards.length + ' File(s)    524,288 bytes free');
             } else if (c === 'cls') { out.innerHTML = ''; }
-            else if (c === 'ver') { print(''); print('Lucky Card [Version 1.0.2600]'); }
+            else if (c === 'ver') { print(''); print('Lucky Card [Version 16.1145.2600]'); }
             else if (c === 'date') { print('The current date is: ' + new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})); }
             else if (c === 'time') { print('The current time is: ' + new Date().toLocaleTimeString('en-US', {hour12: true})); }
             else if (c.startsWith('echo ')) { print(cmd.substring(5)); }
@@ -557,6 +558,7 @@
             } else if (c === 'card') { window.XPShell && window.XPShell.openWindow('create', 'Create Card', '🃏', '/static/forms/card-create.html'); }
             else if (c === 'gallery') { window.XPShell && window.XPShell.openWindow('gallery', 'Gallery', '🖼️', '/static/forms/card-gallery.html'); }
             else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '🎵', '/static/forms/music-player.html'); }
+            else if (c === 'stylize' || c === 'stylizer') { window.XPShell && window.XPShell.openWindow('stylizer', 'AI Stylizer', '🎨', '/static/forms/ai-stylizer.html'); }
             else if (c === 'shutdown' || c === 'poweroff') { window.XPShell && window.XPShell.shutDown(); }
             else if (c === 'exit') { window.XPShell && window.XPShell.closeWindow('cmd'); }
             else { print('"' + c + '" is not recognized as an internal or external command, operable program or batch file.'); }
