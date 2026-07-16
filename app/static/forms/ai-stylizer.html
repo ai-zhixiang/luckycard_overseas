@@ -45,7 +45,7 @@
           <div style="background:#ece9d8;border-bottom:1px solid #b7b09e;padding:3px 8px;font-size:11px;font-weight:bold;color:#333">Result</div>
           <div id="sz-result" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:120px;color:#bbb;font-size:12px;overflow:hidden">
             <img id="sz-result-img" style="max-width:100%;max-height:100%;display:none">
-            <span id="sz-result-empty">✨ Pick a style & generate</span>
+            <span id="sz-result-empty">✨ Pick a style &amp; generate</span>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@
       <!-- Button -->
       <button id="sz-gen-btn" onclick="SGenerate()" disabled
         style="margin-top:8px;padding:6px 12px;background:linear-gradient(180deg,#fff,#ece9d8);border:1px solid #999;border-radius:3px;font-size:12px;cursor:pointer;color:#333;font-weight:bold;box-shadow:0 1px 0 rgba(255,255,255,.8) inset">
-        ✨ Generate
+        Generate
       </button>
     </div>
   </div>
@@ -64,100 +64,5 @@
 .stylist-opt:hover{border-color:#999;background:#f8f5ee}
 #sz-drop.dragover{border-color:#6a4;background:#e8f0d8}
 #sz-gen-btn:disabled{opacity:.5;cursor:default}
-.spin{display:inline-block;width:10px;height:10px;border:2px solid #999;border-top-color:#6a4;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
-<script>
-(function() {
-  var pf = null, cs = 'watercolor';
-
-  function q(s){return document.querySelector(s)}
-  function qi(s){return document.getElementById(s)}
-
-  var dz = qi('sz-drop'), fi = qi('sz-file'), btn = qi('sz-gen-btn');
-  var st = qi('sz-status'), origImg = qi('sz-orig-img'), origEmp = qi('sz-orig-empty');
-  var resImg = qi('sz-result-img'), resEmp = qi('sz-result-empty');
-
-  fi.addEventListener('change',function(e){
-    var f = e.target.files[0];
-    if(!f)return;
-    pf = f;
-    var rd = new FileReader();
-    rd.onload = function(ev){
-      origImg.src = ev.target.result;
-      origImg.style.display = 'block';
-      origEmp.style.display = 'none';
-      resImg.style.display = 'none';
-      resEmp.style.display = 'block';
-      btn.disabled = false;
-      st.style.display = 'none';
-    };
-    rd.readAsDataURL(f);
-  });
-
-  dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('dragover')});
-  dz.addEventListener('dragleave',function(){dz.classList.remove('dragover')});
-  dz.addEventListener('drop',function(e){
-    e.preventDefault();dz.classList.remove('dragover');
-    var f = e.dataTransfer.files[0];
-    if(f){fi.files = e.dataTransfer.files; fi.dispatchEvent(new Event('change'))}
-  });
-
-  window.SPick = function(el){
-    document.querySelectorAll('.stylist-opt').forEach(function(s){s.classList.remove('selected')});
-    el.classList.add('selected');
-    cs = el.dataset.style;
-  };
-
-  var PROMPTS = {
-    watercolor:'watercolor painting style, soft colors, painted on paper, artistic brush strokes',
-    anime:'anime art style, vibrant colors, cel-shaded, Japanese animation style',
-    oilpainting:'oil painting style, thick brush strokes, canvas texture, classical painting',
-    pixelart:'pixel art style, 8-bit retro game graphics, blocky pixels, limited color palette',
-    sketch:'pencil sketch style, black and white, hand-drawn, rough lines',
-    cinematic:'cinematic photography style, dramatic lighting, film grain, professional photo'
-  };
-
-  window.SGenerate = async function(){
-    if(!pf)return;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span> Generating...';
-    st.style.display = 'block';
-    st.className = '';
-    st.style.background = '#ffffe0';
-    st.style.border = '1px solid #ccc';
-    st.style.color = '#666';
-    st.innerHTML = '<span class="spin"></span> AI is painting...';
-
-    try{
-      var fd = new FormData();
-      fd.append('file', pf);
-      fd.append('style', cs);
-      fd.append('style_prompt', PROMPTS[cs]);
-      var r = await fetch('/api/stylize', {method:'POST', body:fd});
-      var d = await r.json();
-      if(d.status === 'ok'){
-        resImg.src = d.result_url;
-        resImg.style.display = 'block';
-        resEmp.style.display = 'none';
-        st.style.background = '#e8f0d8';
-        st.style.border = '1px solid #8a8';
-        st.style.color = '#030';
-        st.innerHTML = '✅ Done! <a href="'+d.result_url+'" download style="color:#36a">Download</a> <a href="'+d.result_url+'" target="_blank" style="color:#36a">Open</a>';
-      } else {
-        st.style.background = '#f0d8d8';
-        st.style.border = '1px solid #a88';
-        st.style.color = '#600';
-        st.innerHTML = '❌ ' + (d.message || 'Generation failed');
-      }
-    } catch(e){
-      st.style.background = '#f0d8d8';
-      st.style.border = '1px solid #a88';
-      st.style.color = '#600';
-      st.innerHTML = '❌ Error: ' + e.message;
-    }
-    btn.innerHTML = '✨ Generate';
-    btn.disabled = false;
-  };
-})();
-</script>
+<script src="/static/js/ai-stylizer.js"></script>
