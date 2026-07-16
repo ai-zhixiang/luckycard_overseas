@@ -255,15 +255,15 @@
     // ===== Control Panel =====
     function buildControlPanelHTML() {
         var cats = [
-            { icon: '🎨', key: 'cp_category_appearance' },
-            { icon: '🌐', key: 'cp_category_network' },
-            { icon: '🔊', key: 'cp_category_sounds' },
-            { icon: '⚡', key: 'cp_category_performance' },
-            { icon: '🖨️', key: 'cp_category_printers' },
-            { icon: '👤', key: 'cp_category_accounts' },
-            { icon: '📅', key: 'cp_category_date' },
-            { icon: '<img src="/static/img/xp_access_48.png" style="width:48px;height:48px;">', key: 'cp_category_accessibility' },
-            { icon: '<img src="/static/img/xp_shield_48.png" style="width:48px;height:48px;">', key: 'cp_category_security' },
+            { icon: '🎨', key: 'cp_category_appearance', action: 'appearance' },
+            { icon: '🌐', key: 'cp_category_network', action: 'network' },
+            { icon: '🔊', key: 'cp_category_sounds', action: 'sounds' },
+            { icon: '⚡', key: 'cp_category_performance', action: 'performance' },
+            { icon: '🖨️', key: 'cp_category_printers', action: 'printers' },
+            { icon: '👤', key: 'cp_category_accounts', action: 'accounts' },
+            { icon: '📅', key: 'cp_category_date', action: 'datetime' },
+            { icon: '<img src="/static/img/xp_access_48.png" style="width:48px;height:48px;">', key: 'cp_category_accessibility', action: 'accessibility' },
+            { icon: '<img src="/static/img/xp_shield_48.png" style="width:48px;height:48px;">', key: 'cp_category_security', action: 'security' },
         ];
 
         var h = '<div class="cp-container">';
@@ -277,7 +277,7 @@
         // Category grid
         h += '<div class="cp-grid">';
         for (var i = 0; i < cats.length; i++) {
-            h += '<div class="cp-cat">';
+            h += '<div class="cp-cat" onclick="XPShell.openCPItem(\'' + cats[i].action + '\')">';
             h += '<div class="cp-cat-icon">' + cats[i].icon + '</div>';
             h += '<div class="cp-cat-label">' + t(cats[i].key) + '</div>';
             h += '</div>';
@@ -294,6 +294,152 @@
 
         h += '</div>';
         return h;
+    }
+
+    function openCPItem(action) {
+        var titles = {
+            appearance: 'Appearance',
+            network: 'Network',
+            sounds: 'Sounds & Audio',
+            performance: 'Performance',
+            printers: 'Printers & Cards',
+            accounts: 'User Accounts',
+            datetime: 'Date & Time',
+            accessibility: 'Accessibility',
+            security: 'Security Center'
+        };
+
+        var menu = {
+            appearance: function() {
+                var c = localStorage.getItem('xp-theme') || 'blue';
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">' + t('appearance') + ' &amp; Themes</h3>' +
+                    '<p style="font-size:12px;color:#666;margin-bottom:12px">Choose a color scheme for your desktop:</p>' +
+                    '<div class="theme-options" style="display:flex;gap:10px;flex-wrap:wrap">' +
+                    '  <div class="theme-pick' + (c === 'blue' ? ' active' : '') + '" data-theme="blue" onclick="XPShell.setTheme(\'blue\')" style="width:80px;padding:8px;border:2px solid ' + (c === 'blue' ? '#039' : '#ccc') + ';border-radius:6px;text-align:center;cursor:pointer;background:linear-gradient(180deg,#3a6ea5,#2a5a8a)">' +
+                    '    <div style="height:40px;border-radius:4px;background:linear-gradient(135deg,#3a6ea5,#1a3a6a)"></div>' +
+                    '    <div style="font-size:11px;margin-top:4px;color:#fff">Classic Blue</div>' +
+                    '  </div>' +
+                    '  <div class="theme-pick' + (c === 'silver' ? ' active' : '') + '" data-theme="silver" onclick="XPShell.setTheme(\'silver\')" style="width:80px;padding:8px;border:2px solid ' + (c === 'silver' ? '#039' : '#ccc') + ';border-radius:6px;text-align:center;cursor:pointer;background:linear-gradient(180deg,#b0b0b0,#8a8a8a)">' +
+                    '    <div style="height:40px;border-radius:4px;background:linear-gradient(135deg,#c0c0c0,#999)"></div>' +
+                    '    <div style="font-size:11px;margin-top:4px;color:#333">Silver</div>' +
+                    '  </div>' +
+                    '  <div class="theme-pick' + (c === 'olive' ? ' active' : '') + '" data-theme="olive" onclick="XPShell.setTheme(\'olive\')" style="width:80px;padding:8px;border:2px solid ' + (c === 'olive' ? '#039' : '#ccc') + ';border-radius:6px;text-align:center;cursor:pointer;background:linear-gradient(180deg,#6a8a3a,#4a6a2a)">' +
+                    '    <div style="height:40px;border-radius:4px;background:linear-gradient(135deg,#7a9a4a,#5a7a2a)"></div>' +
+                    '    <div style="font-size:11px;margin-top:4px;color:#fff">Olive Green</div>' +
+                    '  </div>' +
+                    '</div></div>';
+                return menu.appearance = function(){return menu.appearance._html;}, menu.appearance._html = menu.appearance._html || menu.appearance(), menu.appearance._html;
+            },
+            network: function() {
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">Network Connections</h3>' +
+                    '<div style="background:#e8f0e8;border:1px solid #8a8;border-radius:4px;padding:12px;margin-bottom:12px">' +
+                    '  <div style="font-size:13px;font-weight:bold;color:#060">✅ Connected</div>' +
+                    '  <div style="font-size:11px;color:#666;margin-top:4px">hicard.world — Cloudflare protected</div>' +
+                    '  <div style="font-size:11px;color:#888;margin-top:2px">Server: Hong Kong / Speed: Fast</div>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:#888">' +
+                    '  <div>🔒 Connection: HTTPS + TLS 1.3</div>' +
+                    '  <div style="margin-top:2px">📡 Proxy: Cloudflare CDN</div>' +
+                    '</div></div>';
+            },
+            sounds: function() {
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">Sounds &amp; Audio</h3>' +
+                    '<p style="font-size:12px;color:#666;margin-bottom:12px">Configure your audio experience</p>' +
+                    '<button onclick="XPShell.openWindow(\'music\',\'Music\',\'🎵\',\'' + '/static/forms/music-player.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px">🎵 Open Music Player</button>' +
+                    '<div style="font-size:11px;color:#888;padding:8px;background:#f5f5f0;border:1px solid #ddd;border-radius:3px">' +
+                    '  <div>Volume: 🔊 Default</div>' +
+                    '  <div style="margin-top:2px">Audio Device: Browser Default</div>' +
+                    '</div></div>';
+            },
+            performance: function() {
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">Performance Options</h3>' +
+                    '<div style="padding:8px;background:#f5f5f0;border:1px solid #ddd;border-radius:3px;margin-bottom:12px">' +
+                    '  <div style="font-size:12px;font-weight:bold">Visual effects</div>' +
+                    '  <label style="font-size:11px;display:block;margin-top:6px;cursor:pointer">' +
+                    '    <input type="radio" name="perf" checked> Adjust for best appearance</label>' +
+                    '  <label style="font-size:11px;display:block;margin-top:3px;cursor:pointer">' +
+                    '    <input type="radio" name="perf"> Adjust for best performance</label>' +
+                    '  <label style="font-size:11px;display:block;margin-top:3px;cursor:pointer">' +
+                    '    <input type="radio" name="perf"> Let Windows choose</label>' +
+                    '</div>' +
+                    '<button onclick="XPShell.openTaskManager()" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px">⚡ Open Task Manager</button></div>';
+            },
+            printers: function() {
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">Printers &amp; Cards</h3>' +
+                    '<p style="font-size:12px;color:#666;margin-bottom:12px">Create and manage your greeting cards</p>' +
+                    '<button onclick="XPShell.openWindow(\'create\',\'Create Card\',\'🃏\',\'' + '/static/forms/card-create.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px">🃏 Create a New Card</button>' +
+                    '<button onclick="XPShell.openWindow(\'gallery\',\'Gallery\',\'🖼️\',\'' + '/static/forms/card-gallery.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px">🖼️ View Card Gallery</button></div>';
+            },
+            accounts: function() {
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">User Accounts</h3>' +
+                    '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f5f5f0;border:1px solid #ddd;border-radius:6px;margin-bottom:12px">' +
+                    '  <div style="font-size:32px">👤</div>' +
+                    '  <div>' +
+                    '    <div style="font-weight:bold;font-size:13px">Lucky Card</div>' +
+                    '    <div style="font-size:11px;color:#888">Administrator</div>' +
+                    '    <div style="font-size:11px;color:#aaa">Password protected</div>' +
+                    '  </div>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:#888">' +
+                    '  <div>🟢 Account is active</div>' +
+                    '  <div style="margin-top:2px">📅 Created: June 2026</div>' +
+                    '</div></div>';
+            },
+            datetime: function() {
+                var now = new Date();
+                var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">Date &amp; Time</h3>' +
+                    '<div style="text-align:center;padding:16px;background:#f5f5f0;border:1px solid #ddd;border-radius:6px;margin-bottom:12px">' +
+                    '  <div style="font-size:28px;font-weight:bold;color:#003399">' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + '</div>' +
+                    '  <div style="font-size:13px;color:#666;margin-top:4px">' + days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear() + '</div>' +
+                    '  <div style="font-size:11px;color:#888;margin-top:4px">Time Zone: ' + Intl.DateTimeFormat().resolvedOptions().timeZone + '</div>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:#888;text-align:center">The clock is automatically synced.</div></div>';
+            },
+            accessibility: function() {
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">Accessibility Options</h3>' +
+                    '<div style="margin-bottom:12px">' +
+                    '  <div style="font-size:12px;font-weight:bold;margin-bottom:6px">Language</div>' +
+                    '  <div style="display:flex;gap:8px">' +
+                    '    <button onclick="XPShell.setLang(\'en\')" style="flex:1;padding:8px;font-size:12px;cursor:pointer;border:1px solid ' + (_lang === 'en' ? '#039' : '#999') + ';background:' + (_lang === 'en' ? '#e0e8f8' : 'linear-gradient(180deg,#fff,#ece9d8)') + ';border-radius:3px;font-weight:' + (_lang === 'en' ? 'bold' : 'normal') + '">🇺🇸 English</button>' +
+                    '    <button onclick="XPShell.setLang(\'zh\')" style="flex:1;padding:8px;font-size:12px;cursor:pointer;border:1px solid ' + (_lang === 'zh' ? '#039' : '#999') + ';background:' + (_lang === 'zh' ? '#e0e8f8' : 'linear-gradient(180deg,#fff,#ece9d8)') + ';border-radius:3px;font-weight:' + (_lang === 'zh' ? 'bold' : 'normal') + '">🇨🇳 中文</button>' +
+                    '  </div>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:#888">' +
+                    '  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:4px"><input type="checkbox"> Use high contrast</label>' +
+                    '  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:4px"><input type="checkbox"> Show tooltips</label>' +
+                    '  <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox"> Enable animations</label>' +
+                    '</div></div>';
+            },
+            security: function() {
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399;display:flex;align-items:center;gap:8px"><img src="/static/img/xp_shield_48.png" style="width:24px;height:24px">Security Center</h3>' +
+                    '<div style="background:#e8f0e8;border:1px solid #8a8;border-radius:4px;padding:12px;margin-bottom:12px">' +
+                    '  <div style="font-size:13px;font-weight:bold;color:#060">✅ All secure</div>' +
+                    '  <div style="font-size:11px;color:#666;margin-top:4px">Your connection to hicard.world is encrypted.</div>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:#888">' +
+                    '  <div>🔒 HTTPS — Encrypted connection</div>' +
+                    '  <div style="margin-top:2px">🛡️ Cloudflare — DDoS protection</div>' +
+                    '  <div style="margin-top:2px">🔐 No passwords stored in browser</div>' +
+                    '</div></div>';
+            }
+        };
+
+        var content = menu[action] ? menu[action]() : '<p>Coming soon...</p>';
+        if (typeof content === 'function') content = content();
+
+        // Open a small sub-window for the control panel item
+        XPShell.openWindow('cp-' + action, titles[action] || action, '⚙️', content);
     }
 
     function openControlPanel() {
@@ -1194,6 +1340,46 @@
         });
     }
 
+    // ===== Theme switching =====
+    function setTheme(theme) {
+        var themes = {
+            blue: {
+                titlebar: 'linear-gradient(180deg,#0058e6,#0038a0)',
+                taskbar: 'linear-gradient(180deg,#316cd5,#2557a8)',
+                start: '#36823c',
+                active: '#316cd5'
+            },
+            silver: {
+                titlebar: 'linear-gradient(180deg,#d4d0c8,#b0aca0)',
+                taskbar: 'linear-gradient(180deg,#d4d0c8,#b0aca0)',
+                start: '#6a8a3a',
+                active: '#c0b8a8'
+            },
+            olive: {
+                titlebar: 'linear-gradient(180deg,#6a8a3a,#4a6a2a)',
+                taskbar: 'linear-gradient(180deg,#5a7a3a,#3a5a1a)',
+                start: '#36823c',
+                active: '#5a7a3a'
+            }
+        };
+        var t = themes[theme] || themes.blue;
+        localStorage.setItem('xp-theme', theme);
+        var style = document.getElementById('xp-theme-style');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'xp-theme-style';
+            document.head.appendChild(style);
+        }
+        style.textContent =
+            '.xp-window .xp-titlebar{background:' + t.titlebar + '!important}' +
+            '.xp-taskbar{background:' + t.taskbar + '!important}' +
+            '#xp-start-btn{background:' + t.start + '!important}' +
+            '.xp-task-btn.active{background:' + t.active + '!important;border-color:' + t.active + '!important}';
+        // Refresh control panel to update theme selector state
+        var cpBody = document.getElementById('xp-win-body-control');
+        if (cpBody) cpBody.innerHTML = buildControlPanelHTML();
+    }
+
     window.XPShell = {
         openWindow: openWindow,
         toggleStart: toggleStart,
@@ -1206,6 +1392,8 @@
         runCommand: runCommand,
         openControlPanel: openControlPanel,
         setLang: setLang,
+        openCPItem: openCPItem,
+        setTheme: setTheme,
         openTaskManager: openTaskManager,
         endTask: endTask,
         showTaskbarMenu: showTaskbarMenu,
@@ -1214,5 +1402,9 @@
         restoreShell: restoreShell,
         newTask: newTask,
     };
+
+    // Apply saved theme on load
+    var savedTheme = localStorage.getItem('xp-theme');
+    if (savedTheme && savedTheme !== 'blue') setTheme(savedTheme);
 
 })();
