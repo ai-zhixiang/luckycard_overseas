@@ -125,7 +125,7 @@ async def stylize_image(
         env = os.environ.copy()
         env["ARK_API_KEY"] = settings.ark_api_key or ""
         proc = subprocess.run(
-            ["python3", "stylize_pipeline.py"],
+            ["/home/ubuntu/luckycardeng/.venv/bin/python3", "stylize_pipeline.py"],
             input=f"STYLE:{style}\nSTYLE_PROMPT:{style_prompt}\n{img_b64}\n",
             capture_output=True, text=True, timeout=300,
             cwd="/home/ubuntu/luckycardeng",
