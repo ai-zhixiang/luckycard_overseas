@@ -62,20 +62,6 @@ window.MPlayer = {
             if (self.audio.duration) self.audio.currentTime = (this.value / 100) * self.audio.duration;
         });
     },
-            var pct = self.audio.duration ? (self.audio.currentTime / self.audio.duration * 100) : 0;
-            document.getElementById('mp-seek').value = pct;
-            var c = self.audio.currentTime;
-            document.getElementById('mp-cur').textContent = Math.floor(c/60)+':'+String(Math.floor(c%60)).padStart(2,'0');
-        });
-        this.audio.addEventListener('loadedmetadata', function() {
-            var d = self.audio.duration || 0;
-            document.getElementById('mp-dur').textContent = Math.floor(d/60)+':'+String(Math.floor(d%60)).padStart(2,'0');
-        });
-        this.audio.addEventListener('ended', function() { self.next(); });
-        document.getElementById('mp-seek').addEventListener('input', function() {
-            if (self.audio.duration) self.audio.currentTime = (this.value / 100) * self.audio.duration;
-        });
-    },
     
     loadTrack: function(i) {
         this.idx = i;

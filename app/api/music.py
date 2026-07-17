@@ -34,7 +34,7 @@ async def list_music():
         size = os.path.getsize(filepath)
         tracks.append({
             "id": filename.replace(".mp3", ""),
-            "file": f"/music/play/{filename}",
+            "file": f"/api/music/play/{filename}",
             "title": meta["title"],
             "composer": meta["composer"],
             "style": meta["style"],

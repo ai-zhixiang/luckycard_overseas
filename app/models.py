@@ -35,6 +35,7 @@ class GreetingCard(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     view_count = Column(Integer, default=0)
     is_public = Column(Boolean, default=True)
+    art_url = Column(String(500), nullable=True)
 
 class MusicTrack(Base):
     __tablename__ = "music_tracks"
