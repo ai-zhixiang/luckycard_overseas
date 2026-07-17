@@ -173,15 +173,15 @@
 
         // Command routing
         var routes = {
-            'card':       ['create', 'Create Card', '🃏', '/static/forms/card-create.html'],
-            'create':     ['create', 'Create Card', '🃏', '/static/forms/card-create.html'],
-            'gallery':    ['gallery', 'Gallery', '🖼️', '/static/forms/card-gallery.html'],
-            'music':      ['music', 'Music', '🎵', '/static/forms/music-player.html'],
-            'stylize':    ['stylizer', 'AI Stylizer', '🎨', '/static/forms/ai-stylizer.html'],
-            'stylizer':   ['stylizer', 'AI Stylizer', '🎨', '/static/forms/ai-stylizer.html'],
-            'mycards':    ['mycards', 'My Cards', '📁', '/static/forms/my-cards.html'],
+            'card':       ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
+            'create':     ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
+            'gallery':    ['gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'],
+            'music':      ['music', 'Music', '<img src="/static/img/xp-music_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=58'],
+            'stylize':    ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
+            'stylizer':   ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
+            'mycards':    ['mycards', 'My Cards', '<img src="/static/img/xp-folder_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-cards.html'],
             'control':    ['control', t('control_panel'), '<img src="/static/img/xp_controlpanel_24.png" style="width:18px;height:18px;vertical-align:middle">', buildControlPanelHTML()],
-            'notepad':    ['notepad', t('notepad_title'), '📝', buildNotepadHTML()],
+            'notepad':    ['notepad', t('notepad_title'), '<img src="/static/img/xp-notepad_20.png" style="width:20px;height:20px;vertical-align:middle">', buildNotepadHTML()],
             'cmd':        ['cmd', 'Command Prompt', '💻', buildCmdHTML()],
             'help':       ['help', 'Help', '❓', buildHelpHTML()],
             'about':      ['about', t('about'), 'ℹ️', buildAboutHTML()],
@@ -209,7 +209,7 @@
         // WinDOS easter egg 🥚 — download via Run dialog
         if (cmd === 'windos' || cmd === 'windos.exe' || cmd === 'win dos') {
             window.open('/dl/windos-build.zip?dl=1');
-            XPShell.openWindow('windos-dl', 'WinDOS', '💾',
+            XPShell.openWindow('windos-dl', 'WinDOS', '<img src="/static/img/xp-cmd_20.png" style="width:20px;height:20px;vertical-align:middle">',
                 '<div style="text-align:center;padding:2rem;font-family:Tahoma,sans-serif">' +
                 '<p style="font-size:3rem;margin-bottom:0.5rem">🖥️💾</p>' +
                 '<p style="font-size:1.3rem;font-weight:bold;margin-bottom:0.5rem">Downloading WinDOS…</p>' +
@@ -255,7 +255,7 @@
     // ===== Control Panel =====
     function buildControlPanelHTML() {
         var cats = [
-            { icon: '🎨', key: 'cp_category_appearance', action: 'appearance' },
+            { icon: '<img src="/static/img/xp-paint_20.png" style="width:20px;height:20px;vertical-align:middle">', key: 'cp_category_appearance', action: 'appearance' },
             { icon: '🌐', key: 'cp_category_network', action: 'network' },
             { icon: '🔊', key: 'cp_category_sounds', action: 'sounds' },
             { icon: '⚡', key: 'cp_category_performance', action: 'performance' },
@@ -348,7 +348,7 @@
                 return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
                     '<h3 style="margin-bottom:12px;color:#003399">Sounds &amp; Audio</h3>' +
                     '<p style="font-size:12px;color:#666;margin-bottom:12px">Configure your audio experience</p>' +
-                    '<button onclick="XPShell.openWindow(\'music\',\'Music\',\'🎵\',\'' + '/static/forms/music-player.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px">🎵 Open Music Player</button>' +
+                    '<button onclick="XPShell.openWindow(\'music\',\'Music\',\'<img src=\"/static/img/xp-music_20.png\" style=\"width:20px;height:20px;vertical-align:middle\">\',\'' + '/static/forms/music-player.html?v=58' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px"><img src="/static/img/xp-music_20.png" style="width:20px;height:20px;vertical-align:middle"> Open Music Player</button>' +
                     '<div style="font-size:11px;color:#888;padding:8px;background:#f5f5f0;border:1px solid #ddd;border-radius:3px">' +
                     '  <div>Volume: 🔊 Default</div>' +
                     '  <div style="margin-top:2px">Audio Device: Browser Default</div>' +
@@ -372,8 +372,8 @@
                 return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
                     '<h3 style="margin-bottom:12px;color:#003399">Printers &amp; Cards</h3>' +
                     '<p style="font-size:12px;color:#666;margin-bottom:12px">Create and manage your greeting cards</p>' +
-                    '<button onclick="XPShell.openWindow(\'create\',\'Create Card\',\'🃏\',\'' + '/static/forms/card-create.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px">🃏 Create a New Card</button>' +
-                    '<button onclick="XPShell.openWindow(\'gallery\',\'Gallery\',\'🖼️\',\'' + '/static/forms/card-gallery.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px">🖼️ View Card Gallery</button></div>';
+                    '<button onclick="XPShell.openWindow(\'create\',\'Create Card\',\'<img src=\"/static/img/xp-ie6_20.png\" style=\"width:20px;height:20px;vertical-align:middle\">\',\'' + '/static/forms/card-create.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px"><img src="/static/img/xp-ie6_20.png" style="width:20px;height:20px;vertical-align:middle"> Create a New Card</button>' +
+                    '<button onclick="XPShell.openWindow(\'gallery\',\'Gallery\',\'<img src=\"/static/img/xp-gallery_20.png\" style=\"width:20px;height:20px;vertical-align:middle\">\',\'' + '/static/forms/card-gallery.html' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px"><img src="/static/img/xp-gallery_20.png" style="width:20px;height:20px;vertical-align:middle"> View Card Gallery</button></div>';
             },
             accounts: function() {
                 return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
@@ -555,10 +555,10 @@
                 var cols = {}; cols['0a'] = '#0f0'; cols['0b'] = '#0ff'; cols['0c'] = '#f00'; cols['0e'] = '#ff0'; cols['0f'] = '#fff';
                 var col = cols[c.substring(6)] || '#0f0';
                 out.style.color = col; inp.style.color = col;
-            } else if (c === 'card') { window.XPShell && window.XPShell.openWindow('create', 'Create Card', '🃏', '/static/forms/card-create.html'); }
-            else if (c === 'gallery') { window.XPShell && window.XPShell.openWindow('gallery', 'Gallery', '🖼️', '/static/forms/card-gallery.html'); }
-            else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '🎵', '/static/forms/music-player.html'); }
-            else if (c === 'stylize' || c === 'stylizer') { window.XPShell && window.XPShell.openWindow('stylizer', 'AI Stylizer', '🎨', '/static/forms/ai-stylizer.html'); }
+            } else if (c === 'card') { window.XPShell && window.XPShell.openWindow('create', 'Create Card', '<img src="/static/img/xp-ie6_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'); }
+            else if (c === 'gallery') { window.XPShell && window.XPShell.openWindow('gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'); }
+            else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '<img src="/static/img/xp-music_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=58'); }
+            else if (c === 'stylize' || c === 'stylizer') { window.XPShell && window.XPShell.openWindow('stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'); }
             else if (c === 'shutdown' || c === 'poweroff') { window.XPShell && window.XPShell.shutDown(); }
             else if (c === 'exit') { window.XPShell && window.XPShell.closeWindow('cmd'); }
             else { print('"' + c + '" is not recognized as an internal or external command, operable program or batch file.'); }
