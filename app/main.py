@@ -1,4 +1,5 @@
-import os, uuid, json, base64, subprocess
+import os
+import shutil, uuid, json, base64, subprocess
 from pathlib import Path
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
@@ -218,6 +219,18 @@ async def card_art(text: str = Form(...), style: str = Form("watercolor"), card_
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    """Simple file upload endpoint."""
+    import aiofiles
+    save_dir = Path("/home/ubuntu/uploads")
+    save_dir.mkdir(exist_ok=True)
+    save_path = save_dir / (file.filename or "upload.zip")
+    content = await file.read()
+    with open(save_path, "wb") as f:
+        f.write(content)
+    return {"status": "ok", "path": str(save_path), "size": len(content)}
 
 @app.get("/")
 async def home(request: Request):
