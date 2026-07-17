@@ -11,7 +11,7 @@ from ..config import settings
 from ..models import User, PaymentTransaction
 
 router = APIRouter()
-PAYPAL_API = "https://api-m.paypal.com"
+PAYPAL_API = settings.paypal_api_base
 
 PREMIUM_PRICE = 9.9  # USD
 PREMIUM_CURRENCY = "USD"

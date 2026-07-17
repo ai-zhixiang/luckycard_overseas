@@ -125,6 +125,7 @@ window.CardCreator = {
                 var fd = new FormData();
                 fd.append('text', d.poem);
                 fd.append('style', style);
+                fd.append('card_id', self.cardId);
                 fetch('/api/card-art', { method: 'POST', body: fd })
                 .then(function(r) { return r.json(); })
                 .then(function(art) {

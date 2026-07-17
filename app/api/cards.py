@@ -167,7 +167,8 @@ async def view_card(card_id: str, db: AsyncSession = Depends(get_db)):
         "style": card.style,
         "music_id": card.music_id,
         "created_at": card.created_at.isoformat() if card.created_at else None,
-        "view_count": card.view_count
+        "view_count": card.view_count,
+        "art_url": card.art_url
     }
 
 
@@ -200,14 +201,15 @@ async def card_share_page(card_id: str, db: AsyncSession = Depends(get_db)):
     </script>
     <link rel="stylesheet" href="/static/css/xp.css?v=10">
 </head>
-<body class="xp-desktop" style="display:flex;align-items:center;justify-content:center;min-height:100vh">
-    <div style="text-align:center;padding:2rem;max-width:500px">
-        <div style="font-size:3rem;margin-bottom:1rem">💌</div>
-        <h1 style="font-family:Georgia,serif;font-size:1.5rem;margin-bottom:0.5rem">A Card for {card.recipient_name}</h1>
-        <p style="color:#888;margin-bottom:2rem">from {card.sender_name}</p>
-        <div style="white-space:pre-line;font-family:Georgia,serif;font-size:1.1rem;line-height:1.8;margin-bottom:2rem;background:linear-gradient(135deg,#fffaf5,#fef3e2);padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.06)">{card.poem}</div>
-        <a href="/" style="display:inline-block;background:#C41E3A;color:#fff;padding:0.75rem 2rem;border-radius:8px;text-decoration:none;font-weight:600">✨ Create Your Own Card</a>
-    </div>
-</body>
+    <body class="xp-desktop" style="display:flex;align-items:center;justify-content:center;min-height:100vh">
+        <div style="text-align:center;padding:2rem;max-width:500px">
+            <div style="font-size:3rem;margin-bottom:1rem">💌</div>
+            <h1 style="font-family:Georgia,serif;font-size:1.5rem;margin-bottom:0.5rem">A Card for {card.recipient_name}</h1>
+            <p style="color:#888;margin-bottom:2rem">from {card.sender_name}</p>
+            {card.art_url and f'<div style="margin-bottom:2rem"><img src="{card.art_url}" style="width:100%;max-width:400px;border-radius:12px;border:2px solid #e0d0c0;box-shadow:0 4px 20px rgba(0,0,0,0.1)" alt="AI Artwork"><p style="color:#888;font-size:0.75rem;margin-top:4px">✨ AI-generated artwork</p></div>' or ''}
+            <div style="white-space:pre-line;font-family:Georgia,serif;font-size:1.1rem;line-height:1.8;margin-bottom:2rem;background:linear-gradient(135deg,#fffaf5,#fef3e2);padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.06)">{card.poem}</div>
+            <a href="/" style="display:inline-block;background:#C41E3A;color:#fff;padding:0.75rem 2rem;border-radius:8px;text-decoration:none;font-weight:600">✨ Create Your Own Card</a>
+        </div>
+    </body>
 </html>"""
     return HTMLResponse(html)

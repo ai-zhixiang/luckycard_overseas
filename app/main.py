@@ -156,8 +156,10 @@ async def stylize_image(
         return {"status": "error", "message": str(e)}
 
 @app.post("/api/card-art")
-async def card_art(text: str = Form(...), style: str = Form("watercolor")):
+async def card_art(text: str = Form(...), style: str = Form("watercolor"), card_id: str = Form("")):
     """Generate AI artwork for a card from poem text."""
+    from sqlalchemy import select
+    from .models import GreetingCard
     try:
         STYLE_MAP = {
             "watercolor": "watercolor painting, soft, artistic",
@@ -194,6 +196,21 @@ async def card_art(text: str = Form(...), style: str = Form("watercolor")):
         static_name = f"art_{uuid.uuid4().hex[:12]}.jpg"
         static_path = static_dir / static_name
         urllib.request.urlretrieve(img_url, str(static_path))
+
+        # Save art_url to card record if card_id provided
+        if card_id:
+            try:
+                from .database import AsyncSessionLocal
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(
+                        select(GreetingCard).where(GreetingCard.id == card_id)
+                    )
+                    card = result.scalar_one_or_none()
+                    if card:
+                        card.art_url = f"/static/stylized/{static_name}"
+                        await db.commit()
+            except Exception:
+                pass  # Non-fatal if DB save fails
 
         return {
             "status": "ok",
