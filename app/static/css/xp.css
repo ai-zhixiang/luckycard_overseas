@@ -196,6 +196,7 @@
     display: none;
     position: fixed; bottom: 38px; left: 0; z-index: 200;
     width: 410px;
+    max-width: 100%;
     background: #fff;
     border: 1px solid #0054E3;
     border-radius: 8px 8px 0 0;
@@ -310,6 +311,7 @@
     right: 0 !important; bottom: 38px !important;
     width: auto !important; height: auto !important;
     border-radius: 0;
+    z-index: 9999 !important;
 }
 .xp-window.minimized {
     display: none;
