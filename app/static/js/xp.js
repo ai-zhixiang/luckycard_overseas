@@ -663,7 +663,15 @@
         if (isMobile) {
             win.style.cssText = 'top:0;left:0;right:0;bottom:40px;z-index:' + (++zIndex) + ';';
         } else {
-            win.style.cssText = 'top:60px;left:100px;width:600px;height:440px;z-index:' + (++zIndex) + ';';
+            var vh = window.innerHeight;
+            var vw = window.innerWidth;
+            var taskbarH = 38;
+            var availH = vh - taskbarH - 20;
+            var winH = Math.min(availH * 0.85, 520);
+            var winW = Math.min(vw * 0.7, 640);
+            var winTop = Math.max(20, (availH - winH) / 2.5 + 20);
+            var winLeft = Math.max(20, (vw - winW) / 2);
+            win.style.cssText = 'top:' + winTop + 'px;left:' + winLeft + 'px;width:' + winW + 'px;height:' + winH + 'px;z-index:' + (++zIndex) + ';';
         }
         win.innerHTML =
             '<div class="xp-titlebar" id="xp-title-' + id + '">' +
@@ -713,6 +721,7 @@
         windows[id] = { el: win, taskBtn: tb, title: title, minimized: false, maximized: false };
 
         var titleBar = win.querySelector('.xp-titlebar');
+        if (!isMobile) {
         var isDragging = false, dragX = 0, dragY = 0;
         var _dragTargetX = 0, _dragTargetY = 0;
         var _dragRafId = null;
@@ -766,6 +775,7 @@
         document.addEventListener('touchmove', function(e) { scheduleDrag(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
         document.addEventListener('mouseup', endDrag);
         document.addEventListener('touchend', endDrag);
+        }
 
         var btns = titleBar.querySelectorAll('button');
         btns[0].onclick = function(e) { e.stopPropagation(); minimizeWindow(id); };
@@ -816,7 +826,14 @@
             if (win._savedStyle) {
                 win.el.style.cssText = win._savedStyle;
             } else {
-                win.el.style.cssText = 'top:60px;left:100px;width:600px;height:440px;z-index:' + (++zIndex) + ';';
+                // Dynamic fallback — match _doOpen sizing
+                var vh = window.innerHeight, vw = window.innerWidth;
+                var availH = vh - 38 - 20;
+                var winH = Math.min(availH * 0.85, 520);
+                var winW = Math.min(vw * 0.7, 640);
+                var winTop = Math.max(20, (availH - winH) / 2.5 + 20);
+                var winLeft = Math.max(20, (vw - winW) / 2);
+                win.el.style.cssText = 'top:' + winTop + 'px;left:' + winLeft + 'px;width:' + winW + 'px;height:' + winH + 'px;z-index:' + (++zIndex) + ';';
             }
             win.maximized = false;
             // Update button icon
@@ -825,7 +842,7 @@
         } else {
             // Save current position before maximizing
             var el = win.el;
-            win._savedStyle = 'top:' + el.style.top + ';left:' + el.style.left + ';width:' + el.style.width + ';height:' + el.style.height + ';z-index:' + (++zIndex) + ';';
+            win._savedStyle = 'top:' + el.style.top + ';left:' + el.style.left + ';width:' + el.style.width + ';height:' + el.style.height + ';right:' + (el.style.right || 'auto') + ';bottom:' + (el.style.bottom || 'auto') + ';z-index:' + (++zIndex) + ';';
             win.el.classList.add('maximized');
             win.maximized = true;
             // Update button icon
