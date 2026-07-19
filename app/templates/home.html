@@ -184,12 +184,13 @@
 <style>
 @media (max-width: 768px) {
   body.xp-desktop { background: #0a0a0f !important; }
-  .xp-wallpaper, .xp-desktop-icons, #xp-windows, #xp-start-menu,
+  .xp-desktop-icons, #xp-windows, #xp-start-menu,
   #xp-taskbar, #xp-run-dlg, #xp-taskbar-menu { display: none !important; }
+  .xp-wallpaper { display: block !important; }
   .mobile-home { display: flex !important; }
 }
 </style>
-<div class="mobile-home" style="display:none;flex-direction:column;min-height:100vh;padding:16px;background:linear-gradient(135deg,#0a0a1a,#12122a)">
+<div class="mobile-home" style="display:none;flex-direction:column;min-height:100vh;padding:16px;background:rgba(10,10,26,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)">
   <div style="text-align:center;padding:20px 0 10px">
     <div style="font-size:28px;font-weight:700;color:#e0e0f0">🃏 Lucky Card</div>
     <div style="font-size:12px;color:#666;margin-top:4px">AI-Powered Greeting Cards</div>
