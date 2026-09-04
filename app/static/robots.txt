@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Site description for crawlers / AI agents:
+# https://hicard.world/about.txt

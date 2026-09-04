@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Static Manager — Lucky Card</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1117; color: #c9d1d9;
+  min-height: 100vh;
+}
+.header {
+  background: #161b22; border-bottom: 1px solid #30363d;
+  padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.header h1 { font-size: 20px; color: #f0f6fc; }
+.header h1 span { color: #58a6ff; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.breadcrumb {
+  padding: 12px 24px; font-size: 14px; color: #8b949e;
+  border-bottom: 1px solid #21262d;
+}
+.breadcrumb a { color: #58a6ff; text-decoration: none; cursor: pointer; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb .sep { color: #8b949e; margin: 0 6px; }
+.toolbar {
+  padding: 12px 24px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid #21262d; flex-wrap: wrap;
+}
+.toolbar input, .toolbar button {
+  padding: 6px 12px; border: 1px solid #30363d; border-radius: 6px;
+  background: #21262d; color: #c9d1d9; font-size: 13px;
+}
+.toolbar input:focus { outline: none; border-color: #58a6ff; }
+.toolbar button {
+  cursor: pointer; transition: background .2s;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.toolbar button:hover { background: #30363d; }
+.toolbar button.danger { color: #f85149; }
+.toolbar button.danger:hover { background: #3d1f1f; }
+.toolbar button.primary { background: #238636; border-color: #2ea043; }
+.toolbar button.primary:hover { background: #2ea043; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 8px 16px; text-align: left; font-size: 12px; font-weight: 600;
+  color: #8b949e; border-bottom: 1px solid #21262d; white-space: nowrap;
+  position: sticky; top: 108px; background: #0d1117;
+  user-select: none;
+}
+th:hover { color: #c9d1d9; }
+td { padding: 8px 16px; border-bottom: 1px solid #21262d; font-size: 14px; }
+tr:hover td { background: #161b22; }
+.file-icon { margin-right: 8px; width: 16px; text-align: center; display: inline-block; color: #8b949e; font-size: 12px; }
+.file-name { cursor: pointer; color: #58a6ff; }
+.file-name:hover { text-decoration: underline; }
+.file-name.dir { color: #f0f6fc; font-weight: 500; }
+.file-type { font-size: 12px; color: #8b949e; }
+.file-size { color: #8b949e; font-variant-numeric: tabular-nums; }
+.file-time { color: #8b949e; font-size: 13px; }
+.actions button {
+  background: none; border: none; color: #8b949e; cursor: pointer;
+  padding: 2px 6px; font-size: 13px; font-family: monospace;
+}
+.actions button:hover { color: #f85149; }
+.empty { text-align: center; padding: 48px 24px; color: #8b949e; }
+.empty .empty-line { font-size: 13px; margin-bottom: 8px; }
+.status-bar {
+  padding: 8px 24px; background: #161b22; border-top: 1px solid #30363d;
+  font-size: 12px; color: #8b949e; display: flex; justify-content: space-between;
+  position: fixed; bottom: 0; left: 0; right: 0;
+}
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 24px; width: 360px; max-width: 90vw;
+}
+.modal h2 { font-size: 16px; margin-bottom: 16px; }
+.modal input { width: 100%; padding: 8px 12px; margin-bottom: 12px; }
+.modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
+.modal .btn-row button { padding: 6px 16px; border-radius: 6px; cursor: pointer; }
+.toast {
+  position: fixed; top: 16px; right: 16px; z-index: 300;
+  padding: 10px 20px; border-radius: 6px; font-size: 13px;
+  animation: fadeIn .3s;
+}
+.toast.success { background: #238636; color: #fff; }
+.toast.error { background: #da3633; color: #fff; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+#searchInput { width: 200px; }
+#progressBar { height: 3px; background: #238636; transition: width .3s; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>[ <span>Static</span> Manager ]</h1>
+  <div class="header-right">
+    <span id="adminBadge" style="font-size:12px;color:#8b949e;display:none">[Admin]</span>
+    <button id="btnLogin" onclick="showAuth()">Login</button>
+  </div>
+</div>
+
+<div id="progressBar"></div>
+
+<div class="breadcrumb" id="breadcrumb"></div>
+
+<div class="toolbar">
+  <button onclick="refreshList()">Refresh</button>
+  <input id="searchInput" placeholder="Search files..." oninput="filterList()">
+  <div style="flex:1"></div>
+  <button id="btnUpload" onclick="uploadFile()" style="display:none">Upload</button>
+  <button id="btnMkdir" onclick="createDir()" style="display:none">New Folder</button>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40%">Name</th>
+        <th style="width:100px">Type</th>
+        <th style="width:100px">Size</th>
+        <th style="width:160px">Modified</th>
+        <th style="width:60px" id="thActions">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="fileList"></tbody>
+  </table>
+</div>
+
+<div class="empty" id="emptyState">
+  <div class="empty-line">[ empty ]</div>
+  <div>No files found</div>
+</div>
+
+<div class="status-bar">
+  <span id="statusLeft">Loading...</span>
+  <span id="statusRight"></span>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <h2>Admin Login</h2>
+    <input type="password" id="authToken" placeholder="Enter admin token" onkeydown="if(event.key==='Enter')verifyAuth()">
+    <div class="btn-row">
+      <button onclick="closeAuth()" style="background:#21262d;border:1px solid #30363d;color:#c9d1d9">Cancel</button>
+      <button onclick="verifyAuth()" style="background:#238636;border:none;color:#fff">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal">
+    <h2>Upload Files</h2>
+    <input type="file" id="uploadFile" multiple style="margin-bottom:12px;width:100%">
+    <div class="btn-row">
+      <button onclick="closeUpload()" style="background:#21262d;border:1px solid #30363d;color:#c9d1d9">Cancel</button>
+      <button id="uploadBtn" onclick="doUpload()" style="background:#238636;border:none;color:#fff">Upload</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPath = '';
+let files = [];
+let allFiles = [];
+let isAdmin = false;
+
+var ICONS = {
+  folder: 'xp-folder_20.png', image: 'get_pictures_20.png', audio: 'xp-music_20.png',
+  video: 'xp-wmp_20.png', archive: 'xp-cmd_20.png', executable: 'xp-cmd_20.png',
+  code: 'xp-notepad_20.png', document: 'xp-wordpad_20.png', file: 'xp-notepad_20.png'
+};
+
+function getIconImg(type, isDir) {
+  if (isDir) return '<img src="/static/img/xp-folder_20.png" style="width:16px;height:16px;vertical-align:middle;margin-right:4px">';
+  var fn = ICONS[type] || ICONS.file;
+  return '<img src="/static/img/' + fn + '" style="width:16px;height:16px;vertical-align:middle;margin-right:4px">';
+}
+
+function $(id) { return document.getElementById(id); }
+
+function toast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type || 'success');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
+
+async function api(method, url, data) {
+  var opts = { method: method, credentials: 'same-origin' };
+  if (data instanceof FormData) {
+    opts.body = data;
+  } else if (data) {
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = JSON.stringify(data);
+  }
+  var res = await fetch(url, opts);
+  if (!res.ok) { var e = await res.json().catch(function(){}); throw new Error((e&&e.detail) || res.statusText); }
+  return res.json();
+}
+
+async function refreshList() {
+  var pb = $('progressBar'); pb.style.display = 'block'; pb.style.width = '30%';
+  try {
+    var data = await api('GET', '/api/static/list?path=' + encodeURIComponent(currentPath));
+    pb.style.width = '100%';
+    allFiles = data.items;
+    filterList();
+    renderBreadcrumb();
+    $('statusLeft').textContent = data.total + ' items';
+    $('statusRight').textContent = currentPath || '/';
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+  setTimeout(function(){ pb.style.display = 'none'; }, 500);
+}
+
+function filterList() {
+  var q = $('searchInput').value.toLowerCase();
+  files = q ? allFiles.filter(function(f){ return f.name.toLowerCase().includes(q); }) : allFiles;
+  renderList();
+}
+
+function renderList() {
+  var tbody = $('fileList');
+  var empty = $('emptyState');
+  tbody.innerHTML = '';
+
+  if (currentPath && !files.length && !$('searchInput').value) {
+    files.unshift({ name: '..', is_dir: true, path: currentPath.split('/').slice(0,-1).join('/'), type: 'folder' });
+  }
+
+  if (files.length === 0) {
+    empty.style.display = 'block';
+    $('thActions').style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  $('thActions').style.display = isAdmin ? '' : 'none';
+
+  files.forEach(function(f) {
+    var tr = document.createElement('tr');
+    var iconHtml = getIconImg(f.type, f.is_dir);
+
+    var nameHtml = iconHtml +
+      '<span class="file-name' + (f.is_dir ? ' dir' : '') + '" onclick="' +
+      (f.is_dir ? "navigate('" + f.path.replace(/'/g,"\\'") + "')" : "download('" + f.path.replace(/'/g,"\\'") + "')") +
+      '">' + escapeHtml(f.name) + '</span>';
+
+    var delHtml = (isAdmin && !f.is_dir)
+      ? '<button onclick="deleteFile(\'' + f.path.replace(/'/g,"\\'") + '\')">[x]</button>'
+      : '';
+
+    tr.innerHTML = '<td>' + nameHtml + '</td>' +
+      '<td class="file-type">' + f.type + '</td>' +
+      '<td class="file-size">' + (f.size_display || '-') + '</td>' +
+      '<td class="file-time">' + (f.mtime_display || '-') + '</td>' +
+      '<td class="actions">' + delHtml + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
+function navigate(path) {
+  currentPath = path;
+  refreshList();
+}
+
+function download(path) {
+  window.open('/static/' + path, '_blank');
+}
+
+function renderBreadcrumb() {
+  var el = $('breadcrumb');
+  var parts = currentPath ? currentPath.split('/') : [];
+  var html = '<a onclick="navigate(\'\')">[root]</a>';
+  var acc = '';
+  parts.forEach(function(p, i) {
+    acc += (i ? '/' : '') + p;
+    html += '<span class="sep">&gt;</span>';
+    html += '<a onclick="navigate(\'' + acc + '\')">' + escapeHtml(p) + '</a>';
+  });
+  el.innerHTML = html;
+}
+
+// Auth via cookies
+async function checkAuth() {
+  try {
+    var data = await api('GET', '/api/static/check');
+    isAdmin = data.admin;
+    if (isAdmin) {
+      $('adminBadge').style.display = 'inline';
+      $('btnLogin').textContent = 'Logout';
+      $('btnLogin').onclick = logout;
+      $('btnUpload').style.display = '';
+      $('btnMkdir').style.display = '';
+      if ($('thActions')) $('thActions').style.display = '';
+      renderList();
+    }
+  } catch (e) {}
+}
+
+function showAuth() {
+  if (isAdmin) return logout();
+  $('authModal').classList.add('show');
+  $('authToken').value = '';
+  $('authToken').focus();
+}
+function closeAuth() { $('authModal').classList.remove('show'); }
+
+async function verifyAuth() {
+  var token = $('authToken').value;
+  if (!token) return;
+  try {
+    var fd = new FormData();
+    fd.append('token', token);
+    await api('POST', '/api/static/login', fd);
+    closeAuth();
+    isAdmin = true;
+    $('adminBadge').style.display = 'inline';
+    $('btnLogin').textContent = 'Logout';
+    $('btnLogin').onclick = logout;
+    $('btnUpload').style.display = '';
+    $('btnMkdir').style.display = '';
+    toast('Admin mode enabled');
+    refreshList();
+  } catch (e) {
+    toast('Invalid token', 'error');
+  }
+}
+
+async function logout() {
+  await api('POST', '/api/static/logout');
+  isAdmin = false;
+  $('adminBadge').style.display = 'none';
+  $('btnLogin').textContent = 'Login';
+  $('btnLogin').onclick = showAuth;
+  $('btnUpload').style.display = 'none';
+  $('btnMkdir').style.display = 'none';
+  $('thActions').style.display = 'none';
+  refreshList();
+  toast('Logged out');
+}
+
+// Admin operations
+async function deleteFile(path) {
+  if (!confirm('Delete "' + path + '"?')) return;
+  try {
+    var fd = new FormData();
+    fd.append('file_path', path);
+    await api('POST', '/api/static/delete', fd);
+    toast('Deleted ' + path);
+    refreshList();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function uploadFile() { $('uploadModal').classList.add('show'); }
+function closeUpload() { $('uploadModal').classList.remove('show'); }
+async function doUpload() {
+  var input = $('uploadFile');
+  if (!input.files.length) return;
+  $('uploadBtn').disabled = true;
+  try {
+    for (var i = 0; i < input.files.length; i++) {
+      var file = input.files[i];
+      var fd = new FormData();
+      fd.append('target_path', currentPath);
+      fd.append('file', file);
+      await api('POST', '/api/static/upload', fd);
+      toast('Uploaded ' + file.name);
+    }
+    refreshList();
+    closeUpload();
+  } catch (e) { toast(e.message, 'error'); }
+  $('uploadBtn').disabled = false;
+  input.value = '';
+}
+
+async function createDir() {
+  var name = prompt('Folder name:');
+  if (!name) return;
+  try {
+    var fd = new FormData();
+    fd.append('dir_name', name);
+    fd.append('parent_path', currentPath);
+    await api('POST', '/api/static/mkdir', fd);
+    toast('Created ' + name);
+    refreshList();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// Init
+checkAuth();
+refreshList();
+</script>
+</body>
+</html>

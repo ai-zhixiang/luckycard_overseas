@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minesweeper</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #ECE9D8;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+  color: #000;
+}
+/* ===== Menu Bar ===== */
+.menu-bar {
+  display: flex;
+  gap: 0;
+  padding: 2px 4px;
+  background: #ECE9D8;
+  border-bottom: 1px solid #D4D0C8;
+  position: relative;
+}
+.menu-item {
+  padding: 2px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  position: relative;
+  color: #000;
+}
+.menu-item:hover, .menu-item.active { background: #316AC5; color: #fff; }
+.menu-item.active .menu-dropdown { display: block; }
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #FFF;
+  border: 2px solid;
+  border-color: #FFF #808080 #808080 #FFF;
+  box-shadow: 2px 2px 5px rgba(0,0,0,.3);
+  z-index: 100;
+  min-width: 150px;
+  padding: 2px;
+}
+.menu-dropdown .mi {
+  padding: 3px 24px 3px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  color: #000;
+}
+.menu-dropdown .mi:hover { background: #316AC5; color: #fff; }
+.menu-dropdown .mi-sep { height: 1px; background: #D4D0C8; margin: 3px 2px; }
+
+/* ===== Game Area ===== */
+.game-area {
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ECE9D8;
+}
+
+/* Header panel */
+.header-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 3px 5px;
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #808080 #FFF #FFF #808080;
+  margin-bottom: 5px;
+}
+.counter-box {
+  background: #000;
+  color: #FF0000;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 1px 3px;
+  min-width: 46px;
+  text-align: center;
+  letter-spacing: 2px;
+  line-height: 1.2;
+}
+.smiley-btn {
+  width: 36px; height: 36px;
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #FFF #808080 #808080 #FFF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+}
+.smiley-btn:active { border-color: #808080 #FFF #FFF #808080; }
+
+/* Board */
+.board-wrapper {
+  border: 2px solid;
+  border-color: #808080 #FFF #FFF #808080;
+  background: #C0C0C0;
+  display: inline-block;
+}
+#board {
+  display: grid;
+  gap: 0;
+}
+.cell {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  background: #C0C0C0;
+  border: 2px solid;
+  border-color: #FFF #808080 #808080 #FFF;
+  line-height: 1;
+}
+.cell:active { border: 1px solid #808080; background: #D4D0C8; }
+.cell.revealed { border: 1px solid #808080; background: #D4D0C8; }
+.cell.revealed.n1 { color: #0000FF; }
+.cell.revealed.n2 { color: #008000; }
+.cell.revealed.n3 { color: #FF0000; }
+.cell.revealed.n4 { color: #000080; }
+.cell.revealed.n5 { color: #800000; }
+.cell.revealed.n6 { color: #008080; }
+.cell.revealed.n7 { color: #000000; }
+.cell.revealed.n8 { color: #808080; }
+.cell.flagged { font-size: 15px; }
+
+/* ===== Dialogs ===== */
+.dialog-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+.dialog-overlay.show { display: flex; }
+.dialog-box {
+  background: #ECE9D8;
+  border: 2px solid;
+  border-color: #FFF #404040 #404040 #FFF;
+  box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
+  min-width: 240px;
+  padding: 12px;
+}
+.dialog-box h3 { margin-bottom: 10px; font-size: 12px; }
+.dlg-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+.dlg-row label { min-width: 50px; text-align: right; }
+.dlg-row input {
+  width: 60px;
+  padding: 2px 4px;
+  border: 2px solid;
+  border-color: #808080 #FFF #FFF #808080;
+  background: #FFF;
+  font-size: 11px;
+}
+.dlg-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
+}
+.dlg-btns button {
+  padding: 3px 20px;
+  background: #ECE9D8;
+  border: 2px solid;
+  border-color: #FFF #808080 #808080 #FFF;
+  cursor: pointer;
+  font-size: 11px;
+  min-width: 60px;
+}
+.dlg-btns button:active { border-color: #808080 #FFF #FFF #808080; }
+
+/* Win notice */
+.win-notice {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 150;
+  align-items: center;
+  justify-content: center;
+}
+.win-notice.show { display: flex; }
+.win-notice-box {
+  background: #ECE9D8;
+  border: 2px solid;
+  border-color: #FFF #404040 #404040 #FFF;
+  box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
+  padding: 20px 30px;
+  text-align: center;
+}
+.win-notice-box .wn-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+.win-notice-box .wn-time { font-size: 22px; color: #c00; font-weight: bold; margin-bottom: 6px; }
+.win-notice-box .wn-record { font-size: 11px; color: #060; margin-bottom: 12px; font-weight: bold; }
+.win-notice-box button {
+  padding: 4px 24px;
+  background: #ECE9D8;
+  border: 2px solid;
+  border-color: #FFF #808080 #808080 #FFF;
+  cursor: pointer;
+  font-size: 12px;
+}
+.win-notice-box button:active { border-color: #808080 #FFF #FFF #808080; }
+
+/* ===== XP-style sub-dialogs (About, Records) ===== */
+.ms-dlg .ms-dlg-window {
+  background: #ECE9D8;
+  border: 2px solid;
+  border-color: #FFF #404040 #404040 #FFF;
+  box-shadow: 4px 4px 10px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+}
+.ms-dlg-titlebar {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(90deg, #0A246A 0%, #3A6EA5 100%);
+  color: #fff;
+  padding: 3px 5px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: default;
+  gap: 4px;
+}
+.ms-dlg-title-icon { font-size: 14px; }
+.ms-dlg-title-text { flex: 1; }
+.ms-dlg-title-btns button {
+  width: 21px; height: 21px;
+  background: #ECE9D8;
+  border: 1px solid #fff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+  box-shadow: inset 1px 1px 0 #fff;
+  font-size: 11px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+  color: #000;
+  line-height: 19px;
+}
+.ms-dlg-title-btns button:active {
+  border: 1px solid #404040;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  box-shadow: none;
+}
+.ms-dlg-body {
+  padding: 12px 16px;
+  font-size: 11px;
+  color: #000;
+}
+.ms-dlg-btn {
+  padding: 3px 20px;
+  background: #ECE9D8;
+  border: 2px solid;
+  border-color: #FFF #808080 #808080 #FFF;
+  cursor: pointer;
+  font-size: 11px;
+  min-width: 60px;
+}
+.ms-dlg-btn:active { border-color: #808080 #FFF #FFF #808080; }
+
+/* Status */
+.status-bar {
+  font-size: 10px;
+  color: #555;
+  text-align: center;
+  padding: 2px;
+  border-top: 1px solid #D4D0C8;
+  background: #ECE9D8;
+}
+</style>
+</head>
+<body>
+
+<div class="menu-bar">
+  <div class="menu-item" data-menu="game">Game <span style="font-size:8px">▼</span>
+    <div class="menu-dropdown">
+      <div class="mi" onclick="newGame('beginner')">New (Beginner)</div>
+      <div class="mi" onclick="newGame('intermediate')">New (Intermediate)</div>
+      <div class="mi" onclick="newGame('expert')">New (Expert)</div>
+      <div class="mi-sep"></div>
+      <div class="mi" onclick="showCustom()">Custom...</div>
+      <div class="mi-sep"></div>
+      <div class="mi" onclick="showRecords()">Best Times...</div>
+      <div class="mi-sep"></div>
+      <div class="mi" onclick="closeMinesweeper()">Exit</div>
+    </div>
+  </div>
+  <div class="menu-item" data-menu="help">Help <span style="font-size:8px">▼</span>
+    <div class="menu-dropdown">
+      <div class="mi" onclick="showAbout()">About Minesweeper</div>
+    </div>
+  </div>
+</div>
+
+<div class="game-area">
+  <div class="header-panel">
+    <div class="counter-box" id="mineCounter">010</div>
+    <button class="smiley-btn" id="smileyBtn" onclick="newGame()">🙂</button>
+    <div class="counter-box" id="timeCounter">000</div>
+  </div>
+  <div style="position:relative">
+    <div class="board-wrapper">
+      <div id="board"></div>
+    </div>
+    <div class="win-notice" id="winNotice">
+      <div class="win-notice-box">
+        <div class="wn-title">🎉 You Win!</div>
+        <div class="wn-time" id="wnTime">000</div>
+        <div style="font-size:11px;color:#666;margin-bottom:4px">seconds</div>
+        <div class="wn-record" id="wnRecord"></div>
+        <button onclick="closeWinNotice()">OK</button>
+      </div>
+    </div>
+    <div class="dialog-overlay" id="customDlg">
+      <div class="dialog-box">
+        <h3>Custom Field</h3>
+        <div class="dlg-row"><label>Height:</label><input type="number" id="cHeight" value="9" min="5" max="30"></div>
+        <div class="dlg-row"><label>Width:</label><input type="number" id="cWidth" value="9" min="5" max="30"></div>
+        <div class="dlg-row"><label>Mines:</label><input type="number" id="cMines" value="10" min="1" max="700"></div>
+        <div class="dlg-btns">
+          <button onclick="applyCustom()">OK</button>
+          <button onclick="closeCustom()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <!-- Records dialog -->
+    <div class="dialog-overlay ms-dlg" id="recordsDlg">
+      <div class="ms-dlg-window" style="width:260px">
+        <div class="ms-dlg-titlebar">
+          <span class="ms-dlg-title-icon">📋</span>
+          <span class="ms-dlg-title-text">Best Times</span>
+          <div class="ms-dlg-title-btns"><button onclick="closeRecords()">✕</button></div>
+        </div>
+        <div class="ms-dlg-body">
+          <div id="recordsContent" style="margin:8px 0;line-height:1.8;font-size:12px"></div>
+          <div style="text-align:center;margin-top:8px">
+            <button class="ms-dlg-btn" onclick="closeRecords()">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- About dialog -->
+    <div class="dialog-overlay ms-dlg" id="aboutDlg">
+      <div class="ms-dlg-window" style="width:280px">
+        <div class="ms-dlg-titlebar">
+          <span class="ms-dlg-title-icon">💣</span>
+          <span class="ms-dlg-title-text">About Minesweeper</span>
+          <div class="ms-dlg-title-btns"><button onclick="closeAbout()">✕</button></div>
+        </div>
+        <div class="ms-dlg-body">
+          <div style="margin:4px 0;line-height:1.8;font-size:12px">
+            <b>Minesweeper</b><br>
+            Version 1.0<br>
+            <span style="color:#888">Copyright &copy; 2026 Lucky Card</span><br><br>
+            Left-click to reveal a cell.<br>
+            Right-click to flag a mine.<br>
+            Chord (click a number) to auto-reveal neighbors.<br><br>
+            Classic Windows XP style.
+          </div>
+          <div style="text-align:center;margin-top:8px">
+            <button class="ms-dlg-btn" onclick="closeAbout()">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar" id="statusBar">Beginner: 9×9, 10 mines</div>
+
+<script>
+// ===== Game State =====
+var ROWS = 9, COLS = 9, MINES = 10;
+var board = [], revealed = [], flagged = [];
+var gameOver = false, firstClick = true, timer = null, seconds = 0;
+var flagCount = 0, difficulty = 'beginner';
+
+var DIFFICULTIES = {
+  beginner:     { rows: 9,  cols: 9,  mines: 10 },
+  intermediate: { rows: 16, cols: 16, mines: 40 },
+  expert:       { rows: 30, cols: 30, mines: 160 },
+};
+
+// ===== Window sizing =====
+function resizeWin(w, h) {
+  try {
+    var doc = window.parent && window.parent.document;
+    if (!doc) return;
+    var xpWin = doc.getElementById('xp-win-minesweeper');
+    if (!xpWin) return;
+    xpWin.style.width = w + 'px';
+    xpWin.style.height = h + 'px';
+    var vw = window.parent.innerWidth || 1024;
+    var vh = window.parent.innerHeight || 768;
+    xpWin.style.left = Math.max(20, (vw - w) / 2) + 'px';
+    xpWin.style.top = Math.max(20, (vh - h) / 2.5) + 'px';
+    xpWin.style.right = 'auto';
+    xpWin.style.bottom = 'auto';
+  } catch(e) { /* ignore */ }
+}
+
+function calcWinSize() {
+  var w = Math.min(COLS * 26 + 64, 820);
+  var h = Math.min(ROWS * 26 + 180, 660);
+  w = Math.max(w, 300);
+  h = Math.max(h, 380);
+  resizeWin(w, h);
+}
+
+// ===== Close =====
+function closeMinesweeper() {
+  try {
+    var shell = window.parent && window.parent.XPShell;
+    if (shell && shell.closeWindow) { shell.closeWindow('minesweeper'); return; }
+  } catch(e) {}
+  try { window.top.close(); } catch(e) {}
+}
+
+// ===== Menu =====
+document.querySelectorAll('.menu-item').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    var was = el.classList.contains('active');
+    document.querySelectorAll('.menu-item').forEach(function(m) { m.classList.remove('active'); });
+    if (!was) el.classList.add('active');
+    e.stopPropagation();
+  });
+});
+document.addEventListener('click', function() {
+  document.querySelectorAll('.menu-item').forEach(function(m) { m.classList.remove('active'); });
+});
+
+// ===== Core =====
+function newGame(diff) {
+  closeWinNotice();
+  if (diff) difficulty = diff;
+  var d = DIFFICULTIES[difficulty] || DIFFICULTIES.beginner;
+  ROWS = d.rows; COLS = d.cols; MINES = d.mines;
+  if (MINES >= ROWS * COLS) MINES = ROWS * COLS - 1;
+  resetGame();
+}
+
+function resetGame() {
+  if (timer) { clearInterval(timer); timer = null; }
+  seconds = 0; flagCount = 0; gameOver = false; firstClick = true;
+  board = Array.from({length: ROWS}, function() { return Array(COLS).fill(0); });
+  revealed = Array.from({length: ROWS}, function() { return Array(COLS).fill(false); });
+  flagged = Array.from({length: ROWS}, function() { return Array(COLS).fill(false); });
+  var smiley = document.getElementById('smileyBtn');
+  if (smiley) smiley.textContent = '\uD83D\uDE42';
+  var sb = document.getElementById('statusBar');
+  if (sb) sb.textContent = (difficulty.charAt(0).toUpperCase() + difficulty.slice(1)) + ': ' + ROWS + '\u00d7' + COLS + ', ' + MINES + ' mines';
+  updateCounters();
+  calcWinSize();
+  render();
+}
+
+function placeMines(safeR, safeC) {
+  var placed = 0;
+  while (placed < MINES) {
+    var r = Math.floor(Math.random() * ROWS);
+    var c = Math.floor(Math.random() * COLS);
+    if (board[r][c] === -1) continue;
+    if (Math.abs(r - safeR) <= 1 && Math.abs(c - safeC) <= 1) continue;
+    board[r][c] = -1;
+    placed++;
+  }
+  for (var r = 0; r < ROWS; r++) {
+    for (var c = 0; c < COLS; c++) {
+      if (board[r][c] === -1) continue;
+      var n = 0;
+      for (var dr = -1; dr <= 1; dr++)
+        for (var dc = -1; dc <= 1; dc++) {
+          var nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && board[nr][nc] === -1) n++;
+        }
+      board[r][c] = n;
+    }
+  }
+}
+
+function reveal(r, c) {
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+  if (revealed[r][c] || flagged[r][c]) return;
+  revealed[r][c] = true;
+  if (board[r][c] === -1) {
+    gameOver = true;
+    var sb = document.getElementById('smileyBtn');
+    if (sb) sb.textContent = '\uD83D\uDC80';
+    revealAllMines();
+    render();
+    if (timer) { clearInterval(timer); timer = null; }
+    return;
+  }
+  if (board[r][c] === 0) {
+    for (var dr = -1; dr <= 1; dr++)
+      for (var dc = -1; dc <= 1; dc++)
+        if (dr !== 0 || dc !== 0) reveal(r + dr, c + dc);
+  }
+  render();
+  checkWin();
+}
+
+function checkWin() {
+  var totalSafe = ROWS * COLS - MINES;
+  var revealedCount = 0;
+  for (var r = 0; r < ROWS; r++)
+    for (var c = 0; c < COLS; c++)
+      if (revealed[r][c]) revealedCount++;
+  if (revealedCount === totalSafe) {
+    gameOver = true;
+    var sb = document.getElementById('smileyBtn');
+    if (sb) sb.textContent = '\uD83D\uDE0E';
+    if (timer) { clearInterval(timer); timer = null; }
+    for (var r = 0; r < ROWS; r++)
+      for (var c = 0; c < COLS; c++)
+        if (board[r][c] === -1) flagged[r][c] = true;
+    flagCount = MINES;
+    updateCounters();
+    render();
+    showWin();
+  }
+}
+
+function revealAllMines() {
+  for (var r = 0; r < ROWS; r++)
+    for (var c = 0; c < COLS; c++)
+      if (board[r][c] === -1) revealed[r][c] = true;
+}
+
+function toggleFlag(r, c, e) {
+  if (e) e.preventDefault();
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+  if (revealed[r][c] || gameOver || firstClick) return;
+  flagged[r][c] = !flagged[r][c];
+  flagCount += flagged[r][c] ? 1 : -1;
+  updateCounters();
+  render();
+}
+
+function updateCounters() {
+  var val = Math.max(0, MINES - flagCount);
+  var mc = document.getElementById('mineCounter');
+  var tc = document.getElementById('timeCounter');
+  if (mc) mc.textContent = String(val).padStart(3, '0').slice(-3);
+  if (tc) tc.textContent = String(seconds).padStart(3, '0').slice(-3);
+}
+
+function render() {
+  var boardEl = document.getElementById('board');
+  if (!boardEl) return;
+  boardEl.style.gridTemplateColumns = 'repeat(' + COLS + ', 26px)';
+  boardEl.innerHTML = '';
+  for (var r = 0; r < ROWS; r++) {
+    for (var c = 0; c < COLS; c++) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      if (revealed[r][c]) {
+        cell.classList.add('revealed');
+        if (board[r][c] === -1) {
+          cell.textContent = '\uD83D\uDCA3';
+        } else if (board[r][c] > 0) {
+          cell.textContent = board[r][c];
+          cell.classList.add('n' + board[r][c]);
+        }
+      } else if (flagged[r][c]) {
+        cell.textContent = '\uD83D\uDEA9';
+        cell.classList.add('flagged');
+      }
+      cell.addEventListener('click', (function(rr, cc) { return function() { handleClick(rr, cc); }; })(r, c));
+      cell.addEventListener('contextmenu', (function(rr, cc) { return function(e) { toggleFlag(rr, cc, e); }; })(r, c));
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function handleClick(r, c) {
+  if (gameOver || flagged[r][c]) return;
+  if (revealed[r][c]) { chord(r, c); return; }
+  if (firstClick) {
+    firstClick = false;
+    placeMines(r, c);
+    timer = setInterval(function() {
+      seconds++;
+      updateCounters();
+      if (seconds >= 999) { clearInterval(timer); timer = null; }
+    }, 1000);
+  }
+  reveal(r, c);
+}
+
+function chord(r, c) {
+  if (!revealed[r][c] || board[r][c] <= 0) return;
+  var adjFlags = 0;
+  for (var dr = -1; dr <= 1; dr++)
+    for (var dc = -1; dc <= 1; dc++) {
+      var nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && flagged[nr][nc]) adjFlags++;
+    }
+  if (adjFlags === board[r][c]) {
+    for (var dr = -1; dr <= 1; dr++)
+      for (var dc = -1; dc <= 1; dc++) {
+        var nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !revealed[nr][nc] && !flagged[nr][nc]) {
+          if (board[nr][nc] === -1) {
+            gameOver = true;
+            var sb = document.getElementById('smileyBtn');
+            if (sb) sb.textContent = '\uD83D\uDC80';
+            revealAllMines();
+            render();
+            if (timer) { clearInterval(timer); timer = null; }
+            return;
+          }
+          reveal(nr, nc);
+        }
+      }
+  }
+}
+
+// ===== Win Notice =====
+function showWin() {
+  var d = DIFFICULTIES[difficulty];
+  var isRecord = false;
+  if (d) {
+    try {
+      var key = 'ms_times_' + difficulty;
+      var best = parseInt(localStorage.getItem(key) || '9999');
+      if (seconds < best) { localStorage.setItem(key, String(seconds)); isRecord = true; }
+    } catch(e) {}
+  }
+  var wt = document.getElementById('wnTime');
+  var wr = document.getElementById('wnRecord');
+  var wn = document.getElementById('winNotice');
+  if (wt) wt.textContent = seconds + 's';
+  if (wr) wr.textContent = isRecord ? '\uD83C\uDFC6 New Record!' : '';
+  if (wn) wn.classList.add('show');
+}
+
+function closeWinNotice() {
+  var wn = document.getElementById('winNotice');
+  if (wn) wn.classList.remove('show');
+}
+
+// ===== Custom =====
+function showCustom() {
+  document.getElementById('cHeight').value = ROWS;
+  document.getElementById('cWidth').value = COLS;
+  document.getElementById('cMines').value = MINES;
+  document.getElementById('customDlg').classList.add('show');
+}
+function closeCustom() {
+  document.getElementById('customDlg').classList.remove('show');
+}
+function applyCustom() {
+  var h = parseInt(document.getElementById('cHeight').value) || 9;
+  var w = parseInt(document.getElementById('cWidth').value) || 9;
+  var m = parseInt(document.getElementById('cMines').value) || 10;
+  ROWS = Math.max(5, Math.min(30, h));
+  COLS = Math.max(5, Math.min(30, w));
+  MINES = Math.max(1, Math.min(ROWS * COLS - 1, m));
+  difficulty = 'custom';
+  closeCustom();
+  resetGame();
+}
+
+// ===== Records =====
+function showRecords() {
+  var msg = '';
+  ['beginner','intermediate','expert'].forEach(function(d) {
+    var t = localStorage.getItem('ms_times_' + d);
+    msg += d.charAt(0).toUpperCase() + d.slice(1) + ': ' + (t ? t + ' seconds' : '\u2014') + '<br>';
+  });
+  document.getElementById('recordsContent').innerHTML = msg;
+  document.getElementById('recordsDlg').classList.add('show');
+}
+function closeRecords() {
+  document.getElementById('recordsDlg').classList.remove('show');
+}
+
+function showAbout() {
+  document.getElementById('aboutDlg').classList.add('show');
+}
+function closeAbout() {
+  document.getElementById('aboutDlg').classList.remove('show');
+}
+
+// ===== Init =====
+newGame('beginner');
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+hicard.world — About
+=====================
+
+hicard.world is an AI-powered digital greeting card ("Lucky Card") website.
+Its signature feature: the ENTIRE website is styled as a Windows XP desktop.
+
+WHAT HAPPENS WHEN YOU OPEN IT
+-----------------------------
+1. A BIOS-style boot animation plays (press any key / click to skip).
+2. You land on a Windows XP desktop: start menu, windows, taskbar, desktop
+   icons, Recycle Bin — all XP themed.
+3. For visitors detected in mainland China, a Chinese notice appears first.
+
+CORE FEATURE: AI LUCKY CARDS
+----------------------------
+- Create a greeting card for someone: enter recipient name + a message.
+- AI writes a poem that includes the recipient's name and blends in your
+  message (DeepSeek).
+- Upload/choose a photo: vision AI (Doubao) reads the image, then the image
+  is re-styled (Seedream) into a unique artwork.
+- Cards are stored in your Gallery / My Cards.
+
+DESKTOP APPS (double-click the icons)
+-------------------------------------
+- Create Card ......... make an AI lucky card
+- Gallery ............. browse generated cards
+- My Cards ............ your own cards
+- Music ............... built-in music player
+- AI Stylize .......... restyle an image
+- Chinese Culture ..... daily rotating Chinese culture topic (43 themes)
+- Minesweeper ......... playable XP minesweeper
+- Website's History ... the site's own changelog/story (notepad)
+- Recycle Bin, Source Code (GitHub link)
+
+EASTER EGGS
+-----------
+- Run dialog (Start > Run): type notepad / cmd / control / windos / history
+- "windos" downloads WinDOS — a real x86 OS (Rust UEFI bootloader + C++
+  kernel) runnable in QEMU inside the browser
+- _Win11LPC: a Chinese-keyword programming language, .w11 source compiled
+  to C++ live, reachable from the Start menu
+
+PAYMENTS / QUOTA
+----------------
+- Lucky Point wallet: USD 1 = 100 points (PayPal recharge)
+- Costs: poem 10 / image understanding 10 / painting 15 / stylize 15 pts
+- 3 free uses per IP per day
+
+TECH STACK
+----------
+- Backend: Python FastAPI + nginx
+- Frontend: hand-written vanilla JS XP shell (no framework)
+- AI: DeepSeek (writing), Doubao Vision (image understanding),
+  Seedream (image stylization)
+- All visible UI is English (overseas-facing); backend error messages
+  are Chinese for debugging
+
+NOTES FOR CRAWLERS / AI AGENTS
+------------------------------
+- The homepage HTML (https://hicard.world/) is a complete ~19KB XP desktop
+  structure; the visual boot sequence is JS-rendered (bios.js), the shell
+  is xp.js.
+- Key pages: /static/forms/card-create.html (card form),
+  /static/forms/card-gallery.html, /static/forms/music-player.html,
+  /static/forms/chinese-culture.html, /win11lpc
+- Plain-text description lives at /about.txt (this file).
+- Server may 301 http:// -> https:// ; follow redirects and use a browser
+  User-Agent when fetching.
+
+(c) 2026 hicard.world — made by a father-and-son team (dad: concept & first
+version; son: XP shell, BIOS animation, WinDOS and most of the fun parts).

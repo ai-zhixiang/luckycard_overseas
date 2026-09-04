@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Page Not Found | hicard.world</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: #ffffff;
+    font-family: Tahoma, 'Microsoft Sans Serif', 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+  }
+  .wrap { text-align: center; padding: 24px; }
+  .glitch-img {
+    max-width: min(320px, 64vw);
+    max-height: 40vh;
+    width: auto;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    image-rendering: auto;
+  }
+  .msg {
+    margin-top: 16px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #222;
+  }
+  .home-link {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    color: #0000CC;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .home-link:hover { color: #CC0000; }
+  .err-code {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="glitch-img" src="/static/img/404-glitch-pc.png" alt="404 - My Computer error" />
+    <div class="msg">The page you are looking for was not found on our website.<br>Please check your URL and try again.</div>
+    <a class="home-link" href="/">&laquo; Back to homepage</a>
+    <div class="err-code">HTTP 404 &middot; hicard.world</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chinese Culture</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #ECE9D8;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  overflow-y: auto;
+  color: #000;
+}
+.wrap { padding: 14px 16px 16px; }
+/* 顶部横幅 */
+.banner {
+  background: linear-gradient(180deg, #B3202C, #8E1520);
+  color: #fff;
+  border-radius: 3px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #7A1019;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
+}
+.banner .flag { font-size: 26px; line-height: 1; }
+.banner .titles { flex: 1; }
+.banner .t-zh { font-size: 19px; font-weight: bold; letter-spacing: 1px; }
+.banner .t-en { font-size: 11px; opacity: .85; margin-top: 2px; font-style: italic; }
+.banner .date {
+  text-align: right; font-size: 10px; opacity: .8; line-height: 1.4;
+}
+/* 内容纸面 */
+.paper {
+  margin-top: 12px;
+  background: #FBF6E7;
+  border: 1px solid #D8CFAE;
+  border-radius: 2px;
+  padding: 16px 18px;
+  box-shadow: inset 0 0 0 1px #fff, 0 1px 3px rgba(0,0,0,.08);
+}
+.seg-zh { font-family: 'KaiTi', 'STKaiti', 'SimSun', serif; font-size: 15px; line-height: 1.9; color: #2A1F12; }
+.seg-zh::first-letter { font-size: 21px; }
+.seg-en {
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px dashed #C9BD97;
+  font-family: Georgia, 'Times New Roman', serif; font-size: 13px;
+  line-height: 1.75; color: #3D3323;
+}
+.seg-label {
+  display: inline-block; font-family: Tahoma, sans-serif;
+  font-size: 10px; color: #8E6A2F; font-weight: bold;
+  letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase;
+}
+/* 状态区 */
+#status {
+  text-align: center; color: #666; padding: 40px 10px;
+  font-family: Tahoma, sans-serif;
+}
+.spinner {
+  display: inline-block; width: 20px; height: 20px; margin-right: 8px;
+  border: 2px solid #C0B49A; border-top-color: #8E1520; border-radius: 50%;
+  vertical-align: middle;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.err { color: #B00020; padding: 12px; text-align: center; }
+/* 底部工具条 */
+.toolbar {
+  margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;
+}
+.xp-btn {
+  background: linear-gradient(180deg, #fff 0%, #ECE9D8 100%);
+  border: 1px solid #7F9DB9; border-radius: 3px;
+  padding: 4px 14px; font: 12px Tahoma, sans-serif; cursor: pointer;
+}
+.xp-btn:hover { background: linear-gradient(180deg, #F3E8C8, #ECE9D8); }
+.xp-btn:disabled { opacity: .55; cursor: default; }
+.foot-note {
+  margin-top: 10px; font-size: 10px; color: #999; text-align: right;
+  font-family: Tahoma, sans-serif;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="status"><span class="spinner"></span>Fetching today's culture…</div>
+</div>
+
+<script>
+(function () {
+  var wrap = document.querySelector('.wrap');
+
+  function render(d) {
+    var zh = (d.zh || '').replace(/</g, '&lt;');
+    var en = (d.en || '').replace(/</g, '&lt;');
+    var escT = (d.title_en || '').replace(/</g, '&lt;');
+    wrap.innerHTML =
+      '<div class="banner">' +
+        '<div class="flag">&#127464;&#127475;</div>' +
+        '<div class="titles">' +
+          '<div class="t-zh">' + (d.title_zh || '') + '</div>' +
+          '<div class="t-en">' + escT + '</div>' +
+        '</div>' +
+        '<div class="date">' + (d.date || '') + '</div>' +
+      '</div>' +
+      '<div class="paper">' +
+        '<span class="seg-label">&#20013;&#25991; &middot; Chinese</span>' +
+        '<div class="seg-zh">' + zh + '</div>' +
+        '<div class="seg-en"><span class="seg-label">English</span><br>' + en + '</div>' +
+      '</div>' +
+      '<div class="toolbar">' +
+        '<button class="xp-btn" id="btn-another">Another topic</button>' +
+      '</div>' +
+      '<div class="foot-note">One topic per day &middot; facts from Wikipedia, written by DeepSeek</div>';
+    document.getElementById('btn-another').onclick = load;
+  }
+
+  function fail(msg) {
+    wrap.innerHTML = '<div class="err">' + (msg || 'Failed to load') +
+      '<br><br><button class="xp-btn" onclick="location.reload()">Retry</button></div>';
+  }
+
+  function load() {
+    wrap.innerHTML = '<div id="status"><span class="spinner"></span>Fetching culture…</div>';
+    fetch('/api/culture/today?offset=' + (window.__off || 0))
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (res.ok && res.j && res.j.zh) { render(res.j); return; }
+        fail((res.j && res.j.detail) || 'Empty result');
+      })
+      .catch(function () { fail('Network error'); });
+  }
+
+  // 首次打开 = 今日主题(offset 0); Another topic 每次 +1 换一个主题
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'btn-another') {
+      window.__off = (window.__off || 0) + 1;
+      load();
+    }
+  });
+  load();
+})();
+</script>
+</body>
+</html>

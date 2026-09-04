@@ -28,13 +28,25 @@
                 <option value="Encouragement">💪 Encouragement</option>
             </select>
         </div>
-        <div style="margin-bottom:1.5rem">
+        <div style="margin-bottom:1rem">
             <label style="display:block;font-weight:600;margin-bottom:4px;font-size:0.85rem">Your Message</label>
             <textarea id="cf-message" rows="2" placeholder="What's on your mind?"
                 style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.95rem;box-sizing:border-box;resize:vertical"></textarea>
         </div>
 
-        <div style="margin-bottom:1.5rem;display:flex;align-items:center;gap:8px">
+        <!-- 照片上传（可选） -->
+        <div style="margin-bottom:1rem">
+            <label style="display:block;font-weight:600;margin-bottom:4px;font-size:0.85rem">Photo (optional)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+                <input type="file" id="cf-photo" accept="image/*" style="flex:1;font-size:0.85rem">
+            </div>
+            <div id="cf-photo-preview" style="display:none;margin-top:8px;position:relative">
+                <img id="cf-photo-img" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;border:2px solid #e0d0c0">
+                <button onclick="CardCreator.clearPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px">✕</button>
+            </div>
+            <p style="color:#888;font-size:0.75rem;margin-top:4px">Upload a photo for the card front — or let AI paint one.</p>
+        </div>
+        <div style="margin-bottom:1rem;display:flex;align-items:center;gap:8px">
             <input type="checkbox" id="cf-stylize" style="width:18px;height:18px;accent-color:#7a4aff">
             <label for="cf-stylize" style="font-size:0.85rem;cursor:pointer">🎨 <b>AI Stylize</b> — Generate an AI artwork for this card</label>
             <select id="cf-style" style="margin-left:auto;padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:0.8rem">
@@ -43,6 +55,14 @@
                 <option value="oilpainting">Oil Painting</option>
                 <option value="sketch">Sketch</option>
                 <option value="cinematic">Cinematic</option>
+            </select>
+        </div>
+
+        <!-- 配乐（可选） -->
+        <div style="margin-bottom:1.5rem">
+            <label style="display:block;font-weight:600;margin-bottom:4px;font-size:0.85rem">Background Music (optional)</label>
+            <select id="cf-music" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;box-sizing:border-box">
+                <option value="">🎵 No music</option>
             </select>
         </div>
 
@@ -63,10 +83,19 @@
                 Generating AI artwork...
             </div>
             <p style="color:#888;font-size:0.8rem;margin-bottom:0.5rem">Card created!</p>
-            <button onclick="CardCreator.copyLink()"
-                style="padding:8px 20px;background:#C41E3A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;margin-right:8px">📋 Copy Link</button>
-            <button onclick="CardCreator.openCard()"
-                style="padding:8px 20px;background:#fff;color:#C41E3A;border:1.5px solid #C41E3A;border-radius:6px;cursor:pointer;font-weight:600">👁 View Card</button>
+            <div id="cf-analysis" style="display:none;margin-bottom:0.8rem;background:#f0f7ff;border:1px solid #cfe3ff;border-radius:8px;padding:8px 12px;font-size:0.8rem;color:#335">
+                ✨ <b>AI saw your photo:</b> <span id="cf-analysis-text"></span>
+            </div>
+            <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:0.8rem">
+                <button onclick="CardCreator.shareEmail()"
+                    style="padding:8px 16px;background:#fff;color:#C41E3A;border:1.5px solid #C41E3A;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.85rem">✉️ Email</button>
+                <button onclick="CardCreator.shareWA()"
+                    style="padding:8px 16px;background:#25D366;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:600;font-size:0.85rem">💬 WhatsApp</button>
+                <button onclick="CardCreator.copyLink()"
+                    style="padding:8px 20px;background:#C41E3A;color:#fff;border:none;border-radius:20px;cursor:pointer;font-weight:600;margin-right:0">📋 Copy Link</button>
+                <button onclick="CardCreator.openCard()"
+                    style="padding:8px 20px;background:#fff;color:#C41E3A;border:1.5px solid #C41E3A;border-radius:20px;cursor:pointer;font-weight:600">👁 View Card</button>
+            </div>
             <p id="cf-link" style="font-size:0.75rem;color:#888;margin-top:0.5rem;word-break:break-all"></p>
         </div>
     </div>
@@ -76,6 +105,26 @@
 window.CardCreator = {
     cardId: null,
     loading: false,
+
+    clearPhoto: function() {
+        document.getElementById('cf-photo').value = '';
+        document.getElementById('cf-photo-preview').style.display = 'none';
+    },
+
+    loadMusic: function() {
+        fetch('/api/music/list')
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                var sel = document.getElementById('cf-music');
+                (d.tracks || []).forEach(function(t) {
+                    var opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = '🎵 ' + t.title + ' — ' + t.composer + ' (' + t.style + ')';
+                    sel.appendChild(opt);
+                });
+            })
+            .catch(function(){});
+    },
 
     generate: function() {
         if (this.loading) return;
@@ -92,64 +141,102 @@ window.CardCreator = {
         btn.disabled = true;
 
         var self = this;
-        fetch('/api/cards/create', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                recipient: recipient,
-                sender: sender,
-                occasion: document.getElementById('cf-occasion').value,
-                message: document.getElementById('cf-message').value.trim()
-            })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            self.cardId = d.card_id;
-            // Save to My Cards (localStorage)
-            try {
-                var cards = JSON.parse(localStorage.getItem('lc_my_cards') || '[]');
-                cards.unshift({id: d.card_id, recipient: recipient, poem_first: d.poem.split('\n')[0], created_at: new Date().toISOString()});
-                if (cards.length > 50) cards = cards.slice(0, 50);
-                localStorage.setItem('lc_my_cards', JSON.stringify(cards));
-            } catch(e) {}
-            document.getElementById('cf-poem').textContent = d.poem;
-            document.getElementById('cf-link').textContent = 'https://hicard.world/api/card-share/' + d.card_id;
-            document.getElementById('cf-result').style.display = 'block';
-            document.getElementById('cf-generate-btn').style.display = 'none';
-            self.loading = false;
+        var payload = {
+            recipient: recipient,
+            sender: sender,
+            occasion: document.getElementById('cf-occasion').value,
+            message: document.getElementById('cf-message').value.trim(),
+            music_id: document.getElementById('cf-music').value
+        };
 
-            // If AI Stylize is checked, generate artwork
-            if (document.getElementById('cf-stylize').checked) {
-                var style = document.getElementById('cf-style').value;
-                document.getElementById('cf-stylizing').style.display = 'block';
-                var fd = new FormData();
-                fd.append('text', d.poem);
-                fd.append('style', style);
-                fd.append('card_id', self.cardId);
-                fetch('/api/card-art', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(art) {
-                    document.getElementById('cf-stylizing').style.display = 'none';
-                    if (art.status === 'ok') {
-                        document.getElementById('cf-art-img').src = art.result_url;
-                        document.getElementById('cf-artwork').style.display = 'block';
-                    }
-                })
-                .catch(function() {
-                    document.getElementById('cf-stylizing').style.display = 'none';
-                });
-            }
-        })
-        .catch(function() {
-            alert('Something went wrong. Please try again.');
-            btn.textContent = '✨ Generate Poem & Save';
-            btn.disabled = false;
-            self.loading = false;
-        });
+        // 照片：读文件 → base64 传后端
+        var photoFile = document.getElementById('cf-photo').files[0];
+        var doCreate = function(photoB64) {
+            if (photoB64) payload.photo = photoB64;
+            fetch('/api/cards/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            })
+            .then(function(r) { return r.json().then(function(x){ x.__http = r.status; return x; }); })
+            .then(function(d) {
+                if (d.__http === 402 || (d.detail && d.detail.code === 'quota_blocked')) {
+                    if (window.parent && parent.Lucky) parent.Lucky.quotaBlocked(d.detail || d);
+                    else alert(((d.detail||{}).message) || 'Daily free quota used up');
+                    btn.textContent = '✨ Generate Poem & Save';
+                    btn.disabled = false;
+                    self.loading = false;
+                    return;
+                }
+                self.cardId = d.card_id;
+                try {
+                    var cards = JSON.parse(localStorage.getItem('lc_my_cards') || '[]');
+                    cards.unshift({id: d.card_id, recipient: recipient, poem_first: (d.poem||'').split('\n')[0], created_at: new Date().toISOString()});
+                    if (cards.length > 50) cards = cards.slice(0, 50);
+                    localStorage.setItem('lc_my_cards', JSON.stringify(cards));
+                } catch(e) {}
+                document.getElementById('cf-poem').textContent = d.poem;
+                document.getElementById('cf-link').textContent = 'https://hicard.world/card/' + d.card_id;
+                document.getElementById('cf-result').style.display = 'block';
+                document.getElementById('cf-generate-btn').style.display = 'none';
+                self.loading = false;
+
+                // 相片卡：显示 AI 识图结果
+                if (d.analysis && d.analysis.scene) {
+                    var at = '📷 ' + d.analysis.scene;
+                    if (d.analysis.emotion) at += ' · ' + d.analysis.emotion.charAt(0).toUpperCase() + d.analysis.emotion.slice(1);
+                    document.getElementById('cf-analysis-text').textContent = at;
+                    document.getElementById('cf-analysis').style.display = 'block';
+                }
+
+                // AI Stylize：只有没传照片时才生成配图
+                if (document.getElementById('cf-stylize').checked && !photoB64) {
+                    var style = document.getElementById('cf-style').value;
+                    document.getElementById('cf-stylizing').style.display = 'block';
+                    var fd = new FormData();
+                    fd.append('text', d.poem);
+                    fd.append('style', style);
+                    fd.append('card_id', self.cardId);
+                    fetch('/api/card-art', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json().then(function(x){ x.__http = r.status; return x; }); })
+                    .then(function(art) {
+                        document.getElementById('cf-stylizing').style.display = 'none';
+                        if (art.__http === 402) {
+                            if (window.parent && parent.Lucky) parent.Lucky.quotaBlocked(art.detail || art);
+                            else alert('Daily free quota used up');
+                            return;
+                        }
+                        if (art.status === 'ok') {
+                            document.getElementById('cf-art-img').src = art.result_url;
+                            document.getElementById('cf-artwork').style.display = 'block';
+                        }
+                    })
+                    .catch(function() {
+                        document.getElementById('cf-stylizing').style.display = 'none';
+                    });
+                }
+            })
+            .catch(function() {
+                alert('Something went wrong. Please try again.');
+                btn.textContent = '✨ Generate Poem & Save';
+                btn.disabled = false;
+                self.loading = false;
+            });
+        };
+
+        if (photoFile) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                doCreate(e.target.result);
+            };
+            reader.readAsDataURL(photoFile);
+        } else {
+            doCreate(null);
+        }
     },
 
     copyLink: function() {
-        var url = 'https://hicard.world/api/card-share/' + this.cardId;
+        var url = 'https://hicard.world/card/' + this.cardId;
         if (navigator.clipboard) {
             navigator.clipboard.writeText(url).then(function() {
                 alert('Link copied!');
@@ -159,8 +246,36 @@ window.CardCreator = {
         }
     },
 
+    shareEmail: function() {
+        var url = 'https://hicard.world/card/' + this.cardId;
+        var recipient = document.getElementById('cf-recipient').value.trim() || 'you';
+        var subject = encodeURIComponent('A Lucky Card for ' + recipient);
+        var body = encodeURIComponent('💌 A card for you — open it!\n' + url);
+        window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+    },
+
+    shareWA: function() {
+        var url = 'https://hicard.world/card/' + this.cardId;
+        var text = encodeURIComponent('💌 A card for you — open it! ' + url);
+        window.open('https://wa.me/?text=' + text, '_blank', 'width=600,height=500');
+    },
+
     openCard: function() {
-        window.open('https://hicard.world/api/card-share/' + this.cardId, '_blank');
+        window.open('https://hicard.world/card/' + this.cardId, '_blank');
     }
 };
+
+// 初始化
+document.getElementById('cf-photo').addEventListener('change', function(e) {
+    var f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { alert('Photo too large (max 5MB).'); this.value=''; return; }
+    var r = new FileReader();
+    r.onload = function(ev) {
+        document.getElementById('cf-photo-img').src = ev.target.result;
+        document.getElementById('cf-photo-preview').style.display = 'block';
+    };
+    r.readAsDataURL(f);
+});
+window.CardCreator.loadMusic();
 </script>

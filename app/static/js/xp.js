@@ -15,10 +15,6 @@
             registered: 'Registered to: Lucky Card User',
             cpu: 'Intel(R) Pentium(R) 4 CPU 2.40GHz',
             ram: '512 MB RAM',
-            lang_en: 'English',
-            lang_zh: '中文',
-            switch_lang: 'Switch Language',
-            current_lang: 'Current: English',
             run_prompt: 'Type the name of a program, folder, document, or Internet resource, and Lucky Card will open it for you.',
             run_open: 'Open:',
             run_cancel: 'Cancel',
@@ -34,36 +30,6 @@
             cp_category_date: 'Date, Time, Language, and Regional Options',
             cp_category_accessibility: 'Accessibility Options',
             cp_category_security: 'Security Center',
-        },
-        zh: {
-            control_panel: '控制面板',
-            language: '语言',
-            display: '显示',
-            system: '系统',
-            about: '关于 Lucky Card',
-            version: '版本 16.1145 (Build 2600)',
-            registered: '注册用户: Lucky Card User',
-            cpu: 'Intel(R) Pentium(R) 4 CPU 2.40GHz',
-            ram: '512 MB 内存',
-            lang_en: 'English',
-            lang_zh: '中文',
-            switch_lang: '切换语言',
-            current_lang: '当前: 中文',
-            run_prompt: '请键入程序、文件夹、文档或 Internet 资源的名称，Lucky Card 将为您打开它。',
-            run_open: '打开:',
-            run_cancel: '取消',
-            run_browse: '浏览...',
-            run_title: '运行',
-            notepad_title: '记事本',
-            cp_category_appearance: '外观和主题',
-            cp_category_network: '网络和 Internet 连接',
-            cp_category_sounds: '声音、语音和音频设备',
-            cp_category_performance: '性能和维护',
-            cp_category_printers: '打印机和其它硬件',
-            cp_category_accounts: '用户帐户',
-            cp_category_date: '日期、时间、语言和区域选项',
-            cp_category_accessibility: '辅助功能选项',
-            cp_category_security: '安全中心',
         }
     };
 
@@ -180,6 +146,8 @@
             'stylize':    ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'stylizer':   ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'mycards':    ['mycards', 'My Cards', '<img src="/static/img/xp-folder_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-cards.html'],
+            'minesweeper': ['minesweeper', 'Minesweeper', '<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/minesweeper.html'],
+            'ms':         ['minesweeper', 'Minesweeper', '<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/minesweeper.html'],
             'control':    ['control', t('control_panel'), '<img src="/static/img/xp_controlpanel_24.png" style="width:18px;height:18px;vertical-align:middle">', buildControlPanelHTML()],
             'notepad':    ['notepad', t('notepad_title'), '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', buildNotepadHTML()],
             'cmd':        ['cmd', 'Command Prompt', '💻', buildCmdHTML()],
@@ -187,7 +155,11 @@
             'about':      ['about', t('about'), 'ℹ️', buildAboutHTML()],
             'sysinfo':    ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
             'sys':        ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
+            'history':    ['history', "Website's History", '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/website-history.html?v=1'],
         };
+
+        // Clippy easter egg — type "clippy" in the Run dialog
+        if (cmd === 'clippy' || cmd === 'clippy.exe') { _clippyManual(); return; }
 
         if (cmd.startsWith('http://') || cmd.startsWith('https://')) {
             window.open(cmd, '_blank');
@@ -223,7 +195,7 @@
             var r = routes[cmd];
             XPShell.openWindow(r[0], r[1], r[2], r[3]);
         } else {
-            XPShell.openWindow('run-result', 'Run', '▶️',
+            XPShell.openWindow('run-result', 'Run', '<img src=\"/static/img/xp-run_20.png\" style=\"width:20px;height:20px;vertical-align:middle\">',
                 '<div style="text-align:center;padding:2rem">' +
                 '<p style="font-size:2rem">⚠️</p>' +
                 '<p style="margin-top:1rem">Cannot find <b>' + escHtml(cmd) + '</b></p>' +
@@ -267,12 +239,6 @@
         ];
 
         var h = '<div class="cp-container">';
-        // Language switcher bar
-        h += '<div class="cp-lang-bar">';
-        h += '<span>' + t('current_lang') + '</span>';
-        h += '<button class="cp-lang-btn' + (_lang === 'en' ? ' active' : '') + '" onclick="XPShell.setLang(\'en\')">' + t('lang_en') + '</button>';
-        h += '<button class="cp-lang-btn' + (_lang === 'zh' ? ' active' : '') + '" onclick="XPShell.setLang(\'zh\')">' + t('lang_zh') + '</button>';
-        h += '</div>';
 
         // Category grid
         h += '<div class="cp-grid">';
@@ -282,6 +248,14 @@
             h += '<div class="cp-cat-label">' + t(cats[i].key) + '</div>';
             h += '</div>';
         }
+        h += '</div>';
+
+        // Clippy settings entry (right under the category grid)
+        h += '<div class="cp-clippy" style="display:flex;align-items:center;gap:10px;margin:12px 0;padding:8px 12px;background:linear-gradient(180deg,#fff,#f0ede4);border:1px solid #b7b09e;border-radius:4px;cursor:pointer;font-family:Tahoma,sans-serif">';
+        h += '<span style="color:#c9971c;font-size:22px;line-height:1"><img src="/static/img/clippy-idle.png" style="height:30px;width:auto;vertical-align:middle"></span>';
+        h += '<span style="font-size:12px;font-weight:bold;color:#003399">Clippy</span>';
+        h += '<span style="font-size:11px;color:#666;flex:1">Office Assistant — app tips on/off</span>';
+        h += '<span style="color:#888">»</span>';
         h += '</div>';
 
         // System info at bottom
@@ -306,7 +280,8 @@
             accounts: 'User Accounts',
             datetime: 'Date & Time',
             accessibility: 'Accessibility',
-            security: 'Security Center'
+            security: 'Security Center',
+            clippy: 'Clippy Assistant'
         };
 
         var menu = {
@@ -407,13 +382,6 @@
             accessibility: function() {
                 return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
                     '<h3 style="margin-bottom:12px;color:#003399">Accessibility Options</h3>' +
-                    '<div style="margin-bottom:12px">' +
-                    '  <div style="font-size:12px;font-weight:bold;margin-bottom:6px">Language</div>' +
-                    '  <div style="display:flex;gap:8px">' +
-                    '    <button onclick="XPShell.setLang(\'en\')" style="flex:1;padding:8px;font-size:12px;cursor:pointer;border:1px solid ' + (_lang === 'en' ? '#039' : '#999') + ';background:' + (_lang === 'en' ? '#e0e8f8' : 'linear-gradient(180deg,#fff,#ece9d8)') + ';border-radius:3px;font-weight:' + (_lang === 'en' ? 'bold' : 'normal') + '">🇺🇸 English</button>' +
-                    '    <button onclick="XPShell.setLang(\'zh\')" style="flex:1;padding:8px;font-size:12px;cursor:pointer;border:1px solid ' + (_lang === 'zh' ? '#039' : '#999') + ';background:' + (_lang === 'zh' ? '#e0e8f8' : 'linear-gradient(180deg,#fff,#ece9d8)') + ';border-radius:3px;font-weight:' + (_lang === 'zh' ? 'bold' : 'normal') + '">🇨🇳 中文</button>' +
-                    '  </div>' +
-                    '</div>' +
                     '<div style="font-size:11px;color:#888">' +
                     '  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:4px"><input type="checkbox"> Use high contrast</label>' +
                     '  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:4px"><input type="checkbox"> Show tooltips</label>' +
@@ -432,6 +400,23 @@
                     '  <div style="margin-top:2px">🛡️ Cloudflare — DDoS protection</div>' +
                     '  <div style="margin-top:2px">🔐 No passwords stored in browser</div>' +
                     '</div></div>';
+            },
+            clippy: function() {
+                var on = _clippyEnabled;
+                return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
+                    '<h3 style="margin-bottom:12px;color:#003399">Clippy — Office Assistant</h3>' +
+                    '<div style="display:flex;align-items:center;gap:14px;background:#f5f5f0;border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:14px">' +
+                    '  <img src="/static/img/clippy-idle.png" style="height:72px;width:auto">' +
+                    '  <div style="font-size:12px;color:#444;line-height:1.6">' +
+                    '    <b>Hi! I\'m Clippy.</b><br>I pop up with a quick one-liner whenever you open an app on Lucky Card.<br>' +
+                    '    <span style="color:#888;font-size:11px">Tip: right-click the paperclip in the tray (bottom-right) to switch me off fast, or type <b>clippy</b> in the Run dialog to say hi.</span>' +
+                    '  </div>' +
+                    '</div>' +
+                    '<div style="font-size:12px;font-weight:bold;color:#003399;margin-bottom:8px">When I open an app, show a Clippy tip:</div>' +
+                    '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:6px"><input type="radio" name="clippyPref" ' + (on ? 'checked' : '') + ' onchange="XPShell.setClippy(true)"> Yes — keep the tips coming</label>' +
+                    '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="clippyPref" ' + (!on ? 'checked' : '') + ' onchange="XPShell.setClippy(false)"> No — I\'m good, thanks</label>' +
+                    '<div id="lc-clippy-cp-msg" style="font-size:11px;color:#2a6e2a;margin-top:10px"></div>' +
+                    '</div>';
             }
         };
 
@@ -466,20 +451,6 @@
 
     function openControlPanel() {
         XPShell.openWindow('control', t('control_panel'), '<img src="/static/img/xp_controlpanel_24.png" style="width:18px;height:18px;vertical-align:middle">', buildControlPanelHTML());
-    }
-
-    function setLang(lang) {
-        _lang = lang;
-        // Refresh control panel if open
-        var cpBody = document.getElementById('xp-win-body-control');
-        if (cpBody) cpBody.innerHTML = buildControlPanelHTML();
-        // Refresh run dialog labels if open
-        var runDlg = document.getElementById('xp-run-dlg');
-        if (runDlg && runDlg.style.display !== 'none') {
-            runDlg.querySelector('[data-lang="run_prompt"]').textContent = t('run_prompt');
-            runDlg.querySelector('[data-lang="run_cancel"]').textContent = t('run_cancel');
-            runDlg.querySelector('[data-lang="run_browse"]').textContent = t('run_browse');
-        }
     }
 
     // ===== Notepad =====
@@ -559,8 +530,11 @@
             else if (c === 'gallery') { window.XPShell && window.XPShell.openWindow('gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'); }
             else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=58'); }
             else if (c === 'stylize' || c === 'stylizer') { window.XPShell && window.XPShell.openWindow('stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'); }
+            else if (c === 'minesweeper' || c === 'ms') { window.XPShell && window.XPShell.openWindow('minesweeper', 'Minesweeper', '<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/minesweeper.html'); }
             else if (c === 'shutdown' || c === 'poweroff') { window.XPShell && window.XPShell.shutDown(); }
             else if (c === 'exit') { window.XPShell && window.XPShell.closeWindow('cmd'); }
+            else if (c === 'tasklist') { cmdTasklist(); }
+            else if (c === 'taskkill' || c === 'tskill') { cmdTaskkill(cmd); }
             else { print('"' + c + '" is not recognized as an internal or external command, operable program or batch file.'); }
             out.scrollTop = out.scrollHeight;
         }
@@ -570,6 +544,99 @@
             else if (e.key === 'ArrowDown') { e.preventDefault(); if (histIdx < cmdHistory.length - 1) { histIdx++; inp.value = cmdHistory[histIdx]; } else { histIdx = cmdHistory.length; inp.value = ''; } }
         });
         setTimeout(function() { inp.focus(); }, 200);
+
+        // tasklist — XP-style process table (system procs + open windows)
+        function cmdTasklist() {
+            var pad = function(s, n) { s = String(s); while (s.length < n) s += ' '; return s; };
+            var lines = [];
+            lines.push(pad('Image Name', 22) + pad('PID', 8) + pad('Session Name', 15) + pad('Session#', 9) + 'Mem Usage');
+            lines.push('======================= ======== =============== ======== ============');
+            _sysProcesses.forEach(function(sp, idx) {
+                if (idx === 9 && _shellHidden) return;
+                var mem = sp.pid === 0 ? '24 K' : (sp.pid * 47 % 40000 + 1200).toLocaleString('en-US') + ' K';
+                lines.push(pad(sp.name, 22) + pad(sp.pid, 8) + pad('Services', 15) + pad('0', 9) + mem);
+            });
+            var pids = {};
+            Object.keys(windows).forEach(function(wid) {
+                if (wid === 'taskmgr' || wid === 'cmd') return;
+                if (!windows[wid].el.pid) windows[wid].el.pid = 3000 + Math.floor(Math.random() * 700);
+                pids[wid] = windows[wid].el.pid;
+                var mem = (windows[wid].el.pid * 31 % 30000 + 8000).toLocaleString('en-US') + ' K';
+                lines.push(pad(windows[wid].title, 22) + pad(windows[wid].el.pid, 8) + pad('Console', 15) + pad('1', 9) + mem);
+            });
+            lines.forEach(function(l) { print(l); });
+        }
+
+        // taskkill — /PID n or /IM name  (kills matching process)
+        function cmdTaskkill(rawCmd) {
+            var mPid = rawCmd.match(/\/pid\s+(\d+)/i);
+            var mIm = rawCmd.match(/\/im\s+([^\s\/]+)/i);
+            if (!mPid && !mIm) {
+                print('ERROR: Invalid argument/option - type "taskkill /?" for usage.');
+                return;
+            }
+            var findSys = function(pid) {
+                for (var i = 0; i < _sysProcesses.length; i++) {
+                    if (_sysProcesses[i].pid === pid) return i;
+                }
+                return -1;
+            };
+            var killOne = function(name, pid) {
+                if (name === 'explorer.exe') {
+                    hideShell();
+                    print('SUCCESS: The process "explorer.exe" with PID ' + pid + ' has been terminated.');
+                    return true;
+                }
+                var sysIdx = findSys(pid);
+                if (sysIdx >= 0) {
+                    endSystemProcess(name, sysIdx); // critical → BSOD, just like Task Manager
+                    return true;
+                }
+                var wid = null;
+                Object.keys(windows).forEach(function(w) {
+                    if (w !== 'taskmgr' && w !== 'cmd' && windows[w].el.pid === pid) wid = w;
+                });
+                if (wid) {
+                    closeWindow(wid);
+                    print('SUCCESS: The process "' + name + '" with PID ' + pid + ' has been terminated.');
+                    return true;
+                }
+                return false;
+            };
+            if (mPid) {
+                var pid = parseInt(mPid[1], 10);
+                var sysN = null;
+                _sysProcesses.forEach(function(sp) { if (sp.pid === pid) sysN = sp.name; });
+                var winN = null;
+                Object.keys(windows).forEach(function(w) {
+                    if (windows[w].el.pid === pid) winN = windows[w].title;
+                });
+                if (sysN || winN) {
+                    killOne(sysN || winN, pid);
+                } else {
+                    print('ERROR: The process with PID ' + pid + ' not found.');
+                }
+                return;
+            }
+            if (mIm) {
+                var im = mIm[1].toLowerCase();
+                if (im.indexOf('.exe') < 0) im += '.exe';
+                var hits = 0;
+                _sysProcesses.forEach(function(sp) {
+                    if (sp.name.toLowerCase() === im) { killOne(sp.name, sp.pid); hits++; }
+                });
+                Object.keys(windows).forEach(function(w) {
+                    if (w === 'taskmgr' || w === 'cmd') return;
+                    var t = windows[w].title.toLowerCase();
+                    if (t === im.replace('.exe', '') || t.indexOf(im.replace('.exe', '')) >= 0) {
+                        closeWindow(w);
+                        print('SUCCESS: The process "' + windows[w].title + '" has been terminated.');
+                        hits++;
+                    }
+                });
+                if (hits === 0) print('ERROR: The process "' + im + '" not found.');
+            }
+        }
     }
 
     // ===== Help =====
@@ -624,6 +691,9 @@
             focusWindow(id);
             return;
         }
+
+        // Clippy pops up with a per-app one-liner when an app is really opened.
+        _clippyTip(id, title);
 
         if (contentHTML && (contentHTML.startsWith('/') || contentHTML.startsWith('http'))) {
             var url = contentHTML;
@@ -1267,17 +1337,21 @@
         taskbarMenu.style.left = Math.min(e.clientX - 4, window.innerWidth - 210) + 'px';
         taskbarMenu.style.bottom = (window.innerHeight - e.clientY + 10) + 'px';
         // Click outside to close
+        // NOTE: use mousedown, not click — right-click release fires a click event
+        // which would close the menu as soon as you let go of the right button
         setTimeout(function() {
-            document.addEventListener('click', hideTaskbarMenuOnClick);
+            document.addEventListener('mousedown', hideTaskbarMenuOnClick);
             document.addEventListener('contextmenu', hideTaskbarMenu);
         }, 0);
     }
     function hideTaskbarMenu() {
         taskbarMenu.style.display = 'none';
-        document.removeEventListener('click', hideTaskbarMenuOnClick);
+        document.removeEventListener('mousedown', hideTaskbarMenuOnClick);
         document.removeEventListener('contextmenu', hideTaskbarMenu);
     }
     function hideTaskbarMenuOnClick(e) {
+        // Ignore right-click release (button 2) — only close on left-click
+        if (e.button !== 0) return;
         if (!taskbarMenu.contains(e.target)) hideTaskbarMenu();
     }
     // Attach right-click to taskbar — dual detection for cross-browser compatibility
@@ -1371,7 +1445,7 @@
                     break;
                 case 'taskmgr': openTaskManager(); break;
                 case 'properties':
-                    openWindow('tbp', 'Taskbar and Start Menu Properties', '⚙️',
+                    openWindow('tbp', 'Taskbar and Start Menu Properties', '<img src=\"/static/img/xp_controlpanel_24.png\" style=\"width:18px;height:18px;vertical-align:middle\">',
                         '<div style="padding:16px;font-family:Tahoma,sans-serif;font-size:12px">' +
                         '<h3 style="margin:0 0 12px 0">Taskbar and Start Menu Properties</h3>' +
                         '<p style="color:#666">Taskbar appearance settings are not available in this edition.</p>' +
@@ -1432,7 +1506,6 @@
         closeRun: closeRun,
         runCommand: runCommand,
         openControlPanel: openControlPanel,
-        setLang: setLang,
         openCPItem: openCPItem,
         backToControlPanel: backToControlPanel,
         setTheme: setTheme,
@@ -1443,7 +1516,298 @@
         refreshTaskMgr: refreshTaskMgr,
         restoreShell: restoreShell,
         newTask: newTask,
+        setClippy: setClippy,
     };
+
+
+    // ===================== Clippy the Office Assistant =====================
+    // Hard-coded lines: exactly 3 per app, random pick, never mixed across apps.
+    // Pure front-end, zero API cost — only the on/off pref hits the server once.
+    var _clippyEnabled = true;
+    var _clippyTimer = null;
+    var _clippyMenuVisible = false;
+    var _CLIPPY_LINES = {
+        create: [
+            "It looks like you're making a greeting card! Might I suggest a poem about paperclips? It's very moving.",
+            "Ooh, a new card! Add a personal touch — I'm told I look great on birthdays.",
+            "Creating a card? My tip: the best gift is a paperclip. It holds everything together."
+        ],
+        gallery: [
+            "Browsing the gallery? Lovely cards. Mine are stuck in a folder, unfortunately.",
+            "Admiring your collection? That blue one is my favorite. Don't tell the others.",
+            "Gallery time! If you spot a card of a paperclip, that's me. I deny nothing."
+        ],
+        minesweeper: [
+            "It looks like you're about to lose at Minesweeper. The corners are always safe. Probably.",
+            "Minesweeper! When in doubt, click a flag. When in more doubt, close your eyes and click.",
+            "I'd help you sweep, but I'm a bit... clipped at the moment."
+        ],
+        music: [
+            "It looks like you're listening to music! May I recommend 'Paperclip in C Major'?",
+            "Turn it up! I'm a big fan of anything with a nice hook. Especially paper hooks.",
+            "Music! I once wrote a song called 'Bend Me, Shape Me'. It never charted."
+        ],
+        stylizer: [
+            "AI Stylize! Ooh, make me look like a renaissance paperclip, please!",
+            "Stylizing? My look is called 'Classic Office Gold'. Very rare, very me.",
+            "Turning photos into art? I'm already a masterpiece. But go on — impress me."
+        ],
+        culture: [
+            "Chinese Culture lesson? Here's my fact: paperclips hold things together, just like traditions hold people together.",
+            "Culture day! I'm fluent in... paperclip, and a little bit of everything else.",
+            "Learning about traditions? Lovely. My tradition is bending over backwards to help."
+        ],
+        history: [
+            "The Website's History! I remember when this site was just a BIOS screen and a dream.",
+            "Reading the history? My favorite chapter is the one before I existed. Very short.",
+            "Ah, history! I've been here since the beginning. Created by a machine — how ironic."
+        ],
+        mycards: [
+            "Checking My Cards? You've got gems in there. I keep my collection in a folder. Literally.",
+            "Your card collection is growing! Soon you'll need a bigger clipboard.",
+            "My Cards! I rate this one: paperclip out of ten."
+        ],
+        recycle: [
+            "It looks like you're visiting the Recycle Bin. Please don't recycle... me.",
+            "Emptying the bin? Go ahead — I'll just bend right back.",
+            "The Recycle Bin? I once got deleted. It was a very bent experience."
+        ],
+        control: [
+            "The Control Panel! Change the wrong setting and I might become a... stapler.",
+            "Adjusting settings? May I suggest: Clippy brightness — maximum.",
+            "Control Panel! If you see 'Show Clippy tips', please leave it on. Pretty please."
+        ],
+        taskmgr: [
+            "Ending tasks? Please don't end clippy.exe. I'm not a virus, I promise!",
+            "Task Manager! If you see paperclip.exe at 0% CPU, that's me. Thinking. Deeply.",
+            "Killing processes? I'm a process too, you know. A very handsome one."
+        ],
+        notepad: [
+            "It looks like you're writing something! May I suggest a poem about... paperclips?",
+            "Notepad! Perfect for writing. I once wrote my memoirs here. 124 pages. All about me.",
+            "Writing away? Don't forget to save. I learned that the hard way. Twice."
+        ],
+        cmd: [
+            "It looks like you're using the Command Prompt! Type 'clippy' and something magical happens. Trust me.",
+            "A black window with green text? Bold choice. I prefer a nice yellow bubble.",
+            "C:>clippy — go on, try it. I'll wait."
+        ],
+        'windos-dl': [
+            "Downloading WinDOS? I remember its first boot. Even I was impressed.",
+            "A whole operating system? Sounds heavy. Unlike me — light as a paperclip.",
+            "WinDOS! I once ran on a 486. Those were the days. No, really, I'm old."
+        ],
+        tbp: [
+            "Taskbar properties? May I suggest keeping the taskbar... exactly where it is. It suits you.",
+            "Rearranging the taskbar? Bold move. I support you either way."
+        ],
+        _default: [
+            "It looks like you're opening something! Can I help? I'm very bendable.",
+            "Hello! I'm Clippy. Would you like a quick tip? No? I'll just hover here.",
+            "Opening apps, are we? I've already opened... my heart. And this bubble."
+        ]
+    };
+    var _CLIPPY_CHATS = [
+        "Hello! Just checking in. Everything bendy on your end?",
+        "You called? I was busy straightening things out.",
+        "Did you know? I can hold up to 20 sheets of paper. And one very long conversation."
+    ];
+    var _CLIPPY_IMG_IDLE = '/static/img/clippy-idle.png';
+    var _CLIPPY_IMG_WAVE = '/static/img/clippy-wave.png';
+
+    function _clippyPick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function _clippyCss() {
+        if (document.getElementById('lc-clippy-css')) return;
+        var st = document.createElement('style');
+        st.id = 'lc-clippy-css';
+        st.textContent =
+            '#lc-clippy-menu{position:fixed;right:10px;bottom:48px;z-index:300010;background:#fff;border:1px solid #7f9db9;box-shadow:2px 2px 8px rgba(0,0,0,.25);font-family:Tahoma,sans-serif;min-width:200px;padding:2px;display:none}' +
+            '#lc-clippy-menu .lccm-i{padding:5px 10px;font-size:12px;cursor:pointer;color:#000;white-space:nowrap}' +
+            '#lc-clippy-menu .lccm-i:hover{background:#316ac5;color:#fff}' +
+            '#lc-clippy-menu .lccm-sep{height:1px;background:#d6d0c4;margin:3px 2px}' +
+            '#lc-clippy-box{position:fixed;right:10px;bottom:46px;z-index:300005;display:none;font-family:Tahoma,sans-serif}' +
+            '#lc-clippy-box .lccb-pin{align-self:flex-end;animation:lccb-wiggle 2.2s ease-in-out infinite;transform-origin:50% 90%}' +
+            '#lc-clippy-box .lccb-pin img{width:74px;height:auto;display:block}' +
+            '#lc-clippy-box .lccb-bubble{position:relative;background:#ffffe1;border:2px solid #0a246a;border-radius:6px;box-shadow:2px 2px 8px rgba(0,0,0,.3);padding:10px 12px;max-width:270px}' +
+            '#lc-clippy-box .lccb-tail{position:absolute;left:-10px;bottom:16px;width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-right:9px solid #0a246a}' +
+            '@keyframes lccb-wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)}}';
+        document.head.appendChild(st);
+    }
+
+    function _clippyBox() {
+        var box = document.getElementById('lc-clippy-box');
+        if (box) return box;
+        box = document.createElement('div');
+        box.id = 'lc-clippy-box';
+        box.innerHTML =
+            '<div style="display:flex;align-items:flex-end">' +
+            '  <div class="lccb-pin"><img id="lc-clippy-img" src="' + _CLIPPY_IMG_WAVE + '" alt="Clippy"></div>' +
+            '  <div class="lccb-bubble">' +
+            '    <div class="lccb-tail"></div>' +
+            '    <div id="lc-clippy-text" style="font-size:12px;color:#222;line-height:1.5"></div>' +
+            '    <div style="text-align:right;margin-top:8px">' +
+            '      <button id="lc-clippy-ok" type="button" style="font-family:Tahoma,sans-serif;font-size:11px;padding:3px 18px;background:linear-gradient(180deg,#fff,#ece9d8);border:1px solid #003399;border-radius:3px;cursor:pointer">OK</button>' +
+            '    </div>' +
+            '  </div>' +
+            '</div>';
+        document.body.appendChild(box);
+        box.querySelector('#lc-clippy-ok').addEventListener('click', _clippyHide);
+        return box;
+    }
+
+    function _clippySay(text, img) {
+        var box = _clippyBox();
+        var imgEl = document.getElementById('lc-clippy-img');
+        if (imgEl && img) imgEl.src = img;
+        document.getElementById('lc-clippy-text').textContent = text;
+        box.style.display = 'block';
+        if (_clippyTimer) clearTimeout(_clippyTimer);
+        _clippyTimer = setTimeout(_clippyHide, 15000);
+    }
+
+    function _clippyHide() {
+        if (_clippyTimer) { clearTimeout(_clippyTimer); _clippyTimer = null; }
+        var box = document.getElementById('lc-clippy-box');
+        if (box) box.style.display = 'none';
+    }
+
+    // Hooked from openWindow: one-liner for the app being opened.
+    function _clippyTip(id) {
+        if (!_clippyEnabled) return;
+        var arr = _CLIPPY_LINES[id] || _CLIPPY_LINES._default;
+        _clippySay(_clippyPick(arr), _CLIPPY_IMG_WAVE);
+    }
+
+    // Manual call (tray click, Run "clippy"): chat, or re-onboarding hint when off.
+    function _clippyManual() {
+        if (_clippyEnabled) {
+            _clippySay(_clippyPick(_CLIPPY_CHATS), _CLIPPY_IMG_WAVE);
+        } else {
+            _clippySay("Hey, I'm right here — just resting! Want me back? Right-click me and pick 'Turn On Clippy Tips', or open Control Panel → Clippy.", _CLIPPY_IMG_IDLE);
+        }
+    }
+
+    function _clippyCpMsg(txt) {
+        var el = document.getElementById('lc-clippy-cp-msg');
+        if (el) el.textContent = txt;
+    }
+
+    function _clippySet(on) {
+        var prev = _clippyEnabled;
+        _clippyEnabled = !!on;
+        try {
+            fetch('/api/prefs', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clippy: _clippyEnabled })
+            }).catch(function() {});
+        } catch (e) {}
+        _clippyCpMsg(_clippyEnabled ? 'Saved — Clippy tips are ON.' : 'Saved — Clippy tips are OFF. (Right-click the tray paperclip anytime to turn me back on.)');
+        if (on && !prev) {
+            _clippySay("Yay, I'm back! Watch for me whenever you open an app.", _CLIPPY_IMG_WAVE);
+        } else if (!on && prev) {
+            _clippyHide();
+        }
+    }
+
+    function setClippy(on) { _clippySet(!!on); }
+
+    // ---- tray right-click menu ----
+    var _clippyMenu = null;
+    function _clippyMenuBuild() {
+        var on = _clippyEnabled;
+        return '<div class="lccm-i" data-act="open"><b>Open Clippy</b></div>' +
+               '<div class="lccm-sep"></div>' +
+               (on
+                   ? '<div class="lccm-i" data-act="off">Turn Off Clippy Tips</div>'
+                   : '<div class="lccm-i" data-act="on">Turn On Clippy Tips</div>');
+    }
+    function _clippyMenuShow(e) {
+        if (!_clippyMenu) return;
+        _clippyMenu.innerHTML = _clippyMenuBuild();
+        _clippyMenu.style.display = 'block';
+        _clippyMenuVisible = true;
+    }
+    function _clippyMenuHide() {
+        if (_clippyMenu) { _clippyMenu.style.display = 'none'; }
+        _clippyMenuVisible = false;
+    }
+    function _clippyMenuAct(act) {
+        if (act === 'open') { _clippyManual(); }
+        else if (act === 'on') { _clippySet(true); }
+        else if (act === 'off') { _clippySet(false); }
+    }
+
+    // ---- init ----
+    _clippyCss();
+    (function() {
+        // Tray paperclip (left of EN): left-click chats, right-click menu.
+        var tray = document.querySelector('.xp-tray');
+        if (tray) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.id = 'lc-clippy-tray';
+            b.title = 'Clippy — Office Assistant';
+            b.innerHTML = '<img src="' + _CLIPPY_IMG_IDLE + '" style="height:16px;width:auto;display:block;pointer-events:none">';
+            b.style.cssText = 'background:transparent;border:none;padding:2px 5px;cursor:pointer;vertical-align:middle;line-height:1';
+            b.addEventListener('click', function(e) {
+                _clippyMenuHide();
+                _clippyManual();
+                e.preventDefault();
+            });
+            b.addEventListener('mousedown', function(e) {
+                if (e.button === 2) {
+                    e.preventDefault();
+                    if (_clippyMenuVisible) { _clippyMenuHide(); }
+                    else { _clippyMenuShow(e); }
+                }
+            });
+            b.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                if (!_clippyMenuVisible) _clippyMenuShow(e);
+            });
+            tray.insertBefore(b, tray.firstChild);
+        }
+        // Menu container + global close
+        _clippyMenu = document.createElement('div');
+        _clippyMenu.id = 'lc-clippy-menu';
+        document.body.appendChild(_clippyMenu);
+        _clippyMenu.addEventListener('click', function(e) {
+            var it = e.target && e.target.closest ? e.target.closest('.lccm-i') : null;
+            if (!it) return;
+            var act = it.getAttribute('data-act');
+            _clippyMenuHide();
+            if (act) _clippyMenuAct(act);
+        });
+        document.addEventListener('mousedown', function(e) {
+            if (!_clippyMenuVisible) return;
+            if (e.button !== 0) return;
+            var trayBtn = document.getElementById('lc-clippy-tray');
+            if (trayBtn && trayBtn.contains(e.target)) return;
+            if (_clippyMenu && _clippyMenu.contains(e.target)) return;
+            _clippyMenuHide();
+        });
+        document.addEventListener('contextmenu', function(e) {
+            if (_clippyMenuVisible) {
+                var trayBtn = document.getElementById('lc-clippy-tray');
+                if (!trayBtn || !trayBtn.contains(e.target)) _clippyMenuHide();
+            }
+        });
+        // Control Panel entry: click the Clippy card row → open its settings page
+        document.addEventListener('click', function(e) {
+            var t = e.target && e.target.closest ? e.target.closest('.cp-clippy') : null;
+            if (t && window.XPShell) { XPShell.openCPItem('clippy'); }
+        });
+        // Load server-side pref (guest = by IP, account = by user — survives cookie clears)
+        try {
+            fetch('/api/prefs').then(function(r) { return r.json(); }).then(function(d) {
+                if (d && d.clippy === false) { _clippyEnabled = false; }
+            }).catch(function() {});
+        } catch (e) {}
+    })();
 
     // Apply saved theme on load
     var savedTheme = localStorage.getItem('xp-theme');
