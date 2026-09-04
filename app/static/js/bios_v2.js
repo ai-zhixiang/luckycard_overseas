@@ -950,7 +950,8 @@
             wipeCurtain.classList.add('drop');
             setTimeout(function(){ scr.classList.add('slide-down'); setTimeout(function(){ scr.remove(); },600); },500);
 
-            // China region check — parallel multi-method
+            // China region check — skip in Electron desktop app
+            if (!navigator.userAgent.includes('Electron') && !navigator.userAgent.includes('luckycard') && !navigator.userAgent.includes('Lucky Card') && !window.__IS_ELECTRON) {
             var _cnDetected = false;
             function _cnShow() { if (!_cnDetected) { _cnDetected = true; setTimeout(function(){ showChinaNotice(); }, 2000); } }
 
@@ -967,6 +968,7 @@
                     if (tz==='Asia/Shanghai'||tz==='Asia/Chongqing'||tz==='Asia/Harbin'||tz==='Asia/Urumqi') _cnShow();
                 } catch(e){}
             }, 1000);
+            }
         }
         function updateProgress(p) {
             if (p<50) verEl.textContent='v1.0 — loading...';

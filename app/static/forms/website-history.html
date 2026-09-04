@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website's History</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #fff;
+  font-family: 'Consolas', 'Courier New', 'SimSun', monospace;
+  font-size: 13px;
+  color: #000;
+  overflow-y: auto;
+  height: 100%;
+}
+.menu-bar {
+  display: flex;
+  gap: 0;
+  padding: 3px 4px;
+  background: #ECE9D8;
+  border-bottom: 1px solid #D4D0C8;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  user-select: none;
+}
+.menu-bar span { padding: 2px 8px; cursor: default; }
+.menu-bar span:hover { background: #316AC5; color: #fff; }
+pre {
+  padding: 10px 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+}
+.loading { color: #888; padding: 1rem; }
+</style>
+</head>
+<body>
+<div class="menu-bar">
+  <span>File</span><span>Edit</span><span>Format</span><span>View</span><span>Help</span>
+</div>
+<pre id="hist-body" class="loading">Loading Website's History...</pre>
+<script>
+fetch('/static/website-history.md?v=1').then(function(r){ return r.text(); }).then(function(t){
+  var el = document.getElementById('hist-body');
+  el.classList.remove('loading');
+  el.textContent = t;
+}).catch(function(){
+  var el = document.getElementById('hist-body');
+  el.textContent = 'Failed to load history.';
+});
+</script>
+</body>
+</html>

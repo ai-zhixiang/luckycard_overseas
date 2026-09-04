@@ -1,13 +1,14 @@
 import os
 import shutil, uuid, json, base64, subprocess
 from pathlib import Path
-from fastapi import FastAPI, Request, UploadFile, File, Form
+from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from .database import engine, Base
-from .api import cards, music, auth, payment, paypal
+from .api import cards, music, auth, payment, paypal, static_manager, wallet, culture, prefs
 from .config import settings
 from pydantic import BaseModel
 import httpx
@@ -24,16 +25,32 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """404 → XP 风格错误页; /api 路径仍返回 JSON 错误。"""
+    if exc.status_code == 404 and not request.url.path.startswith("/api"):
+        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
 app.include_router(cards.router, prefix="/api", tags=["cards"])
 app.include_router(music.router, prefix="/api", tags=["music"])
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(payment.router, prefix="/api", tags=["payment"])
 app.include_router(paypal.router, prefix="/api", tags=["paypal"])
+app.include_router(wallet.router, prefix="/api", tags=["wallet"])
+app.include_router(static_manager.router, prefix="/api", tags=["static"])
+app.include_router(culture.router, prefix="/api", tags=["culture"])
+app.include_router(prefs.router, prefix="/api", tags=["prefs"])
 
 @app.on_event("startup")
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+@app.get("/card/{card_id}")
+async def card_short(card_id: str):
+    """短链 /card/{id} → 卡片分享页（OG 友好）"""
+    return RedirectResponse(url=f"/api/card-share/{card_id}")
 
 @app.get("/download/source")
 async def download_source():
@@ -66,6 +83,10 @@ async def check_country(request: Request):
 @app.get("/win11lpc")
 async def win11lpc_page(request: Request):
     return templates.TemplateResponse("win11lpc.html", {"request": request})
+
+@app.get("/static-manager")
+async def static_manager_page(request: Request):
+    return templates.TemplateResponse("static-manager.html", {"request": request})
 
 class Win11Code(BaseModel):
     code: str
@@ -106,11 +127,23 @@ async def win11lpc_compile(body: Win11Code):
         return {"status": "error", "message": str(e)}
 
 @app.post("/api/stylize")
-async def stylize_image(
-    file: UploadFile = File(...),
+async def stylize_image(request: Request, file: UploadFile = File(...),
     style: str = Form("watercolor"),
     style_prompt: str = Form(""),
 ):
+    from .api.auth import charge_op, refund_op
+    charge = charge_op(request, ["stylize"])
+    try:
+        result = await _stylize_impl(file, style, style_prompt)
+    except Exception as e:
+        refund_op(request, ["stylize"], charge)
+        raise
+    if result.get("status") != "ok":
+        refund_op(request, ["stylize"], charge)
+    return result
+
+
+async def _stylize_impl(file: UploadFile, style: str, style_prompt: str):
     try:
         # Save uploaded file temporarily
         tmp_dir = Path("/tmp/stylize_uploads")
@@ -157,8 +190,21 @@ async def stylize_image(
         return {"status": "error", "message": str(e)}
 
 @app.post("/api/card-art")
-async def card_art(text: str = Form(...), style: str = Form("watercolor"), card_id: str = Form("")):
+async def card_art(request: Request, text: str = Form(...), style: str = Form("watercolor"), card_id: str = Form("")):
     """Generate AI artwork for a card from poem text."""
+    from .api.auth import charge_op, refund_op
+    charge = charge_op(request, ["art"])
+    try:
+        result = await _card_art_impl(text, style, card_id)
+    except Exception as e:
+        refund_op(request, ["art"], charge)
+        raise
+    if result.get("status") != "ok":
+        refund_op(request, ["art"], charge)
+    return result
+
+
+async def _card_art_impl(text: str, style: str, card_id: str):
     from sqlalchemy import select
     from .models import GreetingCard
     try:
@@ -231,6 +277,15 @@ async def upload_file(file: UploadFile = File(...)):
     with open(save_path, "wb") as f:
         f.write(content)
     return {"status": "ok", "path": str(save_path), "size": len(content)}
+
+@app.get("/about.txt")
+async def about_txt():
+    """Plain-text site description — for crawlers / AI agents."""
+    return FileResponse("app/static/about.txt", media_type="text/plain; charset=utf-8")
+
+@app.get("/robots.txt")
+async def robots_txt():
+    return FileResponse("app/static/robots.txt", media_type="text/plain; charset=utf-8")
 
 @app.get("/")
 async def home(request: Request):

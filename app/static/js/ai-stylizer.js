@@ -69,6 +69,11 @@
       fd.append('style_prompt', PROMPTS[cs]);
       var r = await fetch('/api/stylize', {method:'POST', body:fd});
       var d = await r.json();
+      if(r.status === 402 || (d && d.detail && d.detail.code === 'quota_blocked')){
+        if(window.parent && parent.Lucky){ parent.Lucky.quotaBlocked(d.detail || d); }
+        else { st.style.background='#f0d8d8'; st.style.color='#600'; st.innerHTML='Error: daily free quota used up'; }
+        btn.innerHTML = 'Generate'; btn.disabled = false; return;
+      }
       if(d.status === 'ok'){
         resImg.src = d.result_url;
         resImg.style.display = 'block';

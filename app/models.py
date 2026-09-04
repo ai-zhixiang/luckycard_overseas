@@ -31,7 +31,7 @@ class GreetingCard(Base):
     sender_name = Column(String(100))
     poem = Column(Text)
     style = Column(String(50), default="shuimo")
-    music_id = Column(String(12), nullable=True)
+    music_id = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     view_count = Column(Integer, default=0)
     is_public = Column(Boolean, default=True)

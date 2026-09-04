@@ -227,6 +227,26 @@ async def paypal_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         custom_id = resource.get("custom_id", "")
         amount_value = resource.get("amount", {}).get("value", "0")
 
+        # ── 充值订单 → 加 Lucky Points ──
+        if custom_id.startswith("recharge:"):
+            uid = custom_id.split(":", 1)[1]
+            try:
+                amt = float(amount_value)
+            except ValueError:
+                amt = 0.0
+            from .. import quota as q
+            q.add_points(uid, amt, note=f"PayPal 充值 ${amt:.2f} (webhook)")
+            result = await db.execute(
+                select(PaymentTransaction).where(PaymentTransaction.gateway_order_id == paypal_order_id)
+            )
+            tx = result.scalar_one_or_none()
+            if tx:
+                tx.status = "paid"
+                tx.gateway_capture_id = capture_id
+                tx.updated_at = datetime.utcnow()
+                await db.commit()
+            return {"ok": True}
+
         # Update transaction
         result = await db.execute(
             select(PaymentTransaction).where(PaymentTransaction.gateway_order_id == paypal_order_id)

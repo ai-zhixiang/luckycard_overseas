@@ -2,3 +2,19 @@
 __pycache__/
 *.pyc
 .env
+# secrets & backups
+.env.bak-*
+
+# runtime data (wallet/quota ledger, prefs, db) — never public
+/data/
+app/data/
+
+# user-generated content
+app/static/uploads/
+app/static/stylized/
+app/static/temp_screenshot.png
+
+# release artifacts / big binaries (hosted on the site, not in git)
+app/static/luckycard-electron-*
+app/static/WinDOS.bak.zip
+app/static/hugehard*

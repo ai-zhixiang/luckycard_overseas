@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # PayPal — Mode (true=sandbox, false=live)
     paypal_sandbox: bool = True
 
+    # Dev helper: allow test point grants (wallet/grant). Disable in production.
+    dev_grant: bool = False
+
     @property
     def paypal_client_id(self) -> str:
         return self.paypal_client_id_sandbox if self.paypal_sandbox else self.paypal_client_id_live
