@@ -1,0 +1,316 @@
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+.mc-root { position:absolute; inset:0; display:flex; flex-direction:column;
+  background:#ECE9D8; font-family:'Tahoma','Segoe UI',sans-serif; font-size:11px; color:#000; user-select:none; overflow:hidden; }
+.mc-tb { display:flex; align-items:center; gap:2px; padding:3px 4px; background:#ECE9D8; border-bottom:1px solid #D4D0C8; flex-wrap:wrap; }
+.mc-btn { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; font-family:'Tahoma',sans-serif; font-size:11px;
+  background:linear-gradient(180deg,#fff,#ECE9D8); border:1px solid #8E8F8A; border-radius:3px; cursor:pointer; color:#000; white-space:nowrap; }
+.mc-btn:hover { border-color:#003399; }
+.mc-btn:active { background:linear-gradient(180deg,#D4D0C8,#ECE9D8); }
+.mc-btn:disabled { opacity:.5; cursor:default; }
+.mc-btn img { width:16px; height:16px; }
+.mc-sep { width:1px; height:18px; background:#C0BFAF; margin:0 4px; }
+.mc-path { padding:4px 8px; background:#FFFFFF; border-bottom:1px solid #D4D0C8; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* drives home */
+.mc-home { flex:1; display:flex; overflow:hidden; }
+.mc-side { width:172px; flex-shrink:0; padding:14px 8px; background:linear-gradient(180deg,#f7f6ef,#E6E3D6); border-right:1px solid #D4D0C8; }
+.mc-side h4 { font-size:11px; color:#555; margin:6px 2px 4px; font-weight:bold; }
+.mc-side a { display:block; padding:5px 6px; color:#003399; text-decoration:none; cursor:pointer; font-size:11px; }
+.mc-side a:hover { background:#C8E4FF; border-radius:3px; }
+.mc-drives { flex:1; padding:14px 18px; overflow:auto; }
+.mc-drive { display:flex; align-items:center; gap:10px; padding:7px 8px; width:100%; max-width:520px; border-radius:4px; cursor:pointer; }
+.mc-drive:hover { background:#C8E4FF; }
+.mc-drive img { width:36px; height:36px; }
+.mc-drive .cap { line-height:1.35; }
+.mc-drive .cap b { font-weight:bold; font-size:12px; }
+.mc-drive .cap .sub { color:#666; }
+/* browser grid */
+.mc-grid { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.mc-row { display:flex; align-items:center; gap:6px; padding:2px 8px; white-space:nowrap; }
+.mc-row.head { background:#F4F2E4; border-bottom:1px solid #D4D0C8; font-weight:bold; }
+.mc-row.item { cursor:default; }
+.mc-row.item.sel { background:#316AC5; color:#fff; }
+.mc-row.item img { width:16px; height:16px; flex-shrink:0; }
+.mc-list { flex:1; overflow:auto; }
+.c-name { flex:2 1 45%; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:5px; }
+.c-size { flex:0 0 70px; text-align:right; overflow:hidden; }
+.c-type { flex:0 0 100px; overflow:hidden; }
+.c-mod { flex:0 0 110px; overflow:hidden; }
+.mc-status { border-top:1px solid #D4D0C8; padding:3px 8px; font-size:11px; }
+.mc-empty { padding:24px; text-align:center; color:#666; }
+/* modal */
+.mc-modal-bg { position:absolute; inset:0; background:rgba(0,0,0,.25); display:none; align-items:center; justify-content:center; z-index:50; }
+.mc-modal { width:340px; background:#ECE9D8; border:1px solid #003399; box-shadow:2px 2px 8px rgba(0,0,0,.4); }
+.mc-modal .mt { display:flex; align-items:center; gap:6px; padding:5px 8px; background:linear-gradient(90deg,#0055E4,#3A8DFF); color:#fff; font-weight:bold; }
+.mc-modal .mb { padding:12px; line-height:1.5; }
+.mc-modal .mbtns { display:flex; justify-content:flex-end; gap:6px; padding:8px 12px; }
+.mc-modal .mbtns button { min-width:72px; padding:4px 10px; font-family:Tahoma,sans-serif; font-size:11px;
+  background:linear-gradient(180deg,#fff,#ECE9D8); border:1px solid #8E8F8A; border-radius:3px; cursor:pointer; }
+</style>
+
+<div class="mc-root" id="mcRoot">
+  <div class="mc-tb">
+    <button class="mc-btn" id="btnHome" title="Back to My Computer"><img src="/static/img/xp-computer_20.png?v=2">My Computer</button>
+    <button class="mc-btn" id="btnUp" title="Up one level"><img src="/static/img/xp-folder_20.png?v=2" style="transform:rotate(90deg)">Up</button>
+    <div class="mc-sep"></div>
+    <button class="mc-btn" id="btnRefresh" title="Refresh">Refresh</button>
+  </div>
+  <div class="mc-path" id="mcPath">My Computer</div>
+
+  <!-- 首页: 驱动器视图 -->
+  <div class="mc-home" id="mcHome">
+    <div class="mc-side">
+      <h4>System Tasks</h4>
+      <a id="sideMyDocs">View My Documents</a>
+      <a id="sideControl">Open Control Panel</a>
+      <h4>Other Places</h4>
+      <a id="sideDesktop">Desktop</a>
+      <h4>Details</h4>
+      <a id="sideSys">System Information</a>
+    </div>
+    <div class="mc-drives" id="mcDrives"></div>
+  </div>
+
+  <!-- 浏览视图 (C:\ / D:\ / Program Files) -->
+  <div class="mc-grid" id="mcBrowse" style="display:none">
+    <div class="mc-row head">
+      <span class="c-name">Name</span><span class="c-size">Size</span><span class="c-type">Type</span><span class="c-mod">Modified</span>
+    </div>
+    <div class="mc-list" id="mcList"><div class="mc-empty">Loading…</div></div>
+  </div>
+
+  <div class="mc-status" id="mcStatus">My Computer</div>
+</div>
+
+<div class="mc-modal-bg" id="mcModalBg">
+  <div class="mc-modal">
+    <div class="mt"><img src="/static/img/xp-computer_20.png?v=2" style="width:18px;height:18px"><span id="mTitle">My Computer</span></div>
+    <div class="mb" id="mMsg"></div>
+    <div class="mbtns"><button id="mOk">OK</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  var X = (window.XPShell) ? window.XPShell : null;
+
+  function runKw(kw){
+    X && (function(){ var i = document.getElementById('xp-run-input'); if (i){ i.value = kw; X.runCommand(); } })();
+  }
+  // Program Files 里的"应用"虚拟表: name, icon, 打开动作, 尺寸(伪)
+  var APPS = [
+    { name:'Lucky Card Suite', kids:[
+      { n:'Create Card.exe', i:'xp-ie6_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('create','Create Card','<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/card-create.html'); } },
+      { n:'Gallery.exe', i:'xp-gallery_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('gallery','Gallery','<img src="/static/img/xp-gallery_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/card-gallery.html'); } },
+      { n:'Lucky Music.exe', i:'xp-music_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('music','Music','<img src="/static/img/xp-music_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/music-player.html'); } },
+      { n:'AI Stylizer.exe', i:'xp-paint_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('stylizer','AI Stylizer','<img src="/static/img/xp-paint_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/ai-stylizer.html'); } },
+      { n:'Minesweeper.exe', i:'xp-help_32.png', t:'Game', kb:'1,024 KB', fn:function(){ X && X.openWindow('minesweeper','Minesweeper','<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">','/static/forms/minesweeper.html'); } } ] },
+    { name:'Windows NT', kids:[
+      { n:'Notepad.exe', i:'xp-notepad_32.png', t:'Application', kb:'68 KB', fn:function(){ runKw('notepad'); } },
+      { n:'Command Prompt.exe', i:'xp-cmd_32.png', t:'Application', kb:'88 KB', fn:function(){ runKw('cmd'); } },
+      { n:'Task Manager.exe', i:'xp-taskmgr_32.png', t:'Application', kb:'148 KB', fn:function(){ runKw('taskmgr'); } },
+      { n:'Internet Explorer.exe', i:'xp-ie6_32.png', t:'Application', kb:'512 KB', fn:function(){ window.open('https://hicard.world','_blank'); } } ] },
+    { name:'Accessories', kids:[
+      { n:'System Information.exe', i:'xp-computer_32.png', t:'Application', kb:'320 KB', fn:function(){ runKw('sysinfo'); } },
+      { n:'WordPad.exe', i:'xp-wordpad_32.png', t:'Application', kb:'320 KB', fn:function(){ X && X.openWindow('about','About Lucky Card','<img src="/static/img/logo.svg" style="width:18px;height:18px;vertical-align:middle">','<div style="text-align:center;padding:2rem;font-family:Segoe UI,sans-serif"><img src="/static/img/logo.svg" style="width:64px;height:64px;margin-bottom:12px"><h2 style="color:#003399">Lucky Card XP</h2><p style="margin-top:8px;color:#888">Registered to: boonxiong2</p><p style="margin-top:16px;color:#888">Physical memory available to Windows: 523,760 KB</p></div>'); } } ] }
+  ];
+  function flatApps(){
+    var out = [];
+    APPS.forEach(function(g){ g.kids.forEach(function(a){ out.push(a); }); });
+    return out;
+  }
+
+  var state = { view:'home', root:'C', sub:'', items:[] };
+  function setPath(t){ $('mcPath').textContent = t; }
+  function setStatus(t){ $('mcStatus').textContent = t; }
+
+  function modal(title, msgHtml){
+    $('mTitle').textContent = title;
+    $('mMsg').innerHTML = msgHtml;
+    $('mcModalBg').style.display = 'flex';
+  }
+  $('mOk').onclick = function(){ $('mcModalBg').style.display = 'none'; };
+
+  function showHome(){
+    state.view = 'home';
+    $('mcHome').style.display = 'flex';
+    $('mcBrowse').style.display = 'none';
+    $('btnHome').disabled = true; $('btnUp').disabled = true;
+    setPath('My Computer');
+    renderDrives();
+    setStatus('My Computer');
+  }
+
+  function renderDrives(){
+    var html =
+      driveRow('A','3½ Floppy (A:)','Floppy Disk Drive','xp-folder_32.png?v=2','Free space: 1.44 MB') +
+      driveRow('C','Local Disk (C:)','Local Disk','xp-computer_32.png?v=2','File system: NTFS · Free space: 1.21 GB of 2.00 GB', function(){ browseC(''); }) +
+      driveRow('D','Data (D:)','Local Disk','xp-sharing_32.png?v=2','Free space: 12.4 GB of 40.0 GB', function(){ browseD(); }) +
+      driveRow('E','WinDOS Setup (E:)','CD Drive','xp-cmd_32.png?v=2','CD-ROM', cdInsert);
+    $('mcDrives').innerHTML = html;
+    bindDriveClicks();
+  }
+  function driveRow(id, cap, type, icon, sub, fn){
+    return '<div class="mc-drive" data-drive="' + id + '"><img src="/static/img/' + icon + '" alt=""><div class="cap"><b>' + esc(cap) + '</b><br><span class="sub">' + esc(type) + '<br>' + esc(sub) + '</span></div></div>';
+  }
+  function bindDriveClicks(){
+    Array.prototype.forEach.call(document.querySelectorAll('.mc-drive'), function(el){
+      el.onclick = function(){
+        var d = el.dataset.drive;
+        if (d === 'A') modal('3½ Floppy (A:)', '<p style="font-size:1.2rem">🛑</p><p><b>A:\\ is not accessible.</b></p><p>The device is not ready.</p>');
+        else if (d === 'C') browseC('');
+        else if (d === 'D') browseD();
+        else if (d === 'E') cdInsert();
+      };
+    });
+  }
+
+  function cdInsert(){
+    modal('WinDOS Setup CD (E:)', '<p>This disc contains <b>WinDOS 2026.1</b> — a lightweight Windows-like OS made by the same family.</p><p style="margin-top:8px"><button class="mc-btn" id="cdDl">Install WinDOS (download .zip)</button></p>');
+    var b = $('cdDl');
+    if (b) b.onclick = function(){ $('mcModalBg').style.display='none'; window.open('/dl/windos-build.zip?dl=1'); };
+  }
+
+  /* ---- 浏览引擎: C: 真 static + Program Files 虚拟; D: 下载物 ---- */
+  function enterBrowse(){
+    state.view = 'browse';
+    $('mcHome').style.display = 'none';
+    $('mcBrowse').style.display = 'flex';
+    $('btnHome').disabled = false; $('btnUp').disabled = false;
+  }
+  function browseC(sub){
+    state.root = 'C'; state.sub = sub || '';
+    enterBrowse();
+    setPath(sub ? 'C:\\' + sub : 'C:\\');
+    var head = [];
+    if (!sub) head.push({ name:'Program Files', kind:'pf', is_dir:true, path:'PF' });
+    fetch('/api/static/list?path=' + encodeURIComponent(sub)).then(function(r){ return r.json(); }).then(function(d){
+      d.items.forEach(function(it){
+        head.push({ name: it.name, kind: it.is_dir ? 'dir' : 'file', is_dir: it.is_dir, size_display: it.size_display, path: (sub ? sub + '/' : '') + it.name, mtime: it.mtime });
+      });
+      state.items = head;
+      renderBrowse(head);
+      setStatus(head.length + ' object(s)');
+    }).catch(function(){ state.items = head; renderBrowse(head); setStatus(''); });
+  }
+  function browseD(){
+    state.root = 'D'; state.sub = '';
+    enterBrowse();
+    setPath('D:\\');
+    fetch('/api/static/list?path=').then(function(r){ return r.json(); }).then(function(d){
+      var files = d.items.filter(function(i){ return !i.is_dir && /\.(zip|exe|7z|rar|msi)$/i.test(i.name) && i.name.indexOf('WinDOS.bak') < 0; });
+      state.items = files;
+      renderBrowse(files);
+      setStatus(files.length + ' download(s) available');
+    }).catch(function(){ state.items = []; renderBrowse([]); setStatus(''); });
+  }
+  function browsePF(){
+    state.root = 'PF'; state.sub = '';
+    enterBrowse();
+    setPath('C:\\Program Files');
+    var rows = [];
+    APPS.forEach(function(g){
+      rows.push({ name:g.name, kind:'dir', is_dir:true, path:'PFG:'+g.name, group:g });
+    });
+    state.items = rows;
+    renderBrowse(rows);
+    setStatus(rows.length + ' folder(s)');
+  }
+  function browsePFG(group){
+    state.root = 'PFG'; state.sub = group.name;
+    enterBrowse();
+    setPath('C:\\Program Files\\' + group.name);
+    state.items = group.kids.map(function(a){ return { name:a.n, kind:'exe', is_dir:false, exe:a, size_display: a.kb + (a.kb==='1,024 KB'?'':' '), mtime: 1109606400 }; });
+    renderBrowse(state.items);
+    setStatus(state.items.length + ' object(s)');
+  }
+
+  function fmtDate(ts){
+    var d = new Date(ts * 1000);
+    function p(n){ return (n<10?'0':'')+n; }
+    return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function iconOf(it){
+    if (it.kind === 'pf') return 'xp-folder_32.png';
+    if (it.kind === 'exe') return it.exe.i;
+    if (it.is_dir) return it.kind === 'dir' ? 'xp-folder_32.png' : 'xp-folder_32.png';
+    var ext = (it.name.split('.').pop()||'').toLowerCase();
+    if (ext === 'zip' || ext === '7z' || ext === 'rar') return 'xp-sharing_32.png';
+    if (ext === 'exe') return 'xp-cmd_32.png';
+    if (['png','jpg','jpeg','gif','svg','ico'].indexOf(ext) >= 0) return 'get_pictures_32.png';
+    if (['mp3','wav','mid'].indexOf(ext) >= 0) return 'my_music_32.png';
+    if (['css','js','html','json','txt','md'].indexOf(ext) >= 0) return 'xp-notepad_32.png';
+    return 'xp-notepad_32.png';
+  }
+  function typeOf(it){
+    if (it.kind === 'pf') return 'File Folder';
+    if (it.kind === 'exe') return it.exe.t;
+    if (it.is_dir) return 'File Folder';
+    var ext = (it.name.split('.').pop()||'').toLowerCase();
+    if (ext === 'zip') return 'WinZip Archive';
+    if (ext === 'exe') return 'Application';
+    if (ext === 'png' || ext === 'jpg') return 'Image';
+    if (ext === 'mp3') return 'Music';
+    return 'File';
+  }
+  function renderBrowse(items){
+    var list = $('mcList');
+    if (!items.length){ list.innerHTML = '<div class="mc-empty">This folder is empty.</div>'; return; }
+    var html = items.map(function(it){
+      return '<div class="mc-row item" data-idx="' + items.indexOf(it) + '">' +
+        '<span class="c-name"><img src="/static/img/' + iconOf(it) + '">' + esc(it.name) + '</span>' +
+        '<span class="c-size">' + esc(it.size_display || '') + '</span>' +
+        '<span class="c-type">' + esc(typeOf(it)) + '</span>' +
+        '<span class="c-mod">' + (it.mtime ? fmtDate(it.mtime) : '') + '</span></div>';
+    }).join('');
+    list.innerHTML = html;
+    Array.prototype.forEach.call(list.querySelectorAll('.mc-row.item'), function(row){
+      row.addEventListener('dblclick', function(){ openItem(items[parseInt(row.dataset.idx, 10)]); });
+    });
+  }
+  function dl(url, filename){
+    fetch(url).then(function(r){ if(!r.ok) throw 0; return r.blob(); }).then(function(b){
+      var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = filename || 'download';
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    }).catch(function(){ modal('Download', 'Could not download this file.'); });
+  }
+  function openItem(it){
+    if (!it) return;
+    if (it.kind === 'pf') { browsePF(); return; }
+    if (it.kind === 'dir' && it.group) { browsePFG(it.group); return; }
+    if (it.kind === 'exe') { it.exe.fn(); return; }
+    if (it.is_dir) { if (state.root === 'C') browseC(it.path); return; }
+    // file → download
+    if (state.root === 'C') dl('/static/' + it.path.split('/').map(encodeURIComponent).join('/'), it.name);
+    else if (state.root === 'D') dl('/static/' + encodeURIComponent(it.name), it.name);
+  }
+
+  /* ---- 导航按钮 ---- */
+  $('btnHome').onclick = showHome;
+  $('btnUp').onclick = function(){
+    if (state.view !== 'browse') return;
+    if (state.root === 'C' && state.sub){ var parts = state.sub.split('/'); parts.pop(); browseC(parts.join('/')); }
+    else if (state.root === 'C') showHome();
+    else if (state.root === 'PF') { browseC(''); }
+    else if (state.root === 'PFG') browsePF();
+    else if (state.root === 'D') showHome();
+  };
+  $('btnRefresh').onclick = function(){
+    if (state.view === 'home') renderDrives();
+    else if (state.root === 'C') browseC(state.sub);
+    else if (state.root === 'D') browseD();
+    else if (state.root === 'PF') browsePF();
+    else if (state.root === 'PFG') { APPS.forEach(function(g){ if (g.name === state.sub) browsePFG(g); }); }
+  };
+
+  /* ---- 侧栏 ---- */
+  $('sideMyDocs').onclick = function(){ X && X.openWindow('mydocs','My Documents','<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/my-documents.html?v=1'); };
+  $('sideControl').onclick = function(){ runKw('control'); };
+  $('sideDesktop').onclick = function(){ X && X.openWindow('recycle','Recycle Bin','<img src="/static/img/xp-recycle_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','<div style="text-align:center;padding:2rem"><img src="/static/img/xp-recycle_48.png" style="width:48px;height:48px"><p style="font-size:1.2rem;font-family:Georgia,serif;margin-top:8px">The Recycle Bin is empty.</p><p style="color:#888;margin-top:1rem">Your luck never goes to waste.</p></div>'); };
+  $('sideSys').onclick = function(){ runKw('sysinfo'); };
+
+  showHome();
+})();
+</script>

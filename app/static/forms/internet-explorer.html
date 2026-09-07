@@ -1,0 +1,321 @@
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; }
+.ie-root { position:absolute; inset:0; display:flex; flex-direction:column;
+  background:#ECE9D8; font-family:'Tahoma','Segoe UI',sans-serif; font-size:11px;
+  color:#000; user-select:none; overflow:hidden; }
+
+/* ===== menu bar ===== */
+.ie-menubar { display:flex; background:linear-gradient(180deg,#ffffff,#ECE9D8 8%,#D6D2C4 90%,#C9C4B4);
+  padding:1px 2px; border-bottom:1px solid #A6A6A6; position:relative; z-index:40; }
+.ie-menu { position:relative; padding:3px 9px; cursor:default; }
+.ie-menu:hover, .ie-menu.open { background:#316AC5; color:#fff; }
+.ie-menu .dd { display:none; position:absolute; top:100%; left:0; min-width:200px;
+  background:#fff; border:1px solid #8E8F8A; box-shadow:2px 2px 5px rgba(0,0,0,.3);
+  padding:2px; color:#000; z-index:60; }
+.ie-menu.open .dd { display:block; }
+.dd-item { padding:4px 24px 4px 24px; white-space:nowrap; cursor:default; }
+.dd-item:hover { background:#316AC5; color:#fff; }
+.dd-item.dis { color:#9a9a9a; }
+.dd-item.dis:hover { background:transparent; color:#9a9a9a; }
+.dd-sep { height:1px; background:#D4D0C8; margin:3px 8px; }
+
+/* ===== toolbar ===== */
+.ie-toolbar { display:flex; align-items:center; gap:2px; padding:3px 4px;
+  background:linear-gradient(180deg,#f2f4f8,#dfe3ea); border-bottom:1px solid #A6A6A6; }
+.bt { display:inline-flex; align-items:center; gap:3px; padding:3px 7px;
+  font-family:'Tahoma',sans-serif; font-size:11px; cursor:pointer; color:#000;
+  background:linear-gradient(180deg,#fff 0%,#ECE9D8 90%); border:1px solid #8E8F8A; border-radius:3px; }
+.bt:hover { border-color:#316AC5; }
+.bt:active { background:linear-gradient(180deg,#D4D0C8,#ECE9D8); }
+.bt:disabled { opacity:.45; cursor:default; }
+.bt img { width:16px; height:16px; }
+.tb-sep { width:1px; height:20px; background:#B7B3A5; margin:0 3px; align-self:center; }
+
+/* ===== address bar ===== */
+.ie-addrbar { display:flex; align-items:center; gap:5px; padding:3px 6px 4px;
+  background:linear-gradient(180deg,#e8e5d8,#dfdccd); border-bottom:1px solid #A6A6A6; }
+.ie-addrbar label { font-weight:bold; white-space:nowrap; }
+#ie-addr { flex:1; height:21px; padding:2px 6px; font-family:'Tahoma',sans-serif; font-size:12px;
+  border:1px solid #7f9db9; border-radius:10px; background:#fff; outline:none; }
+.go-btn { border-radius:10px; padding:2px 12px; font-weight:bold; }
+
+/* ===== content ===== */
+#ie-frame-wrap { flex:1; position:relative; background:#fff; overflow:hidden; }
+#ie-frame { position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; }
+
+/* ===== status bar ===== */
+.ie-status { display:flex; align-items:center; gap:6px; padding:2px 8px;
+  background:linear-gradient(180deg,#ECE9D8,#DDD9CB); border-top:1px solid #A6A6A6; }
+#ie-status-txt { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ie-zone { display:flex; align-items:center; gap:5px; border-left:1px solid #C0BFAF; padding-left:10px; }
+.ie-zone img { width:16px; height:16px; }
+
+/* ===== about dialog ===== */
+.ie-shade { display:none; position:absolute; inset:0; background:rgba(0,0,0,.25); z-index:100;
+  align-items:center; justify-content:center; }
+.ie-shade.on { display:flex; }
+.ie-about { width:400px; background:#ECE9D8; border:1px solid #003C74; box-shadow:3px 3px 8px rgba(0,0,0,.4);
+  font-family:'Tahoma',sans-serif; font-size:11px; }
+.ie-about-bar { display:flex; align-items:center; justify-content:space-between; padding:4px 6px;
+  background:linear-gradient(180deg,#0a3d91,#0a3d91 8%,#2b6cd4 90%,#4b8fe0);
+  color:#fff; font-weight:bold; font-size:12px; }
+.ie-about-bar .x { cursor:pointer; padding:0 5px; font-size:12px; }
+.ie-about-body { padding:14px 16px 10px; display:flex; gap:14px; }
+.ie-about-body img { width:48px; height:48px; flex-shrink:0; }
+.ie-about-title { font-size:16px; font-weight:bold; color:#1a3f8f; margin-bottom:2px; }
+.ie-about-line { margin-top:2px; }
+.ie-about-legal { margin:8px 16px 6px; border:1px solid #B7B3A5; background:#fff; padding:6px 8px;
+  font-size:10px; color:#333; line-height:1.5; max-height:90px; overflow:auto; }
+.ie-about-ok { display:flex; justify-content:center; padding:0 0 12px; }
+</style>
+
+<div class="ie-root">
+  <div class="ie-menubar" id="ie-menubar"></div>
+
+  <div class="ie-toolbar">
+    <button class="bt" data-act="back" disabled title="Back">◀ Back</button>
+    <button class="bt" data-act="fwd" disabled title="Forward">Forward ▶</button>
+    <span class="tb-sep"></span>
+    <button class="bt" data-act="stop" title="Stop">✕</button>
+    <button class="bt" data-act="refresh" title="Refresh">⟳</button>
+    <button class="bt" data-act="home" title="Home Page">⌂</button>
+    <span class="tb-sep"></span>
+    <button class="bt" data-act="newtab" title="Open current page in a new browser tab">New Tab</button>
+  </div>
+
+  <div class="ie-addrbar">
+    <label for="ie-addr">Address</label>
+    <input id="ie-addr" type="text" value="about:home" spellcheck="false" autocomplete="off"
+           placeholder="Enter a web address (https://…)" />
+    <button class="bt go-btn" data-act="go">Go</button>
+  </div>
+
+  <div id="ie-frame-wrap">
+    <iframe id="ie-frame" src="/static/forms/ie-home.html" title="Internet Explorer"></iframe>
+  </div>
+
+  <div class="ie-status">
+    <span id="ie-status-txt">Done</span>
+    <span class="ie-zone"><img src="/static/img/xp_ie6_48.png?v=2" alt="">Internet</span>
+  </div>
+
+  <!-- About dialog -->
+  <div class="ie-shade" id="ie-about-shade">
+    <div class="ie-about">
+      <div class="ie-about-bar"><span>About Lucky Card Internet Explorer</span><span class="x" id="ie-about-x">✕</span></div>
+      <div class="ie-about-body">
+        <img src="/static/img/xp_ie6_48.png?v=2" alt="">
+        <div style="flex:1">
+          <div class="ie-about-title">Lucky Card Internet Explorer</div>
+          <div class="ie-about-line"><b>Version 6.00.2900.5512</b> (Lucky Card Build 2600)</div>
+          <div class="ie-about-line">Cipher Strength: 128-bit</div>
+          <div class="ie-about-line">Product ID: 55274-640-0000356-23021</div>
+          <div class="ie-about-line" style="margin-top:6px;color:#555">Update Versions: SP3; Lucky Card Professional</div>
+        </div>
+      </div>
+      <div class="ie-about-legal">Based on the Web is the Future. It just got better.<br>
+        Warning: This site is protected by copyright law and international treaties.<br>
+        Unauthorized reproduction or distribution of this site, or any portion of it, may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under law.<br>
+        © 2026 Lucky Card. All rights reserved.</div>
+      <div class="ie-about-ok"><button class="bt" id="ie-about-ok" style="padding:4px 24px">OK</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var HOME = '/static/forms/ie-home.html';
+  var frame = document.getElementById('ie-frame');
+  var addr = document.getElementById('ie-addr');
+  var stat = document.getElementById('ie-status-txt');
+  var hist = [];      // same-origin navigation stack
+  var hpos = -1;
+
+  function setStat(s){ stat.textContent = s; }
+  function setAddr(u){
+    try { var cu = frame.contentWindow.location.href; if (cu) { addr.value = cu; return; } } catch(e){}
+    addr.value = u;
+  }
+  function pushHist(u){
+    try {
+      // only same-origin pages are truly stackable
+      var a = document.createElement('a'); a.href = u;
+      if (a.origin !== location.origin) { hist = []; hpos = -1; return; }
+    } catch(e){ hist = []; hpos = -1; return; }
+    hist = hist.slice(0, hpos + 1);
+    hist.push(u); hpos = hist.length - 1;
+    syncBtns();
+  }
+  function syncBtns(){
+    document.querySelectorAll('[data-act="back"]')[0].disabled = hpos <= 0;
+    document.querySelectorAll('[data-act="fwd"]')[0].disabled = hpos >= hist.length - 1;
+  }
+  function nav(url, fromGo){
+    var u = (url || '').trim();
+    if (!u) return;
+    // Search terms (contains CJK / space / no dot) → real search in a new browser tab
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u) && (/[\u4e00-\u9fff\s]/.test(u) || u.indexOf('.') === -1)) {
+      window.open('https://www.bing.com/search?q=' + encodeURIComponent(u), '_blank');
+      setStat('Searching the Web for "' + u + '"… (opened in new tab)');
+      return;
+    }
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u;
+    addr.value = u;
+    setStat('Opening ' + u + ' …');
+    frame.onload = function(){ setStat('Done'); pushHist(u); };
+    frame.src = u;
+  }
+  function goHome(){ nav(HOME); }
+  function refresh(){
+    var s = frame.src;
+    if (!s || s.indexOf('about:') === 0) return;
+    setStat('Refreshing ' + s + ' …');
+    frame.onload = function(){ setStat('Done'); };
+    frame.src = s.split('#')[0] + (s.indexOf('#') >= 0 ? '#ie-reload-' + Date.now() : '');
+  }
+
+  // ===== menu bar model =====
+  var MENUS = [
+    { label:'File', items:[
+      { label:'New Window', dis:true },
+      { label:'Open…', dis:true },
+      { sep:true },
+      { label:'Close', act:'close' }
+    ]},
+    { label:'Edit', items:[
+      { label:'Cut', dis:true }, { label:'Copy', dis:true }, { label:'Paste', dis:true }
+    ]},
+    { label:'View', items:[
+      { label:'Refresh', act:'refresh' },
+      { label:'Stop', act:'stop' },
+      { sep:true },
+      { label:'Home Page', act:'home' }
+    ]},
+    { label:'Favorites', items:[
+      { label:'Read About This Site', act:'go', arg:'/about.txt' },
+      { label:"Website's History", act:'go', arg:'/static/website-history.md' },
+      { label:'Lucky Wallet', dis:true },
+      { sep:true },
+      { label:'Add to Favorites…', dis:true }
+    ]},
+    { label:'Tools', items:[
+      { label:'Internet Options…', act:'options' }
+    ]},
+    { label:'Help', items:[
+      { label:'Help Topics', act:'help' },
+      { sep:true },
+      { label:'About Lucky Card Internet Explorer', act:'about' }
+    ]}
+  ];
+  function buildMenus(){
+    var bar = document.getElementById('ie-menubar');
+    MENUS.forEach(function(m, mi){
+      var el = document.createElement('div');
+      el.className = 'ie-menu';
+      el.setAttribute('data-menu', mi);
+      el.textContent = m.label;
+      var dd = document.createElement('div');
+      dd.className = 'dd';
+      m.items.forEach(function(it){
+        if (it.sep) { var sp = document.createElement('div'); sp.className = 'dd-sep'; dd.appendChild(sp); return; }
+        var d = document.createElement('div');
+        d.className = 'dd-item' + (it.dis ? ' dis' : '');
+        d.textContent = it.label;
+        if (!it.dis) {
+          d.addEventListener('click', function(ev){
+            ev.stopPropagation();
+            closeMenus();
+            var a = it.act;
+            if (a === 'go') nav(it.arg);
+            else if (a === 'close' && window.XPShell) XPShell.closeWindow('ie');
+            else if (a === 'refresh') refresh();
+            else if (a === 'stop') { setStat('Stopped'); }
+            else if (a === 'home') goHome();
+            else if (a === 'about') showAbout(true);
+            else if (a === 'options') showOptions();
+            else if (a === 'help' && window.XPShell) {
+              XPShell.openWindow('help','Help','<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">', XPShell.buildHelpHTML ? XPShell.buildHelpHTML() : 'Help');
+            }
+          });
+        }
+        dd.appendChild(d);
+      });
+      el.appendChild(dd);
+      el.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var was = el.classList.contains('open');
+        closeMenus();
+        if (!was) el.classList.add('open');
+      });
+      bar.appendChild(el);
+    });
+  }
+  function closeMenus(){ document.querySelectorAll('.ie-menu.open').forEach(function(m){ m.classList.remove('open'); }); }
+  document.addEventListener('click', closeMenus);
+
+  // ===== about / options dialogs =====
+  function showAbout(on){
+    document.getElementById('ie-about-shade').classList.toggle('on', !!on);
+  }
+  var optDiv = null;
+  function showOptions(){
+    if (!optDiv) {
+      optDiv = document.createElement('div');
+      optDiv.className = 'ie-shade';
+      optDiv.innerHTML = '<div class="ie-about" style="width:380px">' +
+        '<div class="ie-about-bar"><span>Internet Options</span><span class="x">✕</span></div>' +
+        '<div style="padding:16px 18px;line-height:1.6">' +
+        '<p><b>Internet Options are managed by your system administrator.</b></p>' +
+        '<p style="color:#666;margin-top:8px">This is a website, not a real computer.<br>There is no dial-up connection to configure. Enjoy the Web anyway.</p>' +
+        '<p style="margin-top:8px;color:#888">— The Management</p></div>' +
+        '<div style="display:flex;justify-content:center;padding:0 0 14px"><button class="bt" style="padding:4px 24px">OK</button></div></div>';
+      document.querySelector('.ie-root').appendChild(optDiv);
+      optDiv.addEventListener('click', function(ev){
+        if (ev.target.closest('.x') || ev.target.textContent.trim() === 'OK') optDiv.classList.remove('on');
+      });
+    }
+    optDiv.classList.add('on');
+  }
+
+  // ===== toolbar & addr =====
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('.bt');
+    if (!b || !b.dataset.act) return;
+    var a = b.dataset.act;
+    if (a === 'go') nav(addr.value);
+    else if (a === 'home') goHome();
+    else if (a === 'refresh') refresh();
+    else if (a === 'stop') setStat('Stopped');
+    else if (a === 'back' && hpos > 0) { hpos--; nav(hist[hpos]); }
+    else if (a === 'fwd' && hpos < hist.length - 1) { hpos++; nav(hist[hpos]); }
+    else if (a === 'newtab') {
+      var u = addr.value.trim();
+      if (!u) return;
+      if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = (u.indexOf('.') >= 0 && !/[\u4e00-\u9fff\s]/.test(u)) ? 'https://' + u : 'https://www.bing.com/search?q=' + encodeURIComponent(u);
+      window.open(u, '_blank');
+    }
+  });
+  addr.addEventListener('keydown', function(e){ if (e.key === 'Enter') nav(addr.value); });
+  addr.addEventListener('focus', function(){ addr.select(); });
+
+  // same-origin address bar sync (clicking links inside the page)
+  setInterval(function(){
+    try {
+      var cu = frame.contentWindow.location.href;
+      if (cu && cu.indexOf('about:') !== 0) addr.value = cu;
+    } catch(e){}
+  }, 400);
+
+  document.getElementById('ie-about-x').addEventListener('click', function(){ showAbout(false); });
+  document.getElementById('ie-about-ok').addEventListener('click', function(){ showAbout(false); });
+  document.getElementById('ie-about-shade').addEventListener('click', function(e){
+    if (e.target === this) showAbout(false);
+  });
+
+  buildMenus();
+  addr.value = HOME;
+  setStat('Done');
+  syncBtns();
+})();
+</script>
