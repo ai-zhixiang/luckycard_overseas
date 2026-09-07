@@ -107,14 +107,16 @@
       { n:'Lucky Music.exe', i:'xp-music_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('music','Music','<img src="/static/img/xp-music_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/music-player.html'); } },
       { n:'AI Stylizer.exe', i:'xp-paint_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('stylizer','AI Stylizer','<img src="/static/img/xp-paint_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/ai-stylizer.html'); } },
       { n:'Minesweeper.exe', i:'xp-help_32.png', t:'Game', kb:'1,024 KB', fn:function(){ X && X.openWindow('minesweeper','Minesweeper','<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">','/static/forms/minesweeper.html'); } } ] },
-    { name:'Windows NT', kids:[
-      { n:'Notepad.exe', i:'xp-notepad_32.png', t:'Application', kb:'68 KB', fn:function(){ runKw('notepad'); } },
-      { n:'Command Prompt.exe', i:'xp-cmd_32.png', t:'Application', kb:'88 KB', fn:function(){ runKw('cmd'); } },
-      { n:'Task Manager.exe', i:'xp-taskmgr_32.png', t:'Application', kb:'148 KB', fn:function(){ runKw('taskmgr'); } },
-      { n:'Internet Explorer.exe', i:'xp-ie6_32.png', t:'Application', kb:'512 KB', fn:function(){ window.open('https://hicard.world','_blank'); } } ] },
-    { name:'Accessories', kids:[
-      { n:'System Information.exe', i:'xp-computer_32.png', t:'Application', kb:'320 KB', fn:function(){ runKw('sysinfo'); } },
-      { n:'WordPad.exe', i:'xp-wordpad_32.png', t:'Application', kb:'320 KB', fn:function(){ X && X.openWindow('about','About Lucky Card','<img src="/static/img/logo.svg" style="width:18px;height:18px;vertical-align:middle">','<div style="text-align:center;padding:2rem;font-family:Segoe UI,sans-serif"><img src="/static/img/logo.svg" style="width:64px;height:64px;margin-bottom:12px"><h2 style="color:#003399">Lucky Card XP</h2><p style="margin-top:8px;color:#888">Registered to: boonxiong2</p><p style="margin-top:16px;color:#888">Physical memory available to Windows: 523,760 KB</p></div>'); } } ] }
+    { name:'Internet Explorer', kids:[
+      { n:'iexplore.exe', i:'xp-ie6_32.png', t:'Application', kb:'512 KB', fn:function(){ runKw('iexplore'); } } ] }
+  ];
+  // C:\Lucky Card —— 系统目录(OS 本体 = Lucky Card,对应真 XP 的 C:\WINDOWS)
+  var SYS_KIDS = [
+    { n:'Notepad.exe', i:'xp-notepad_32.png', t:'Application', kb:'68 KB', fn:function(){ runKw('notepad'); } },
+    { n:'Command Prompt.exe', i:'xp-cmd_32.png', t:'Application', kb:'88 KB', fn:function(){ runKw('cmd'); } },
+    { n:'Task Manager.exe', i:'xp-taskmgr_32.png', t:'Application', kb:'148 KB', fn:function(){ runKw('taskmgr'); } },
+    { n:'System Information.exe', i:'xp-computer_32.png', t:'Application', kb:'320 KB', fn:function(){ runKw('sysinfo'); } },
+    { n:'WordPad.exe', i:'xp-wordpad_32.png', t:'Application', kb:'320 KB', fn:function(){ X && X.openWindow('about','About Lucky Card','<img src="/static/img/logo.svg" style="width:18px;height:18px;vertical-align:middle">','<div style="text-align:center;padding:2rem;font-family:Segoe UI,sans-serif"><img src="/static/img/logo.svg" style="width:64px;height:64px;margin-bottom:12px"><h2 style="color:#003399">Lucky Card XP</h2><p style="margin-top:8px;color:#888">Registered to: boonxiong2</p><p style="margin-top:16px;color:#888">Physical memory available to Windows: 523,760 KB</p></div>'); } }
   ];
   function flatApps(){
     var out = [];
@@ -186,6 +188,7 @@
     setPath(sub ? 'C:\\' + sub : 'C:\\');
     var head = [];
     if (!sub) head.push({ name:'Program Files', kind:'pf', is_dir:true, path:'PF' });
+    if (!sub) head.push({ name:'Lucky Card', kind:'sys', is_dir:true, path:'SYS' });
     fetch('/api/static/list?path=' + encodeURIComponent(sub)).then(function(r){ return r.json(); }).then(function(d){
       d.items.forEach(function(it){
         head.push({ name: it.name, kind: it.is_dir ? 'dir' : 'file', is_dir: it.is_dir, size_display: it.size_display, path: (sub ? sub + '/' : '') + it.name, mtime: it.mtime });
@@ -223,6 +226,14 @@
     enterBrowse();
     setPath('C:\\Program Files\\' + group.name);
     state.items = group.kids.map(function(a){ return { name:a.n, kind:'exe', is_dir:false, exe:a, size_display: a.kb + (a.kb==='1,024 KB'?'':' '), mtime: 1109606400 }; });
+    renderBrowse(state.items);
+    setStatus(state.items.length + ' object(s)');
+  }
+  function browseLC(){
+    state.root = 'LC'; state.sub = '';
+    enterBrowse();
+    setPath('C:\\Lucky Card');
+    state.items = SYS_KIDS.map(function(a){ return { name:a.n, kind:'exe', is_dir:false, exe:a, size_display: a.kb + (a.kb==='1,024 KB'?'':' '), mtime: 1109606400 }; });
     renderBrowse(state.items);
     setStatus(state.items.length + ' object(s)');
   }
@@ -279,6 +290,7 @@
   function openItem(it){
     if (!it) return;
     if (it.kind === 'pf') { browsePF(); return; }
+    if (it.kind === 'sys') { browseLC(); return; }
     if (it.kind === 'dir' && it.group) { browsePFG(it.group); return; }
     if (it.kind === 'exe') { it.exe.fn(); return; }
     if (it.is_dir) { if (state.root === 'C') browseC(it.path); return; }
@@ -295,6 +307,7 @@
     else if (state.root === 'C') showHome();
     else if (state.root === 'PF') { browseC(''); }
     else if (state.root === 'PFG') browsePF();
+    else if (state.root === 'LC') browseC('');
     else if (state.root === 'D') showHome();
   };
   $('btnRefresh').onclick = function(){
@@ -303,6 +316,7 @@
     else if (state.root === 'D') browseD();
     else if (state.root === 'PF') browsePF();
     else if (state.root === 'PFG') { APPS.forEach(function(g){ if (g.name === state.sub) browsePFG(g); }); }
+    else if (state.root === 'LC') browseLC();
   };
 
   /* ---- 侧栏 ---- */
