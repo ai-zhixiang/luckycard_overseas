@@ -94,8 +94,22 @@ window.MPlayer = {
         this.loadTrack(i);
         this.audio.play().catch(function(){});
         document.getElementById('mp-play').textContent = '⏸️';
+    },
+
+    // Rickroll easter egg: double-click the song title → jump straight to it
+    rickroll: function() {
+        for (var i = 0; i < this.tracks.length; i++) {
+            if (this.tracks[i].artist === 'Rick Astley') {
+                this.loadTrack(i);
+                this.audio.play().catch(function(){});
+                document.getElementById('mp-play').textContent = '⏸️';
+                return true;
+            }
+        }
+        return false;
     }
 };
 
 MPlayer.init();
+document.getElementById('mp-title').addEventListener('dblclick', function() { MPlayer.rickroll(); });
 </script>

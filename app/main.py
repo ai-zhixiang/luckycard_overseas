@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from .database import engine, Base
-from .api import cards, music, auth, payment, paypal, static_manager, wallet, culture, prefs
+from .api import cards, music, auth, payment, paypal, static_manager, wallet, culture, prefs, userfiles
 from .config import settings
 from pydantic import BaseModel
 import httpx
@@ -41,6 +41,7 @@ app.include_router(wallet.router, prefix="/api", tags=["wallet"])
 app.include_router(static_manager.router, prefix="/api", tags=["static"])
 app.include_router(culture.router, prefix="/api", tags=["culture"])
 app.include_router(prefs.router, prefix="/api", tags=["prefs"])
+app.include_router(userfiles.router, prefix="/api", tags=["userfiles"])
 
 @app.on_event("startup")
 async def startup():

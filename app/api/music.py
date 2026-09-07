@@ -22,6 +22,7 @@ TRACK_META = {
     "schubert_andante.mp3": {"title": "Piano Sonata D.664 - Andante", "composer": "Franz Schubert", "style": "romantic"},
     "haydn_adagio.mp3": {"title": "Lark Quartet - Adagio Cantabile", "composer": "Joseph Haydn", "style": "classical"},
     "suk_meditation.mp3": {"title": "Meditation on an Old Czech Hymn", "composer": "Josef Suk", "style": "romantic"},
+    "rickroll.mp3": {"title": "Never Gonna Give You Up", "composer": "Rick Astley", "style": "1987 pop"},
 }
 
 @router.get("/music/list")

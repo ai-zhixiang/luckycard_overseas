@@ -131,6 +131,86 @@
         if (dlg) dlg.style.display = 'none';
     }
 
+    // Shared keyword launcher — powers the Run dialog AND the cmd START command.
+    // NOTE: keep the app list in sync with the routes table in runCommand below.
+    // Returns true when the keyword was recognized (app/URL/easter egg launched).
+    function launchByKeyword(input) {
+        var kw = input.trim().toLowerCase();
+        if (!kw) return true;
+
+        // Clippy easter egg — type "clippy"
+        if (kw === 'clippy' || kw === 'clippy.exe') { _clippyManual(); return true; }
+
+        // URLs open in a new browser tab
+        if (kw.startsWith('http://') || kw.startsWith('https://')) {
+            window.open(kw, '_blank');
+            return true;
+        }
+
+        // explorer.exe → shell dead: restore; shell alive: open My Documents window (real XP opens a folder view)
+        if (kw === 'explorer' || kw === 'explorer.exe') {
+            if (_shellHidden) { restoreShell(); }
+            else { XPShell.openWindow('mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'); }
+            return true;
+        }
+
+        // taskmgr / taskman → Task Manager
+        if (kw === 'taskmgr' || kw === 'taskman') {
+            openTaskManager();
+            return true;
+        }
+
+        // WinDOS easter egg 🥚 — download
+        if (kw === 'windos' || kw === 'windos.exe' || kw === 'win dos') {
+            window.open('/dl/windos-build.zip?dl=1');
+            XPShell.openWindow('windos-dl', 'WinDOS', '<img src="/static/img/xp-cmd_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">',
+                '<div style="text-align:center;padding:2rem;font-family:Tahoma,sans-serif">' +
+                '<p style="font-size:3rem;margin-bottom:0.5rem">🖥️💾</p>' +
+                '<p style="font-size:1.3rem;font-weight:bold;margin-bottom:0.5rem">Downloading WinDOS…</p>' +
+                '<p style="color:#666;font-size:0.9rem">A lightweight Windows-like OS</p>' +
+                '<p style="color:#888;margin-top:1rem;font-size:0.85rem">Build 20260621</p>' +
+                '</div>');
+            return true;
+        }
+
+        var routes = {
+            'card':       ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
+            'create':     ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
+            'gallery':    ['gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'],
+            'music':      ['music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=59'],
+            'stylize':    ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
+            'stylizer':   ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
+            'mycards':    ['mycards', 'My Cards', '<img src="/static/img/xp-folder_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-cards.html'],
+            'minesweeper': ['minesweeper', 'Minesweeper', '<img src="/static/img/xp-help_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/minesweeper.html'],
+            'ms':         ['minesweeper', 'Minesweeper', '<img src="/static/img/xp-help_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/minesweeper.html'],
+            'control':    ['control', t('control_panel'), '<img src="/static/img/xp_controlpanel_24.png" style="width:18px;height:18px;vertical-align:middle">', buildControlPanelHTML()],
+            'notepad':    ['notepad', t('notepad_title'), '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', buildNotepadHTML()],
+            'cmd':        ['cmd', 'Command Prompt', '💻', buildCmdHTML()],
+            'help':       ['help', 'Help', '❓', buildHelpHTML()],
+            'about':      ['about', t('about'), 'ℹ️', buildAboutHTML()],
+            'sysinfo':    ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
+            'sys':        ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
+            'history':    ['history', "Website's History", '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/website-history.html?v=1'],
+            'mydocs':     ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
+            'my documents': ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
+            'documents':  ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
+            'mycomputer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=1'],
+            'my computer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=1'],
+            'computer':  ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=1'],
+            'iexplore':   ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'iexplore.exe': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'ie':         ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'internet explorer': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+        };
+
+        if (routes[kw]) {
+            var r = routes[kw];
+            XPShell.openWindow(r[0], r[1], r[2], r[3]);
+            return true;
+        }
+        return false;
+    }
+
     function runCommand() {
         var inp = document.getElementById('xp-run-input');
         var cmd = inp ? inp.value.trim().toLowerCase() : '';
@@ -142,7 +222,7 @@
             'card':       ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
             'create':     ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
             'gallery':    ['gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'],
-            'music':      ['music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=58'],
+            'music':      ['music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=59'],
             'stylize':    ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'stylizer':   ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'mycards':    ['mycards', 'My Cards', '<img src="/static/img/xp-folder_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-cards.html'],
@@ -156,6 +236,16 @@
             'sysinfo':    ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
             'sys':        ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
             'history':    ['history', "Website's History", '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/website-history.html?v=1'],
+            'mydocs':     ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
+            'my documents': ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
+            'documents':  ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
+            'mycomputer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=1'],
+            'my computer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=1'],
+            'computer':  ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=1'],
+            'iexplore':   ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'iexplore.exe': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'ie':         ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'internet explorer': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
         };
 
         // Clippy easter egg — type "clippy" in the Run dialog
@@ -166,9 +256,10 @@
             return;
         }
 
-        // Handle explorer.exe → restore shell
+        // Handle explorer.exe → shell dead: restore; alive: My Documents window
         if (cmd === 'explorer' || cmd === 'explorer.exe') {
-            if (_shellHidden) restoreShell();
+            if (_shellHidden) { restoreShell(); }
+            else { XPShell.openWindow('mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'); }
             return;
         }
 
@@ -199,7 +290,7 @@
                 '<div style="text-align:center;padding:2rem">' +
                 '<p style="font-size:2rem">⚠️</p>' +
                 '<p style="margin-top:1rem">Cannot find <b>' + escHtml(cmd) + '</b></p>' +
-                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, stylizer, control, notepad, cmd, windos</p>' +
+                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, stylizer, control, notepad, cmd, windos, iexplore</p>' +
                 '</div>');
         }
     }
@@ -323,7 +414,7 @@
                 return '<div style="padding:16px;font-family:Tahoma,sans-serif">' +
                     '<h3 style="margin-bottom:12px;color:#003399">Sounds &amp; Audio</h3>' +
                     '<p style="font-size:12px;color:#666;margin-bottom:12px">Configure your audio experience</p>' +
-                    '<button onclick="XPShell.openWindow(\'music\',\'Music\',\'<img src=\"/static/img/xp-music_20.png?v=1\" style=\"width:20px;height:20px;vertical-align:middle\">\',\'' + '/static/forms/music-player.html?v=58' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px"><img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle"> Open Music Player</button>' +
+                    '<button onclick="XPShell.openWindow(\'music\',\'Music\',\'<img src=\"/static/img/xp-music_20.png?v=1\" style=\"width:20px;height:20px;vertical-align:middle\">\',\'' + '/static/forms/music-player.html?v=59' + '\')" style="width:100%;padding:8px;font-size:12px;cursor:pointer;border:1px solid #999;background:linear-gradient(180deg,#fff,#ece9d8);border-radius:3px;margin-bottom:8px"><img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle"> Open Music Player</button>' +
                     '<div style="font-size:11px;color:#888;padding:8px;background:#f5f5f0;border:1px solid #ddd;border-radius:3px">' +
                     '  <div>Volume: 🔊 Default</div>' +
                     '  <div style="margin-top:2px">Audio Device: Browser Default</div>' +
@@ -499,6 +590,9 @@
                 print('GALLERY    Open Gallery');
                 print('MUSIC      Open Music Player');
                 print('STYLIZE    Open AI Stylizer');
+                print('TASKLIST   List running processes');
+                print('TASKKILL   Kill a process (/F /PID n or /F /IM name — /F for system procs)');
+                print('START      Open an app or webpage (e.g. START MUSIC)');
                 print('SHUTDOWN   Shut down Lucky Card OS');
                 print('EXIT       Close command prompt');
             } else if (c === 'rmcards') {
@@ -528,11 +622,19 @@
                 out.style.color = col; inp.style.color = col;
             } else if (c === 'card') { window.XPShell && window.XPShell.openWindow('create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'); }
             else if (c === 'gallery') { window.XPShell && window.XPShell.openWindow('gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'); }
-            else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=58'); }
+            else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=59'); }
             else if (c === 'stylize' || c === 'stylizer') { window.XPShell && window.XPShell.openWindow('stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'); }
             else if (c === 'minesweeper' || c === 'ms') { window.XPShell && window.XPShell.openWindow('minesweeper', 'Minesweeper', '<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/minesweeper.html'); }
             else if (c === 'shutdown' || c === 'poweroff') { window.XPShell && window.XPShell.shutDown(); }
             else if (c === 'exit') { window.XPShell && window.XPShell.closeWindow('cmd'); }
+            else if (c === 'start' || c === 'start /?') { cmdStartHelp(); }
+            else if (c.startsWith('start ')) {
+                var arg = cmd.substring(6).trim();
+                if (!arg) { cmdStartHelp(); }
+                else if (!launchByKeyword(arg)) {
+                    print('"' + arg + '" is not recognized as an internal or external command, operable program or batch file.');
+                }
+            }
             else if (c === 'tasklist') { cmdTasklist(); }
             else if (c === 'taskkill' || c === 'tskill') { cmdTaskkill(cmd); }
             else { print('"' + c + '" is not recognized as an internal or external command, operable program or batch file.'); }
@@ -567,12 +669,23 @@
             lines.forEach(function(l) { print(l); });
         }
 
-        // taskkill — /PID n or /IM name  (kills matching process)
+        // taskkill — /F /PID n | /IM name  (system processes need /F, like real XP)
         function cmdTaskkill(rawCmd) {
+            var usage = function() {
+                print('Usage: TASKKILL [/F] [/PID processid | /IM imagename]');
+                print('');
+                print('  /F      Forcefully terminate the process.');
+                print('  /PID    Process ID to terminate (see TASKLIST).');
+                print('  /IM     Image name to terminate (e.g. music, explorer.exe).');
+                print('');
+                print('System processes (smss, csrss, winlogon, services) can only be');
+                print('terminated forcefully with /F. Killing one crashes the system.');
+            };
             var mPid = rawCmd.match(/\/pid\s+(\d+)/i);
             var mIm = rawCmd.match(/\/im\s+([^\s\/]+)/i);
+            var force = /\/f(?!i)/i.test(rawCmd);
             if (!mPid && !mIm) {
-                print('ERROR: Invalid argument/option - type "taskkill /?" for usage.');
+                usage();
                 return;
             }
             var findSys = function(pid) {
@@ -580,6 +693,9 @@
                     if (_sysProcesses[i].pid === pid) return i;
                 }
                 return -1;
+            };
+            var sysErr = function(name, pid) {
+                print('Access denied: The process "' + name + '" with PID ' + pid + ' could not be terminated.');
             };
             var killOne = function(name, pid) {
                 if (name === 'explorer.exe') {
@@ -589,7 +705,8 @@
                 }
                 var sysIdx = findSys(pid);
                 if (sysIdx >= 0) {
-                    endSystemProcess(name, sysIdx); // critical → BSOD, just like Task Manager
+                    if (!force) { sysErr(name, pid); return false; }
+                    endSystemProcess(name, sysIdx); // /F → critical process dies → BSOD, just like XP
                     return true;
                 }
                 var wid = null;
@@ -636,6 +753,20 @@
                 });
                 if (hits === 0) print('ERROR: The process "' + im + '" not found.');
             }
+        }
+
+        // start — XP-style START: open an app or a webpage from cmd
+        function cmdStartHelp() {
+            print('Starts an app or opens a webpage.');
+            print('');
+            print('START  <appname>     e.g. START MUSIC');
+            print('START  <URL>         e.g. START http://www.luckycard.com');
+            print('');
+            print('Known apps: CARD, GALLERY, MUSIC, STYLIZER, MYCARDS, NOTEPAD,');
+            print('            CONTROL, TASKMAN, MINESWEEPER, SYSINFO, HISTORY, CMD,');
+            print('            MYDOCS (opens My Documents), EXPLORER (same)');
+            print('');
+            print('START alone or START /? shows this help.');
         }
     }
 
