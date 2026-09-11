@@ -4,8 +4,14 @@ Stylize pipeline: reads base64 image from stdin → NSFW check → Doubao vision
 Usage: echo "STYLE:watercolor" ; echo "STYLE_PROMPT:..." ; cat image.b64 | python3 pipeline.py
 Outputs JSON result to stdout
 """
-import json, urllib.request, base64, sys, os, uuid, io
+import json, urllib.request, base64, sys, os, uuid, io, time
 from PIL import Image
+
+# ── 分阶段计时 ── 以 [ 12.3s] 前缀打到 stderr, 由 /api/stylize 转发进服务日志
+_T0 = time.time()
+def log(msg):
+    sys.stderr.write(f"[{time.time()-_T0:5.1f}s] {msg}\n")
+    sys.stderr.flush()
 
 API_KEY = os.environ.get("ARK_API_KEY")
 if not API_KEY:
@@ -81,6 +87,7 @@ try:
         raw = base64.b64decode(img_b64)
         pil_img = Image.open(io.BytesIO(raw))
         safe, label = nsfw_check(pil_img)
+        log(f"stage1 local NSFW model: {label}")
         if not safe:
             print(json.dumps({
                 "status": "error",
@@ -103,6 +110,7 @@ try:
         check_resp = api(VISION_URL, check_data)
         check_result = check_resp["choices"][0]["message"]["content"].strip().upper()
         sys.stderr.write(f"DOUBAO CHECK: {check_result}\n")
+        log(f"stage2 doubao safety check: {check_result}")
         if "UNSAFE" in check_result:
             print(json.dumps({
                 "status": "error",
@@ -124,6 +132,7 @@ try:
     vision_resp = api(VISION_URL, vision_data)
     description = vision_resp["choices"][0]["message"]["content"]
     sys.stderr.write(f"VISION: {description[:80]}...\n")
+    log("stage3 vision description done (%d chars)" % len(description))
 
     # ── Step 4: Seedream ──
     seed_data = {
@@ -135,6 +144,7 @@ try:
     seed_resp = api(SEEDREAM_URL, seed_data, timeout=180)
     img_url = seed_resp["data"][0]["url"]
     sys.stderr.write("SEEDREAM: got URL\n")
+    log("stage4 seedream 1920x1920 rendered")
 
     # ── Step 5: Download result ──
     out_dir = os.path.expanduser("~/stylized_results")
@@ -143,6 +153,7 @@ try:
     urllib.request.urlretrieve(img_url, out_path)
     size = os.path.getsize(out_path)
     sys.stderr.write(f"DOWNLOADED: {size} bytes\n")
+    log("stage5 downloaded %d bytes -> done" % size)
 
     print(json.dumps({
         "status": "ok",

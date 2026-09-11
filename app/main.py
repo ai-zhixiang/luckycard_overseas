@@ -1,4 +1,5 @@
 import os
+import asyncio
 import shutil, uuid, json, base64, subprocess
 from pathlib import Path
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
@@ -8,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from .database import engine, Base
-from .api import cards, music, auth, payment, paypal, static_manager, wallet, culture, prefs, userfiles
+from .api import cards, music, auth, payment, paypal, static_manager, wallet, culture, prefs, userfiles, ie, crypto
 from .config import settings
 from pydantic import BaseModel
 import httpx
@@ -42,6 +43,8 @@ app.include_router(static_manager.router, prefix="/api", tags=["static"])
 app.include_router(culture.router, prefix="/api", tags=["culture"])
 app.include_router(prefs.router, prefix="/api", tags=["prefs"])
 app.include_router(userfiles.router, prefix="/api", tags=["userfiles"])
+app.include_router(ie.router, prefix="/api", tags=["ie"])
+app.include_router(crypto.router, prefix="/api", tags=["crypto"])
 
 @app.on_event("startup")
 async def startup():
@@ -159,13 +162,18 @@ async def _stylize_impl(file: UploadFile, style: str, style_prompt: str):
         # Run stylize pipeline
         env = os.environ.copy()
         env["ARK_API_KEY"] = settings.ark_api_key or ""
-        proc = subprocess.run(
+        # 必须放进线程池: subprocess.run 是阻塞调用, 直接在 async def 里跑会把
+        # 整个事件循环卡住 —— 生成期间全站(所有窗口/所有访客)都无响应。
+        proc = await asyncio.to_thread(
+            subprocess.run,
             ["/home/ubuntu/luckycardeng/.venv/bin/python3", "stylize_pipeline.py"],
             input=f"STYLE:{style}\nSTYLE_PROMPT:{style_prompt}\n{img_b64}\n",
             capture_output=True, text=True, timeout=300,
             cwd="/home/ubuntu/luckycardeng",
             env=env,
         )
+        if proc.stderr:
+            print("[stylize] " + " | ".join((proc.stderr or "").strip().splitlines()[-12:]), flush=True)
         if proc.returncode != 0:
             return {"status": "error", "message": proc.stderr.strip() or "Pipeline failed"}
 
@@ -230,20 +238,23 @@ async def _card_art_impl(text: str, style: str, card_id: str):
         if not api_key:
             return {"status": "error", "message": "API key not configured"}
 
-        req = urllib.request.Request(
-            "https://ark.cn-beijing.volces.com/api/v3/images/generations",
-            json.dumps(seed_data).encode(),
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
-        )
-        seed_resp = json.loads(urllib.request.urlopen(req, timeout=180).read())
-        img_url = seed_resp["data"][0]["url"]
+        def _render_blocking() -> str:
+            # 阻塞式 urllib 调用 —— 整体丢进线程池, 否则长达 180s 的 Seedream
+            # 渲染会把 uvicorn 事件循环钉死, 全站跟着卡。
+            req = urllib.request.Request(
+                "https://ark.cn-beijing.volces.com/api/v3/images/generations",
+                json.dumps(seed_data).encode(),
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
+            )
+            seed_resp = json.loads(urllib.request.urlopen(req, timeout=180).read())
+            img_url = seed_resp["data"][0]["url"]
+            static_dir = Path("app/static/stylized")
+            static_dir.mkdir(exist_ok=True)
+            name = f"art_{uuid.uuid4().hex[:12]}.jpg"
+            urllib.request.urlretrieve(img_url, str(static_dir / name))
+            return name
 
-        # Download to static
-        static_dir = Path("app/static/stylized")
-        static_dir.mkdir(exist_ok=True)
-        static_name = f"art_{uuid.uuid4().hex[:12]}.jpg"
-        static_path = static_dir / static_name
-        urllib.request.urlretrieve(img_url, str(static_path))
+        static_name = await asyncio.to_thread(_render_blocking)
 
         # Save art_url to card record if card_id provided
         if card_id:

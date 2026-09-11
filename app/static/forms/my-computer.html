@@ -99,29 +99,160 @@
   function runKw(kw){
     X && (function(){ var i = document.getElementById('xp-run-input'); if (i){ i.value = kw; X.runCommand(); } })();
   }
-  // Program Files 里的"应用"虚拟表: name, icon, 打开动作, 尺寸(伪)
-  var APPS = [
-    { name:'Lucky Card Suite', kids:[
-      { n:'Create Card.exe', i:'xp-ie6_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('create','Create Card','<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/card-create.html'); } },
-      { n:'Gallery.exe', i:'xp-gallery_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('gallery','Gallery','<img src="/static/img/xp-gallery_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/card-gallery.html'); } },
-      { n:'Lucky Music.exe', i:'xp-music_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('music','Music','<img src="/static/img/xp-music_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/music-player.html'); } },
-      { n:'AI Stylizer.exe', i:'xp-paint_32.png', t:'Application', kb:'1,024 KB', fn:function(){ X && X.openWindow('stylizer','AI Stylizer','<img src="/static/img/xp-paint_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/ai-stylizer.html'); } },
-      { n:'Minesweeper.exe', i:'xp-help_32.png', t:'Game', kb:'1,024 KB', fn:function(){ X && X.openWindow('minesweeper','Minesweeper','<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">','/static/forms/minesweeper.html'); } } ] },
-    { name:'Internet Explorer', kids:[
-      { n:'iexplore.exe', i:'xp-ie6_32.png', t:'Application', kb:'512 KB', fn:function(){ runKw('iexplore'); } } ] }
+  // ── 虚拟文件系统: Program Files 与 C:\Lucky Card(对应 XP 的 C:\WINDOWS)──
+  // 每个软件独立文件夹 + 各自 dll; 系统目录带 system32 / drivers / 经典文件。
+  function vExe(n, i, kb, act){ return { n:n, i:i, kb:kb, t:'Application', act:act }; }
+  function vFile(n, i, kb, t, act){ return { n:n, i:i, kb:kb, t:t || 'File', act:act }; }
+  function vDir(name, kids){ return { name:name, kids:kids || [] }; }
+  function vCanOpen(it){
+    modal(it.name,
+      '<p><b>Windows cannot open this file:</b></p>' +
+      '<p style="margin-top:8px;color:#555">File: ' + esc(it.name) +
+      '<br>This file does not have a program associated with it for performing this action.</p>');
+  }
+  function vTextFile(n, kb, body, title){
+    return vFile(n, 'xp-notepad_32.png', kb, 'Configuration Settings', function(){
+      modal(title || n, '<pre style="font-family:Courier New,monospace;font-size:12px;margin:0">' + esc(body) + '</pre>');
+    });
+  }
+  function vFontFile(n, family, kb){
+    return vFile(n, 'file_unknown_32.png', kb, 'TrueType font file', function(){
+      modal(n + ' (TrueType)', '<div style="font-family:' + family + ';font-size:22px">The quick brown fox jumps over the lazy dog<br><span style="font-size:14px;color:#666">1234567890</span></div>');
+    });
+  }
+
+  var winIcon = '<img src="/static/img/xp-cmd_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">';
+  function w(title, url, ic){ return function(){ X && X.openWindow(title, title, ic || winIcon, url); }; }
+
+  // ── C:\Program Files —— 一软件一文件夹 ──
+  var VPF = [
+    vDir('Create Card', [
+      vExe('Create Card.exe', 'xp-ie6_32.png', '1,024 KB', function(){ X && X.openWindow('create','Create Card','<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/card-create.html'); }),
+      vFile('cardgen.dll', 'file_unknown_32.png', '812 KB', 'Application Extension'),
+      vFile('deepseek_link.dll', 'file_unknown_32.png', '356 KB', 'Application Extension'),
+      vFile('quota.dll', 'file_unknown_32.png', '128 KB', 'Application Extension'),
+      vFile('paypal.dll', 'file_unknown_32.png', '208 KB', 'Application Extension')
+    ]),
+    vDir('Gallery', [
+      vExe('Gallery.exe', 'xp-gallery_32.png', '1,024 KB', function(){ X && X.openWindow('gallery','Gallery','<img src="/static/img/xp-gallery_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/card-gallery.html'); }),
+      vFile('gallery.dll', 'file_unknown_32.png', '264 KB', 'Application Extension'),
+      vFile('gallery.db', 'file_unknown_32.png', '4,096 KB', 'Data File')
+    ]),
+    vDir('Lucky Music', [
+      vExe('Lucky Music.exe', 'xp-music_32.png', '1,024 KB', function(){ X && X.openWindow('music','Music','<img src="/static/img/xp-music_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/music-player.html'); }),
+      vFile('bass.dll', 'file_unknown_32.png', '584 KB', 'Application Extension'),
+      vFile('wmploc.dll', 'file_unknown_32.png', '368 KB', 'Application Extension'),
+      vFile('eq.dll', 'file_unknown_32.png', '128 KB', 'Application Extension'),
+      vFile('vis.dll', 'file_unknown_32.png', '96 KB', 'Application Extension')
+    ]),
+    vDir('AI Stylizer', [
+      vExe('AI Stylizer.exe', 'xp-paint_32.png', '1,024 KB', function(){ X && X.openWindow('stylizer','AI Stylizer','<img src="/static/img/xp-paint_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">','/static/forms/ai-stylizer.html'); }),
+      vFile('seedream.dll', 'file_unknown_32.png', '1,340 KB', 'Application Extension'),
+      vFile('doubao_vision.dll', 'file_unknown_32.png', '1,008 KB', 'Application Extension'),
+      vFile('imgproc.dll', 'file_unknown_32.png', '440 KB', 'Application Extension')
+    ]),
+    vDir('Minesweeper', [
+      vExe('Minesweeper.exe', 'xp-help_32.png', '1,024 KB', function(){ X && X.openWindow('minesweeper','Minesweeper','<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">','/static/forms/minesweeper.html'); }),
+      vFile('minefield.dll', 'file_unknown_32.png', '64 KB', 'Application Extension'),
+      vFile('sweep.dll', 'file_unknown_32.png', '96 KB', 'Application Extension'),
+      vFile('highscores.dat', 'file_unknown_32.png', '2 KB', 'Data File')
+    ]),
+    vDir('Internet Explorer', [
+      vExe('iexplore.exe', 'xp-ie6_32.png', '512 KB', function(){ runKw('iexplore'); }),
+      vFile('mshtml.dll', 'file_unknown_32.png', '3,470 KB', 'Application Extension'),
+      vFile('shdocvw.dll', 'file_unknown_32.png', '1,428 KB', 'Application Extension'),
+      vFile('jscript.dll', 'file_unknown_32.png', '456 KB', 'Application Extension'),
+      vFile('wininet.dll', 'file_unknown_32.png', '656 KB', 'Application Extension'),
+      vFile('urlmon.dll', 'file_unknown_32.png', '520 KB', 'Application Extension')
+    ]),
+    vDir('Lucky Card Desktop', [
+      vExe('Lucky Card Desktop Setup.exe', 'xp-cmd_32.png', '77 MB', function(){ window.open('/static/LuckyCard_Setup_1.2.0.exe'); }),
+      vFile('Lucky Card Desktop Portable.zip', 'xp-sharing_32.png', '110 MB', 'WinZip Archive', function(){ window.open('/static/luckycard-electron-win64-1.2.0.zip'); })
+    ])
   ];
-  // C:\Lucky Card —— 系统目录(OS 本体 = Lucky Card,对应真 XP 的 C:\WINDOWS)
-  var SYS_KIDS = [
-    { n:'Notepad.exe', i:'xp-notepad_32.png', t:'Application', kb:'68 KB', fn:function(){ runKw('notepad'); } },
-    { n:'Command Prompt.exe', i:'xp-cmd_32.png', t:'Application', kb:'88 KB', fn:function(){ runKw('cmd'); } },
-    { n:'Task Manager.exe', i:'xp-taskmgr_32.png', t:'Application', kb:'148 KB', fn:function(){ runKw('taskmgr'); } },
-    { n:'System Information.exe', i:'xp-computer_32.png', t:'Application', kb:'320 KB', fn:function(){ runKw('sysinfo'); } },
-    { n:'WordPad.exe', i:'xp-wordpad_32.png', t:'Application', kb:'320 KB', fn:function(){ X && X.openWindow('about','About Lucky Card','<img src="/static/img/logo.svg" style="width:18px;height:18px;vertical-align:middle">','<div style="text-align:center;padding:2rem;font-family:Segoe UI,sans-serif"><img src="/static/img/logo.svg" style="width:64px;height:64px;margin-bottom:12px"><h2 style="color:#003399">Lucky Card XP</h2><p style="margin-top:8px;color:#888">Registered to: boonxiong2</p><p style="margin-top:16px;color:#888">Physical memory available to Windows: 523,760 KB</p></div>'); } }
+
+  // ── C:\Lucky Card —— 系统目录(对应 C:\WINDOWS)──
+  var SYS32 = [
+    vDir('drivers', [
+      vFile('ntfs.sys', 'file_unknown_32.png', '123 KB', 'System file'),
+      vFile('tcpip.sys', 'file_unknown_32.png', '359 KB', 'System file'),
+      vFile('ndis.sys', 'file_unknown_32.png', '182 KB', 'System file'),
+      vFile('mouclass.sys', 'file_unknown_32.png', '23 KB', 'System file'),
+      vFile('vga.sys', 'file_unknown_32.png', '42 KB', 'System file'),
+      vFile('usbport.sys', 'file_unknown_32.png', '143 KB', 'System file')
+    ]),
+    vExe('cmd.exe', 'xp-cmd_32.png', '384 KB', function(){ runKw('cmd'); }),
+    vExe('notepad.exe', 'xp-notepad_32.png', '68 KB', function(){ runKw('notepad'); }),
+    vExe('taskmgr.exe', 'xp-taskmgr_32.png', '148 KB', function(){ runKw('taskmgr'); }),
+    vExe('msconfig.exe', 'xp-cmd_32.png', '216 KB', function(){ modal('System Configuration', '<p>Startup items: <b>47</b>.<br>All of them are Clippy.</p>'); }),
+    vFile('ntoskrnl.exe', 'xp-cmd_32.png', '2,173 KB', 'System file'),
+    vFile('hal.dll', 'file_unknown_32.png', '134 KB', 'Application Extension'),
+    vFile('kernel32.dll', 'file_unknown_32.png', '964 KB', 'Application Extension'),
+    vFile('user32.dll', 'file_unknown_32.png', '577 KB', 'Application Extension'),
+    vFile('gdi32.dll', 'file_unknown_32.png', '273 KB', 'Application Extension'),
+    vFile('advapi32.dll', 'file_unknown_32.png', '619 KB', 'Application Extension'),
+    vFile('ntdll.dll', 'file_unknown_32.png', '703 KB', 'Application Extension'),
+    vFile('msvcrt.dll', 'file_unknown_32.png', '343 KB', 'Application Extension'),
+    vFile('shell32.dll', 'file_unknown_32.png', '8,157 KB', 'Application Extension'),
+    vFile('ole32.dll', 'file_unknown_32.png', '1,134 KB', 'Application Extension'),
+    vFile('crypt32.dll', 'file_unknown_32.png', '630 KB', 'Application Extension'),
+    vFile('ws2_32.dll', 'file_unknown_32.png', '311 KB', 'Application Extension'),
+    vFile('shlwapi.dll', 'file_unknown_32.png', '474 KB', 'Application Extension'),
+    vFile('comdlg32.dll', 'file_unknown_32.png', '300 KB', 'Application Extension'),
+    vFile('winmm.dll', 'file_unknown_32.png', '337 KB', 'Application Extension'),
+    vFile('rpcrt4.dll', 'file_unknown_32.png', '428 KB', 'Application Extension'),
+    vFile('netapi32.dll', 'file_unknown_32.png', '336 KB', 'Application Extension'),
+    vFile('dnsapi.dll', 'file_unknown_32.png', '144 KB', 'Application Extension'),
+    vFile('win32k.sys', 'file_unknown_32.png', '1,822 KB', 'System file'),
+    vFile('bootvid.dll', 'file_unknown_32.png', '64 KB', 'Application Extension')
   ];
-  function flatApps(){
-    var out = [];
-    APPS.forEach(function(g){ g.kids.forEach(function(a){ out.push(a); }); });
-    return out;
+  var SYSROOT_FILES = [
+    vDir('system32', SYS32),
+    vDir('Fonts', [
+      vFontFile('tahoma.ttf', 'Tahoma', '420 KB'),
+      vFontFile('arial.ttf', 'Arial', '356 KB'),
+      vFontFile('times.ttf', '"Times New Roman"', '346 KB'),
+      vFontFile('marlett.ttf', 'Marlett', '60 KB'),
+      vFontFile('simsun.ttc', 'SimSun', '10,500 KB')
+    ]),
+    vDir('Prefetch', []),
+    vDir('Temp', []),
+    vExe('explorer.exe', 'xp-folder_32.png', '1,024 KB', function(){ runKw('explorer'); }),
+    vExe('regedit.exe', 'xp-cmd_32.png', '132 KB', function(){ modal('Registry Editor', '<p>Lucky Card XP does not ship with a registry.</p><p style="color:#555;margin-top:8px">All settings are kept in <b>localStorage</b>.</p>'); }),
+    vTextFile('win.ini', '2 KB', '; for 16-bit app support\n[fonts]\n[extensions]\n[mci extensions]\n[files]\n[Mail]\nMAPI=1\n', 'win.ini - Notepad'),
+    vTextFile('system.ini', '2 KB', '; for 16-bit app support\n[386Enh]\n[drivers]\nwave=mmdrv.dll\n[drv32]\n[color scheme]\n', 'system.ini - Notepad'),
+    vTextFile('boot.ini', '1 KB', '[boot loader]\ntimeout=30\ndefault=multi(0)disk(0)rdisk(0)partition(1)\\LuckyCard\n[operating systems]\nmulti(0)disk(0)rdisk(0)partition(1)\\LuckyCard="Lucky Card XP Professional" /fastdetect\n', 'boot.ini - Notepad')
+  ];
+  var LC_ROOT = { name:'__lc', kids: SYSROOT_FILES };
+  var PF_ROOT = { name:'__pf', kids: VPF };
+
+  // 虚拟目录导航(state.root === 'V'; state.vcur 存当前目录 + 父链)
+  function toVItem(c){
+    if (c.kids) return { name:c.name, kind:'vd', is_dir:true, v:c, i:'xp-folder_32.png', size_display:'', mtime:1109606400 };
+    return { name:c.n, kind:'v', is_dir:false, v:c, i:c.i || 'file_unknown_32.png', size_display:c.kb + ' ', mtime:1109606400 };
+  }
+  function paintV(){
+    enterBrowse();
+    var cur = state.vcur;
+    state.items = cur.d.kids.map(toVItem);
+    renderBrowse(state.items);
+    setPath(cur.label);
+    setStatus(cur.d.kids.length + ' object(s)');
+  }
+  function mountV(root, label){
+    state.root = 'V';
+    state.vcur = { d:root, label:label, parent:null };
+    paintV();
+  }
+  function goV(node){
+    var parent = state.vcur;
+    state.vcur = { d:node, label:(parent ? parent.label + '\\' + node.name : node.name), parent:parent };
+    paintV();
+  }
+  function upV(){
+    if (!state.vcur) { browseC(''); return; }
+    if (state.vcur.parent) { state.vcur = state.vcur.parent; paintV(); }
+    else browseC('');
   }
 
   var state = { view:'home', root:'C', sub:'', items:[] };
@@ -209,34 +340,8 @@
       setStatus(files.length + ' download(s) available');
     }).catch(function(){ state.items = []; renderBrowse([]); setStatus(''); });
   }
-  function browsePF(){
-    state.root = 'PF'; state.sub = '';
-    enterBrowse();
-    setPath('C:\\Program Files');
-    var rows = [];
-    APPS.forEach(function(g){
-      rows.push({ name:g.name, kind:'dir', is_dir:true, path:'PFG:'+g.name, group:g });
-    });
-    state.items = rows;
-    renderBrowse(rows);
-    setStatus(rows.length + ' folder(s)');
-  }
-  function browsePFG(group){
-    state.root = 'PFG'; state.sub = group.name;
-    enterBrowse();
-    setPath('C:\\Program Files\\' + group.name);
-    state.items = group.kids.map(function(a){ return { name:a.n, kind:'exe', is_dir:false, exe:a, size_display: a.kb + (a.kb==='1,024 KB'?'':' '), mtime: 1109606400 }; });
-    renderBrowse(state.items);
-    setStatus(state.items.length + ' object(s)');
-  }
-  function browseLC(){
-    state.root = 'LC'; state.sub = '';
-    enterBrowse();
-    setPath('C:\\Lucky Card');
-    state.items = SYS_KIDS.map(function(a){ return { name:a.n, kind:'exe', is_dir:false, exe:a, size_display: a.kb + (a.kb==='1,024 KB'?'':' '), mtime: 1109606400 }; });
-    renderBrowse(state.items);
-    setStatus(state.items.length + ' object(s)');
-  }
+  function browsePF(){ mountV(PF_ROOT, 'C:\\Program Files'); }
+  function browseLC(){ mountV(LC_ROOT, 'C:\\Lucky Card'); }
 
   function fmtDate(ts){
     var d = new Date(ts * 1000);
@@ -244,20 +349,22 @@
     return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
   function iconOf(it){
+    if (it.kind === 'vd') return it.i || 'xp-folder_32.png';
+    if (it.kind === 'v') return it.i || 'file_unknown_32.png';
     if (it.kind === 'pf') return 'xp-folder_32.png';
-    if (it.kind === 'exe') return it.exe.i;
-    if (it.is_dir) return it.kind === 'dir' ? 'xp-folder_32.png' : 'xp-folder_32.png';
+    if (it.is_dir) return 'xp-folder_32.png';
     var ext = (it.name.split('.').pop()||'').toLowerCase();
     if (ext === 'zip' || ext === '7z' || ext === 'rar') return 'xp-sharing_32.png';
     if (ext === 'exe') return 'xp-cmd_32.png';
     if (['png','jpg','jpeg','gif','svg','ico'].indexOf(ext) >= 0) return 'get_pictures_32.png';
     if (['mp3','wav','mid'].indexOf(ext) >= 0) return 'my_music_32.png';
-    if (['css','js','html','json','txt','md'].indexOf(ext) >= 0) return 'xp-notepad_32.png';
-    return 'xp-notepad_32.png';
+    if (['css','js','html','json','txt','md','ini','log'].indexOf(ext) >= 0) return 'xp-notepad_32.png';
+    return 'file_unknown_32.png';
   }
   function typeOf(it){
+    if (it.kind === 'vd') return 'File Folder';
+    if (it.kind === 'v') return it.v.t;
     if (it.kind === 'pf') return 'File Folder';
-    if (it.kind === 'exe') return it.exe.t;
     if (it.is_dir) return 'File Folder';
     var ext = (it.name.split('.').pop()||'').toLowerCase();
     if (ext === 'zip') return 'WinZip Archive';
@@ -289,10 +396,10 @@
   }
   function openItem(it){
     if (!it) return;
+    if (it.kind === 'vd') { goV(it.v); return; }
+    if (it.kind === 'v') { if (it.v.act) it.v.act(); else vCanOpen(it); return; }
     if (it.kind === 'pf') { browsePF(); return; }
     if (it.kind === 'sys') { browseLC(); return; }
-    if (it.kind === 'dir' && it.group) { browsePFG(it.group); return; }
-    if (it.kind === 'exe') { it.exe.fn(); return; }
     if (it.is_dir) { if (state.root === 'C') browseC(it.path); return; }
     // file → download
     if (state.root === 'C') dl('/static/' + it.path.split('/').map(encodeURIComponent).join('/'), it.name);
@@ -303,20 +410,16 @@
   $('btnHome').onclick = showHome;
   $('btnUp').onclick = function(){
     if (state.view !== 'browse') return;
+    if (state.root === 'V') { upV(); return; }
     if (state.root === 'C' && state.sub){ var parts = state.sub.split('/'); parts.pop(); browseC(parts.join('/')); }
     else if (state.root === 'C') showHome();
-    else if (state.root === 'PF') { browseC(''); }
-    else if (state.root === 'PFG') browsePF();
-    else if (state.root === 'LC') browseC('');
     else if (state.root === 'D') showHome();
   };
   $('btnRefresh').onclick = function(){
     if (state.view === 'home') renderDrives();
     else if (state.root === 'C') browseC(state.sub);
     else if (state.root === 'D') browseD();
-    else if (state.root === 'PF') browsePF();
-    else if (state.root === 'PFG') { APPS.forEach(function(g){ if (g.name === state.sub) browsePFG(g); }); }
-    else if (state.root === 'LC') browseLC();
+    else if (state.root === 'V') paintV();
   };
 
   /* ---- 侧栏 ---- */

@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # Dev helper: allow test point grants (wallet/grant). Disable in production.
     dev_grant: bool = False
 
+    # Cloud-browser master switch (server-side headless browser for the IE window).
+    # The 2G server cannot feed a Chromium instance — keep OFF unless upgraded to 4G+.
+    # Any cloud-browser code path MUST check this before launching a browser.
+    ie_cloud_browser_enabled: bool = False
+
     @property
     def paypal_client_id(self) -> str:
         return self.paypal_client_id_sandbox if self.paypal_sandbox else self.paypal_client_id_live

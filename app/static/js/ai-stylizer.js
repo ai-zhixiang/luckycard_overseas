@@ -51,50 +51,68 @@
     cinematic:'cinematic photography style, dramatic lighting, film grain, professional photo'
   };
 
+  var TIMEOUT_MS = 200000;  // 200s hard cap — otherwise the button says "Generating" forever
+
+  function setStatus(html, bg, border, color){
+    st.style.display = 'block';
+    st.style.background = bg;
+    st.style.border = border;
+    st.style.color = color;
+    st.innerHTML = html;
+  }
+
   window.SGenerate = async function(){
     if(!pf)return;
     btn.disabled = true;
     btn.innerHTML = 'Generating...';
-    st.style.display = 'block';
-    st.className = '';
-    st.style.background = '#ffffe0';
-    st.style.border = '1px solid #ccc';
-    st.style.color = '#666';
-    st.innerHTML = 'AI is painting...';
+
+    // Live elapsed counter: a bare "Generating..." for 90s looks like a hang,
+    // so show the seconds ticking and a rough expectation.
+    var t0 = Date.now();
+    function tick(){
+      var s = Math.round((Date.now() - t0) / 1000);
+      setStatus('AI is painting&hellip; <b>' + s + 's</b> ' +
+        '<span style="color:#999">(usually 40-90s &mdash; keep this window open)</span>',
+        '#ffffe0', '1px solid #ccc', '#666');
+    }
+    tick();
+    var iv = setInterval(tick, 1000);
+    var ctrl = new AbortController();
+    var to = setTimeout(function(){ ctrl.abort(); }, TIMEOUT_MS);
 
     try{
       var fd = new FormData();
       fd.append('file', pf);
       fd.append('style', cs);
       fd.append('style_prompt', PROMPTS[cs]);
-      var r = await fetch('/api/stylize', {method:'POST', body:fd});
+      var r = await fetch('/api/stylize', {method:'POST', body:fd, signal: ctrl.signal});
       var d = await r.json();
       if(r.status === 402 || (d && d.detail && d.detail.code === 'quota_blocked')){
         if(window.parent && parent.Lucky){ parent.Lucky.quotaBlocked(d.detail || d); }
-        else { st.style.background='#f0d8d8'; st.style.color='#600'; st.innerHTML='Error: daily free quota used up'; }
-        btn.innerHTML = 'Generate'; btn.disabled = false; return;
+        else { setStatus('Error: daily free quota used up', '#f0d8d8', '1px solid #a88', '#600'); }
+        return;
       }
       if(d.status === 'ok'){
         resImg.src = d.result_url;
         resImg.style.display = 'block';
         resEmp.style.display = 'none';
-        st.style.background = '#e8f0d8';
-        st.style.border = '1px solid #8a8';
-        st.style.color = '#030';
-        st.innerHTML = 'Done! <a href="'+d.result_url+'" download style="color:#36a">Download</a> <a href="'+d.result_url+'" target="_blank" style="color:#36a">Open</a>';
+        var secs = Math.round((Date.now() - t0) / 1000);
+        setStatus('Done in ' + secs + 's! <a href="'+d.result_url+'" download style="color:#36a">Download</a> <a href="'+d.result_url+'" target="_blank" style="color:#36a">Open</a>',
+          '#e8f0d8', '1px solid #8a8', '#030');
       } else {
-        st.style.background = '#f0d8d8';
-        st.style.border = '1px solid #a88';
-        st.style.color = '#600';
-        st.innerHTML = 'Error: ' + (d.message || 'Generation failed');
+        setStatus('Error: ' + (d.message || 'Generation failed') + ' <span style="color:#999">(you were not charged)</span>',
+          '#f0d8d8', '1px solid #a88', '#600');
       }
     } catch(e){
-      st.style.background = '#f0d8d8';
-      st.style.border = '1px solid #a88';
-      st.style.color = '#600';
-      st.innerHTML = 'Error: ' + e.message;
+      var msg = (e && e.name === 'AbortError')
+        ? 'Timed out after ' + Math.round(TIMEOUT_MS/1000) + 's — the server may still be working, try again in a minute.'
+        : ('Error: ' + (e && e.message ? e.message : e));
+      setStatus(msg, '#f0d8d8', '1px solid #a88', '#600');
+    } finally {
+      clearInterval(iv);
+      clearTimeout(to);
+      btn.innerHTML = 'Generate';
+      btn.disabled = false;
     }
-    btn.innerHTML = 'Generate';
-    btn.disabled = false;
   };
 })();

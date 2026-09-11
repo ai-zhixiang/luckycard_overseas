@@ -5,13 +5,19 @@ Payload: {"k": "user:<id>" | "ip", "p": 0|1 (premium), "n": name, "exp": ts}
 Guests are keyed by their client IP server-side; the cookie just records that
 they went through the XP login window so the UI can show an identity.
 """
+import asyncio
 import base64
 import hashlib
 import hmac
 import json
+import re
 import secrets
+import threading
 import time
 from datetime import datetime
+
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
@@ -26,6 +32,18 @@ from .. import quota
 router = APIRouter()
 COOKIE_NAME = "lc_sess"
 COOKIE_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
+
+# 邮箱格式: 本地部分@域名.TLD(≥2 字母)。挡掉 "a@b" / "@@@" / "x@y.z" 这类。
+# (挡的是"格式", 挡不了"格式对但不是你的邮箱" —— 那要靠邮箱验证。)
+EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}$")
+
+# 常见一次性邮箱域名 —— 直接拒。想放行就从这里删。
+DISPOSABLE_DOMAINS = {
+    "mailinator.com", "10minutemail.com", "guerrillamail.com", "sharklasers.com",
+    "tempmail.com", "temp-mail.org", "throwawaymail.com", "yopmail.com",
+    "trashmail.com", "getnada.com", "maildrop.cc", "dispostable.com",
+    "fakeinbox.com", "mailnesia.com", "mytemp.email", "emailondeck.com",
+}
 
 
 # ───────────────────────── charging gate (shared by AI endpoints) ─────────────────────────
@@ -126,10 +144,85 @@ def identity_from(request: Request) -> dict:
     }
 
 
-def _hash_password(password: str, salt: str | None = None) -> tuple[str, str]:
-    salt = salt or secrets.token_hex(8)
-    h = hashlib.sha256((salt + password).encode()).hexdigest()
-    return salt, h
+# ── 密码哈希: Argon2id (memory_cost=19MiB, time_cost=2, parallelism=1) ──
+# 本机实测单次 ~23ms, 只在注册/登录时各算一次, 不影响页面速度。
+# 存储格式 "argon2$<encoded>"; 老的 "sha256$salt$hash" 记录仍可登录,
+# 验证通过后自动重存为 Argon2 (无需重置密码)。
+_PH = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1,
+                     hash_len=32, salt_len=16)
+
+
+def _hash_password(password: str) -> str:
+    """→ 入库字符串。Argon2 编码串自带算法标识: $argon2id$v=19$m=19456,t=2,p=1$..."""
+    return _PH.hash(password)
+
+
+def _verify_password(password: str, stored: str) -> tuple[bool, bool]:
+    """(是否正确, 是否需要升级重存)。兼容老的 sha256 记录。"""
+    if not stored:
+        return False, False
+    s = stored
+    if s.startswith("argon2$"):        # 兼容早期写法 "argon2$$argon2id$…"
+        s = s[len("argon2"):]
+    if s.startswith("$argon2"):        # Argon2id 编码串
+        try:
+            _PH.verify(s, password)
+        except VerifyMismatchError:
+            return False, False
+        except Exception:
+            return False, False
+        return True, _PH.check_needs_rehash(s)
+    if stored.startswith("sha256$"):   # 老记录 sha256$salt$hash
+        salt, _, h = stored[len("sha256$"):].partition("$")
+        if not salt or not h:
+            return False, False
+        calc = hashlib.sha256((salt + password).encode()).hexdigest()
+        if hmac.compare_digest(calc, h):
+            return True, True          # 老方案 → 顺势升级
+    return False, False
+
+
+# ── 登录/注册限流 (内存计数, 重启清空) ──
+# 登录只统计"失败"次数: 连续 5 次错密码 → 该 IP 锁 60 秒; 登录成功即清零。
+# 所以正常用户永远不会被自己的成功登录挡住。
+_fail_lock = threading.Lock()
+_login_fails: dict = {}
+_login_hits: dict = {}
+LOGIN_MAX_FAILS = 5
+LOGIN_WINDOW = 60
+REGISTER_MAX = 3
+REGISTER_WINDOW = 600
+
+
+def _login_guard(key: str) -> None:
+    now = time.time()
+    with _fail_lock:
+        hist = [t for t in _login_fails.get(key, []) if now - t < LOGIN_WINDOW]
+        if len(hist) >= LOGIN_MAX_FAILS:
+            wait = int(LOGIN_WINDOW - (now - hist[0]))
+            raise HTTPException(429, f"密码错误次数过多, 请 {wait} 秒后再试")
+        _login_fails[key] = hist
+
+
+def _login_failed(key: str) -> None:
+    with _fail_lock:
+        _login_fails.setdefault(key, []).append(time.time())
+
+
+def _login_ok(key: str) -> None:
+    with _fail_lock:
+        _login_fails.pop(key, None)
+
+
+def _register_guard(key: str) -> None:
+    now = time.time()
+    with _fail_lock:
+        hist = [t for t in _login_hits.get(key, []) if now - t < REGISTER_WINDOW]
+        if len(hist) >= REGISTER_MAX:
+            wait = int(REGISTER_WINDOW - (now - hist[0]))
+            raise HTTPException(429, f"注册太频繁, 请 {wait} 秒后再试")
+        hist.append(now)
+        _login_hits[key] = hist
 
 
 def _set_session_cookie(response: JSONResponse, payload: dict) -> None:
@@ -188,17 +281,24 @@ async def guest_login(response: JSONResponse):
 
 
 @router.post("/session/register")
-async def register(data: dict, db: AsyncSession = Depends(get_db), response: JSONResponse = None):
+async def register(request: Request, data: dict, db: AsyncSession = Depends(get_db), response: JSONResponse = None):
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
-    nickname = (data.get("nickname") or "").strip() or email.split("@")[0]
-    if not email or "@" not in email or len(password) < 4:
-        raise HTTPException(400, "邮箱格式不对或密码太短(至少4位)")
+    nickname = (data.get("nickname") or "").strip() or email.split("@")[0] or "User"
+    if len(email) > 254 or not EMAIL_RE.match(email):
+        raise HTTPException(400, "邮箱格式不对(需要形如 name@example.com)")
+    if len(password) < 8:
+        raise HTTPException(400, "密码太短(至少8位)")
+    domain = email.rsplit("@", 1)[1]
+    if any(domain == d or domain.endswith("." + d) for d in DISPOSABLE_DOMAINS):
+        raise HTTPException(400, "不支持临时邮箱, 请用常用邮箱注册")
+    _register_guard(client_ip(request))
     result = await db.execute(select(User).where(User.email == email))
     if result.scalar_one_or_none():
         raise HTTPException(409, "该邮箱已注册")
-    salt, h = _hash_password(password)
-    user = User(email=email, password_hash=f"sha256${salt}${h}", nickname=nickname)
+    # Argon2id 是 CPU 密集的阻塞调用 → 丢线程, 别钉住事件循环
+    pw_hash = await asyncio.to_thread(_hash_password, password)
+    user = User(email=email, password_hash=pw_hash, nickname=nickname)
     db.add(user)
     try:
         await db.commit()
@@ -212,19 +312,24 @@ async def register(data: dict, db: AsyncSession = Depends(get_db), response: JSO
 
 
 @router.post("/session/login")
-async def account_login(data: dict, db: AsyncSession = Depends(get_db), response: JSONResponse = None):
+async def account_login(request: Request, data: dict, db: AsyncSession = Depends(get_db), response: JSONResponse = None):
     email = (data.get("email") or "").strip().lower()
     password = data.get("password") or ""
+    ipk = client_ip(request)
+    _login_guard(ipk)                     # 连续错 5 次 → 该 IP 锁 60s
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if not user or not user.password_hash:
+        _login_failed(ipk)
         raise HTTPException(401, "邮箱或密码错误")
-    try:
-        scheme, salt, h = user.password_hash.split("$")
-    except Exception:
+    ok, needs_upgrade = await asyncio.to_thread(_verify_password, password, user.password_hash)
+    if not ok:
+        _login_failed(ipk)
         raise HTTPException(401, "邮箱或密码错误")
-    if scheme != "sha256" or _hash_password(password, salt)[1] != h:
-        raise HTTPException(401, "邮箱或密码错误")
+    _login_ok(ipk)
+    if needs_upgrade:
+        # 老 sha256 记录: 登录成功后顺手升级成 Argon2id
+        user.password_hash = await asyncio.to_thread(_hash_password, password)
     user.last_login = datetime.utcnow()
     await db.commit()
     now = datetime.utcnow()

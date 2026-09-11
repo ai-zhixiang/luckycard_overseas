@@ -178,6 +178,8 @@
             'create':     ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
             'gallery':    ['gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'],
             'music':      ['music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=59'],
+            'crypto':     ['crypto', 'Crypto Challenge', '<img src="/static/img/xp_key_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/crypto-challenge.html?v=3'],
+            'challenge':  ['crypto', 'Crypto Challenge', '<img src="/static/img/xp_key_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/crypto-challenge.html?v=3'],
             'stylize':    ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'stylizer':   ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'mycards':    ['mycards', 'My Cards', '<img src="/static/img/xp-folder_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-cards.html'],
@@ -190,17 +192,17 @@
             'about':      ['about', t('about'), 'ℹ️', buildAboutHTML()],
             'sysinfo':    ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
             'sys':        ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
-            'history':    ['history', "Website's History", '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/website-history.html?v=1'],
+            'history':    ['history', "Website's History", '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/website-history.html?v=3'],
             'mydocs':     ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
             'my documents': ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
             'documents':  ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
-            'mycomputer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=3'],
-            'my computer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=3'],
-            'computer':  ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=3'],
-            'iexplore':   ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
-            'iexplore.exe': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
-            'ie':         ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
-            'internet explorer': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'mycomputer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=5'],
+            'my computer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=5'],
+            'computer':  ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=5'],
+            'iexplore':   ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
+            'iexplore.exe': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
+            'ie':         ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
+            'internet explorer': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
         };
 
         if (routes[kw]) {
@@ -223,6 +225,8 @@
             'create':     ['create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'],
             'gallery':    ['gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'],
             'music':      ['music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=59'],
+            'crypto':     ['crypto', 'Crypto Challenge', '<img src="/static/img/xp_key_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/crypto-challenge.html?v=3'],
+            'challenge':  ['crypto', 'Crypto Challenge', '<img src="/static/img/xp_key_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/crypto-challenge.html?v=3'],
             'stylize':    ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'stylizer':   ['stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'],
             'mycards':    ['mycards', 'My Cards', '<img src="/static/img/xp-folder_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-cards.html'],
@@ -235,17 +239,17 @@
             'about':      ['about', t('about'), 'ℹ️', buildAboutHTML()],
             'sysinfo':    ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
             'sys':        ['sysinfo', 'System Information', 'ℹ️', buildSysInfoHTML()],
-            'history':    ['history', "Website's History", '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/website-history.html?v=1'],
+            'history':    ['history', "Website's History", '<img src="/static/img/xp-notepad_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/website-history.html?v=3'],
             'mydocs':     ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
             'my documents': ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
             'documents':  ['mydocs', 'My Documents', '<img src="/static/img/xp-mydocs_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-documents.html?v=1'],
-            'mycomputer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=3'],
-            'my computer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=3'],
-            'computer':  ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=3'],
-            'iexplore':   ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
-            'iexplore.exe': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
-            'ie':         ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
-            'internet explorer': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=1'],
+            'mycomputer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=5'],
+            'my computer': ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=5'],
+            'computer':  ['mycomputer', 'My Computer', '<img src="/static/img/xp-computer_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/my-computer.html?v=5'],
+            'iexplore':   ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
+            'iexplore.exe': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
+            'ie':         ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
+            'internet explorer': ['ie', 'Internet Explorer', '<img src="/static/img/xp-ie6_20.png?v=2" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/internet-explorer.html?v=2'],
         };
 
         // Clippy easter egg — type "clippy" in the Run dialog
@@ -290,7 +294,7 @@
                 '<div style="text-align:center;padding:2rem">' +
                 '<p style="font-size:2rem">⚠️</p>' +
                 '<p style="margin-top:1rem">Cannot find <b>' + escHtml(cmd) + '</b></p>' +
-                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, stylizer, control, notepad, cmd, windos, iexplore</p>' +
+                '<p style="color:#888;margin-top:0.5rem">Try: card, gallery, music, crypto, stylizer, control, notepad, cmd, windos, iexplore</p>' +
                 '</div>');
         }
     }
@@ -623,6 +627,7 @@
             } else if (c === 'card') { window.XPShell && window.XPShell.openWindow('create', 'Create Card', '<img src="/static/img/xp-ie6_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-create.html'); }
             else if (c === 'gallery') { window.XPShell && window.XPShell.openWindow('gallery', 'Gallery', '<img src="/static/img/xp-gallery_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/card-gallery.html'); }
             else if (c === 'music') { window.XPShell && window.XPShell.openWindow('music', 'Music', '<img src="/static/img/xp-music_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/music-player.html?v=59'); }
+            else if (c === 'crypto' || c === 'challenge') { window.XPShell && window.XPShell.openWindow('crypto', 'Crypto Challenge', '<img src="/static/img/xp_key_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/crypto-challenge.html?v=3'); }
             else if (c === 'stylize' || c === 'stylizer') { window.XPShell && window.XPShell.openWindow('stylizer', 'AI Stylizer', '<img src="/static/img/xp-paint_20.png?v=1" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/ai-stylizer.html'); }
             else if (c === 'minesweeper' || c === 'ms') { window.XPShell && window.XPShell.openWindow('minesweeper', 'Minesweeper', '<img src="/static/img/xp-help_20.png" style="width:20px;height:20px;vertical-align:middle">', '/static/forms/minesweeper.html'); }
             else if (c === 'shutdown' || c === 'poweroff') { window.XPShell && window.XPShell.shutDown(); }
@@ -762,7 +767,7 @@
             print('START  <appname>     e.g. START MUSIC');
             print('START  <URL>         e.g. START http://www.luckycard.com');
             print('');
-            print('Known apps: CARD, GALLERY, MUSIC, STYLIZER, MYCARDS, NOTEPAD,');
+            print('Known apps: CARD, GALLERY, MUSIC, CRYPTO, STYLIZER, MYCARDS, NOTEPAD,');
             print('            CONTROL, TASKMAN, MINESWEEPER, SYSINFO, HISTORY, CMD,');
             print('            MYDOCS (opens My Documents), EXPLORER (same)');
             print('');
@@ -1166,6 +1171,10 @@
                 overlay.style.transition = 'background 1.5s';
                 overlay.style.background = '#000';
                 overlay.innerHTML = '';
+                // Desktop build: "Turn Off" really powers down the machine.
+                if (window.xpBridge && window.xpBridge.quitApp) {
+                    setTimeout(function() { window.xpBridge.quitApp(); }, 1200);
+                }
             }, 3000);
         }, 2500);
     }
@@ -1626,11 +1635,32 @@
         if (cpBody) cpBody.innerHTML = buildControlPanelHTML();
     }
 
+    // XP-style "close whatever is on top", used by the desktop app's Alt+F4.
+    // Priority: Lucky Card dialog → China notice → Run dialog → shutdown
+    // dialog → focused XP window → last opened XP window. Returns true when
+    // something was closed (the app should NOT quit in that case).
+    function closeTopmost() {
+        if (window.Lucky && typeof window.Lucky._closeTopOverlay === 'function') {
+            if (window.Lucky._closeTopOverlay()) return true;
+        }
+        var nc = document.querySelector('.xp-notice-overlay');
+        if (nc && nc.parentNode === document.body) { nc.remove(); return true; }
+        var rd = document.getElementById('xp-run-dlg');
+        if (rd && rd.parentNode === document.body && rd.style.display !== 'none') { closeRun(); return true; }
+        var sd = document.getElementById('xp-shutdown-dlg');
+        if (sd && sd.parentNode === document.body) { sd.remove(); return true; }
+        var ids = Object.keys(windows);
+        if (activeWindow && windows[activeWindow]) { closeWindow(activeWindow); return true; }
+        if (ids.length) { closeWindow(ids[ids.length - 1]); return true; }
+        return false;
+    }
+
     window.XPShell = {
         openWindow: openWindow,
         toggleStart: toggleStart,
         focusWindow: focusWindow,
         closeWindow: closeWindow,
+        closeTopmost: closeTopmost,
         logOff: logOff,
         shutDown: showShutdownDialog,
         openRun: openRun,
@@ -1649,6 +1679,23 @@
         newTask: newTask,
         setClippy: setClippy,
     };
+
+    // Desktop app (Electron) Alt+F4 bridge: main.js sends 'xpshell-altf4'
+    // whenever the user presses Alt+F4 (or the window X). Close the top-most
+    // XP element; only if nothing was open, tell main it may really quit.
+    (function wireDesktopAltF4() {
+        function wire() {
+            if (!window.xpBridge || !window.xpBridge.onAltF4 || window.__altF4Wired) return;
+            window.__altF4Wired = true;
+            window.xpBridge.onAltF4(function () {
+                if (!window.XPShell || !window.XPShell.closeTopmost || !window.XPShell.closeTopmost()) {
+                    if (window.xpBridge.quitOk) window.xpBridge.quitOk();
+                }
+            });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+        else wire();
+    })();
 
 
     // ===================== Clippy the Office Assistant =====================
@@ -1732,6 +1779,26 @@
             "Taskbar properties? May I suggest keeping the taskbar... exactly where it is. It suits you.",
             "Rearranging the taskbar? Bold move. I support you either way."
         ],
+        candy: [
+            "Which one's the fake? Read the label, not the wrapper. The cheap ones always lie.",
+            "A candy shell! My kind of dessert — I'm all shell, no filling.",
+            "Pick carefully. Some of those are vitamins. Very disappointing vitamins."
+        ],
+        wallet: [
+            "Opening your wallet? It looks a little light. I'm not judging — I'm a paperclip.",
+            "Lucky Points! I'd lend you some, but I'm made of metal, not money.",
+            "Checking your balance? Sit down first. I already know."
+        ],
+        crypto: [
+            "The Crypto Challenge! Start with the low ones. Q8 has eaten stronger minds than yours.",
+            "Cracking ciphers? I once solved one by accident. I was trying to open a letter.",
+            "Ooh, ciphers! 34 layers is not a hint, that's a threat."
+        ],
+        cert: [
+            "Your certificate! I'd hang it on the fridge, but I'm the fridge.",
+            "A solver's certificate! Very official. Slightly more official than me.",
+            "Look at you, with proof. I just have a bent wire and confidence."
+        ],
         _default: [
             "It looks like you're opening something! Can I help? I'm very bendable.",
             "Hello! I'm Clippy. Would you like a quick tip? No? I'll just hover here.",
@@ -1743,8 +1810,58 @@
         "You called? I was busy straightening things out.",
         "Did you know? I can hold up to 20 sheets of paper. And one very long conversation."
     ];
+    // Idle chatter — fires only after the user has gone quiet for a while,
+    // never while they are actively clicking around. Cheap, local, no API.
+    var _CLIPPY_IDLE = [
+        "Still there? I've been holding this pose for a while now.",
+        "Psst. The Crypto Challenge isn't going to crack itself.",
+        "I reorganised your desktop icons. In my head. They're perfect now.",
+        "Nothing to do? I could tell you about the time I held 20 sheets at once. Legendary.",
+        "You've been quiet. I'm not worried. I'm a paperclip. I don't worry.",
+        "Tip: type 'clippy' in the Run dialog if you ever miss me.",
+        "Idle hands are the devil's paperclips. Just saying."
+    ];
     var _CLIPPY_IMG_IDLE = '/static/img/clippy-idle.png';
     var _CLIPPY_IMG_WAVE = '/static/img/clippy-wave.png';
+    var CLIPPY_IDLE_MS = 60000;   // silence before Clippy pipes up
+    var _clippyIdleTimer = null;
+    var _clippyIdleOn = false;
+    var _clippyLastActivity = 0;
+
+    function _clippyIdleReset() {
+        _clippyLastActivity = Date.now();
+        if (!_clippyEnabled) return;
+        if (!_clippyIdleOn) { _clippyIdleOn = true; _clippyIdleTick(); return; }
+        if (_clippyIdleTimer) clearTimeout(_clippyIdleTimer);
+        _clippyIdleTimer = setTimeout(_clippyIdleFire, CLIPPY_IDLE_MS);
+    }
+
+    function _clippyIdleTick() {
+        if (_clippyIdleTimer) clearTimeout(_clippyIdleTimer);
+        _clippyIdleTimer = setTimeout(_clippyIdleFire, CLIPPY_IDLE_MS);
+    }
+
+    function _clippyIdleFire() {
+        if (!_clippyEnabled) { _clippyIdleOn = false; return; }
+        // only if the bubble is not already up and the user really went quiet
+        var box = document.getElementById('lc-clippy-box');
+        var showing = box && box.style.display === 'block';
+        if (!showing && Date.now() - _clippyLastActivity >= CLIPPY_IDLE_MS - 500) {
+            _clippySay(_clippyPick(_CLIPPY_IDLE), _CLIPPY_IMG_IDLE);
+        }
+        _clippyIdleTick();
+    }
+
+    (function wireClippyIdle() {
+        function start() {
+            ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+                document.addEventListener(ev, _clippyIdleReset, { passive: true });
+            });
+            _clippyIdleReset();
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+        else start();
+    })();
 
     function _clippyPick(arr) {
         return arr[Math.floor(Math.random() * arr.length)];

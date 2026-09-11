@@ -1,5 +1,9 @@
 /* ===== Lucky Card XP Edition — Luna Theme ===== */
 
+/* Stop mobile/tablet browsers from force-enlarging our pixel fonts
+   (text autosizing breaks the 11px Fixedsys icon labels into chopped words) */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
 /* Fixedsys Core — English bitmap-flavoured font for the retro XP crispness */
 @font-face {
     font-family: 'Fixedsys Core';
@@ -29,18 +33,19 @@
    column when reaching the taskbar (viewport height), never hidden behind it */
 .xp-desktop-icons {
     position: absolute; top: 14px; left: 14px;
+    right: 14px;               /* span full desktop width (no shrink-to-fit) so
+                                  wrapped columns always live INSIDE the container */
     z-index: 2;
     display: flex; flex-direction: column; flex-wrap: wrap;
     align-content: flex-start;
     height: calc(100vh - 58px);
     column-gap: 18px; row-gap: 6px;
-    max-width: calc(100vw - 28px);
     overflow: hidden;
 }
 .xp-icon {
     display: flex; flex-direction: column;
     align-items: center; gap: 2px;
-    width: 56px; padding: 4px 2px;
+    width: 68px; padding: 4px 2px;
     border-radius: 4px; border: 1px solid transparent;
     cursor: pointer; color: #fff;
     transition: background 0.1s;
@@ -57,7 +62,9 @@
     font-family: 'Fixedsys Core', 'Tahoma', 'SimSun', sans-serif;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
     line-height: 1.3; word-wrap: break-word;
-    max-width: 52px;
+    max-width: 6.6em;   /* ≈10 Fixedsys chars; em-based so browser font
+                           enlargement can't shrink the per-line char count */
+    min-width: 0;
 }
 .xp-icon.selected,
 .xp-icon:hover {
@@ -395,6 +402,9 @@
 /* Window content */
 .xp-window-body {
     flex: 1; padding: 16px;
+    position: relative;   /* injected pages use absolute layouts (e.g. My Computer
+                             toolbar) — anchor them to the BODY, not the whole window,
+                             or they overlap the titlebar and block the close button */
     background: #fff; overflow: auto;
     font-size: 13px; color: #000;
 }

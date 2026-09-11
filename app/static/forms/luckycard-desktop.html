@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lucky Card Desktop</title>
+<style>
+  body { font-family: Tahoma, 'Segoe UI', sans-serif; background: #fff; color: #000; margin: 0; padding: 18px 22px; }
+  .row { display: flex; gap: 16px; align-items: flex-start; }
+  .logo { width: 56px; height: 56px; flex-shrink: 0; }
+  h2 { margin: 2px 0 4px; color: #003399; font-size: 20px; }
+  .ver { color: #888; font-size: 12px; }
+  .desc { color: #444; font-size: 13px; margin: 10px 0 6px; line-height: 1.6; }
+  ul { margin: 6px 0 12px; padding-left: 20px; color: #333; font-size: 13px; line-height: 1.7; }
+  .note { background: #f4f1e6; border: 1px solid #d5d0bd; padding: 8px 12px; font-size: 12px; color: #555; margin: 10px 0 14px; }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .dl { display: inline-block; padding: 10px 22px; font: bold 14px Tahoma, sans-serif; border-radius: 3px; text-decoration: none; cursor: pointer; }
+  .dl-main { background: linear-gradient(180deg, #3a8bff, #1a5ae0); color: #fff; border: 1px solid #1a5ae0; }
+  .dl-main:hover { background: linear-gradient(180deg, #5aa0ff, #2a6af0); }
+  .dl-alt { background: linear-gradient(180deg, #fff, #ECE9D8); color: #000; border: 1px solid #7F9DB9; }
+  .dl-alt:hover { background: linear-gradient(180deg, #f0e5c8, #ECE9D8); }
+  .small { font-size: 11px; color: #999; margin-top: 6px; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <img class="logo" src="/static/img/logo.svg" alt="">
+    <div>
+      <h2>Lucky Card Desktop</h2>
+      <div class="ver">Version 1.2.0 · Windows 10 / 11</div>
+    </div>
+  </div>
+  <div class="desc">Turn this whole XP desktop into a native Windows app — no browser tabs, no menus, no Chromium right-click menu. Just the desktop.</div>
+  <ul>
+    <li><b>Alt+F4 closes XP windows</b> like real Windows — the app quits only when the desktop is empty (press Alt+F4 twice to force quit).</li>
+    <li>Start → Turn Off Computer → Turn Off really exits the app.</li>
+    <li>F11 fullscreen · F12 developer tools · F5 reload (menus hidden).</li>
+  </ul>
+  <div class="note">The installer is unsigned, so Windows SmartScreen will warn once — click <b>More info → Run anyway</b>. The portable zip is the same build, no install needed.</div>
+  <div class="btns">
+    <a class="dl dl-main" href="/static/LuckyCard_Setup_1.2.0.exe" download>Download Installer (.exe · 77 MB)</a>
+    <a class="dl dl-alt" href="/static/luckycard-electron-win64-1.2.0.zip" download>Download Portable (.zip · 110 MB)</a>
+  </div>
+  <div class="small">hicard.world · Lucky Card XP</div>
+</body>
+</html>

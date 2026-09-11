@@ -1,57 +1,201 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Website's History</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
+/* Root fills the whole window body (absolute + inset:0 escapes the body padding,
+   so the menu bar sits flush against the title bar and spans the full width). */
+.hist-root {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
   background: #fff;
-  font-family: 'Consolas', 'Courier New', 'SimSun', monospace;
-  font-size: 13px;
-  color: #000;
-  overflow-y: auto;
-  height: 100%;
+  font-family: 'Consolas', 'Courier New', 'SimSun', '宋体', monospace;
+  font-size: 13px; color: #000;
+  overflow: hidden;
 }
-.menu-bar {
-  display: flex;
-  gap: 0;
+.hist-menu {
+  flex: 0 0 auto;
+  display: flex; align-items: center;
   padding: 3px 4px;
   background: #ECE9D8;
   border-bottom: 1px solid #D4D0C8;
-  position: sticky;
-  top: 0;
-  z-index: 5;
   font-family: 'Tahoma', 'Segoe UI', sans-serif;
   font-size: 11px;
   user-select: none;
 }
-.menu-bar span { padding: 2px 8px; cursor: default; }
-.menu-bar span:hover { background: #316AC5; color: #fff; }
-pre {
-  padding: 10px 14px;
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.55;
+.hist-menu .mi { padding: 2px 8px; cursor: default; }
+.hist-menu .mi:hover { background: #316AC5; color: #fff; }
+.hist-btn {
+  margin-left: 6px;
+  padding: 2px 10px;
+  cursor: pointer;
+  border: 1px solid #8E8F8A;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #fff, #ECE9D8);
+  color: #000;
+  white-space: nowrap;
 }
-.loading { color: #888; padding: 1rem; }
+.hist-btn:hover { border-color: #003399; }
+.hist-btn:active { background: linear-gradient(180deg, #D4D0C8, #ECE9D8); }
+.hist-btn.first { margin-left: auto; }
+/* content area */
+#hist-body {
+  flex: 1; overflow: auto;
+  margin: 0; padding: 10px 14px;
+  font-family: inherit; font-size: inherit; color: #000;
+  line-height: 1.55;
+  word-break: break-word;
+}
+#hist-body.plain { white-space: pre-wrap; }
+#hist-body.loading { color: #888; padding: 14px; }
+/* rendered-markdown look (Notepad-flavoured, no external CSS) */
+#hist-body h1 { font-size: 17px; margin: 2px 0 8px; }
+#hist-body h2 { font-size: 15px; margin: 14px 0 6px; border-bottom: 1px solid #D4D0C8; padding-bottom: 2px; }
+#hist-body h3 { font-size: 13px; margin: 12px 0 4px; }
+#hist-body p { margin: 0 0 8px; }
+#hist-body ul { margin: 0 0 8px; padding-left: 22px; }
+#hist-body li { margin: 1px 0; }
+#hist-body blockquote {
+  margin: 0 0 8px; padding: 2px 0 2px 9px;
+  border-left: 3px solid #B7B09E; color: #444;
+}
+#hist-body hr { border: 0; border-top: 1px solid #D4D0C8; margin: 10px 0; }
+#hist-body strong { font-weight: bold; }
+#hist-body em { font-style: italic; }
+#hist-body code {
+  font-family: inherit; background: #F0EFE6;
+  border: 1px solid #DCD9C9; padding: 0 3px;
+}
+#hist-body a { color: #0645AD; }
 </style>
 </head>
 <body>
-<div class="menu-bar">
-  <span>File</span><span>Edit</span><span>Format</span><span>View</span><span>Help</span>
+<div class="hist-root">
+  <div class="hist-menu">
+    <span class="mi">File</span><span class="mi">Edit</span><span class="mi">Format</span><span class="mi">View</span><span class="mi">Help</span>
+    <span class="hist-btn first" id="btnView" title="Switch between formatted Markdown and plain text">Plain Text</span>
+    <span class="hist-btn" id="btnLang" title="Switch to 中文">Switch Language</span>
+  </div>
+  <div id="hist-body" class="loading">Loading Website's History...</div>
 </div>
-<pre id="hist-body" class="loading">Loading Website's History...</pre>
 <script>
-fetch('/static/website-history.md?v=1').then(function(r){ return r.text(); }).then(function(t){
+(function () {
+  var FILES = {
+    en: '/static/website-history.en.md?v=1',
+    zh: '/static/website-history.md?v=1'
+  };
+  var cache = {};                // lang -> raw markdown
+  var current = 'en';            // default: English
+  var formatted = true;          // default: render the markdown
   var el = document.getElementById('hist-body');
-  el.classList.remove('loading');
-  el.textContent = t;
-}).catch(function(){
-  var el = document.getElementById('hist-body');
-  el.textContent = 'Failed to load history.';
-});
+  var btnLang = document.getElementById('btnLang');
+  var btnView = document.getElementById('btnView');
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function inline(s) {
+    return esc(s)
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
+
+  // Deliberately tiny, dependency-free markdown: headings, blockquote,
+  // bullet lists, hr, bold/italic/code. Everything is escaped first, so raw
+  // HTML in the .md can never inject markup.
+  function renderMarkdown(src) {
+    var lines = src.replace(/\r\n?/g, '\n').split('\n');
+    var out = [], i = 0;
+    while (i < lines.length) {
+      var ln = lines[i];
+      if (/^\s*$/.test(ln)) { i++; continue; }
+      var m;
+      if ((m = /^(#{1,3})\s+(.*)$/.exec(ln))) {
+        var lvl = m[1].length;
+        out.push('<h' + lvl + '>' + inline(m[2]) + '</h' + lvl + '>');
+        i++; continue;
+      }
+      if (/^\s*([-*_])\1{2,}\s*$/.test(ln)) { out.push('<hr>'); i++; continue; }
+      if (/^>\s?/.test(ln)) {
+        var q = [];
+        while (i < lines.length && /^>\s?/.test(lines[i])) {
+          q.push(inline(lines[i].replace(/^>\s?/, '')));
+          i++;
+        }
+        out.push('<blockquote>' + q.join('<br>') + '</blockquote>');
+        continue;
+      }
+      if (/^\s*[-*]\s+/.test(ln)) {
+        var items = [];
+        while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+          items.push('<li>' + inline(lines[i].replace(/^\s*[-*]\s+/, '')) + '</li>');
+          i++;
+        }
+        out.push('<ul>' + items.join('') + '</ul>');
+        continue;
+      }
+      var para = [];
+      while (i < lines.length && !/^\s*$/.test(lines[i]) &&
+             !/^(#{1,3})\s+/.test(lines[i]) && !/^>\s?/.test(lines[i]) &&
+             !/^\s*[-*]\s+/.test(lines[i]) && !/^\s*([-*_])\1{2,}\s*$/.test(lines[i])) {
+        para.push(inline(lines[i]));
+        i++;
+      }
+      if (para.length) { out.push('<p>' + para.join('<br>') + '</p>'); }
+    }
+    return out.join('');
+  }
+
+  function paint() {
+    var raw = cache[current];
+    if (typeof raw !== 'string') { return; }
+    el.classList.remove('loading');
+    if (formatted) {
+      el.classList.remove('plain');
+      el.innerHTML = renderMarkdown(raw);
+    } else {
+      el.classList.add('plain');
+      el.textContent = raw;
+    }
+  }
+
+  function load(lang) {
+    current = lang;
+    btnLang.setAttribute('title', lang === 'en' ? 'Switch to 中文' : 'Switch to English');
+    if (typeof cache[lang] === 'string') { paint(); return; }
+    el.classList.add('loading');
+    el.textContent = 'Loading Website\'s History...';
+    fetch(FILES[lang]).then(function (r) {
+      if (!r.ok) { throw new Error('HTTP ' + r.status); }
+      return r.text();
+    }).then(function (t) {
+      cache[lang] = t;
+      if (current === lang) { paint(); }
+    }).catch(function () {
+      if (current === lang) {
+        el.classList.remove('loading');
+        el.textContent = 'Failed to load history.';
+      }
+    });
+  }
+
+  btnLang.addEventListener('click', function () {
+    load(current === 'en' ? 'zh' : 'en');
+  });
+
+  btnView.addEventListener('click', function () {
+    formatted = !formatted;
+    btnView.textContent = formatted ? 'Plain Text' : 'Formatted';
+    btnView.setAttribute('title', formatted ? 'Show the raw .md source' : 'Render the markdown');
+    paint();
+  });
+
+  load('en');
+})();
 </script>
 </body>
 </html>
