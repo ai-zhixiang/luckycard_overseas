@@ -162,6 +162,22 @@ html,body { height:100%; }
     }
     if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u;
     addr.value = u;
+    // External sites: most refuse iframes (X-Frame-Options). bing/baidu go
+    // through the server-side IE proxy; everything else opens in a real tab.
+    var ext = false;
+    try { ext = new URL(u).origin !== location.origin; } catch (e) { ext = /^https?:\/\//i.test(u); }
+    if (ext) {
+      var h = ''; try { h = new URL(u).hostname.toLowerCase(); } catch (e) {}
+      if (h === 'bing.com' || h.endsWith('.bing.com') || h === 'baidu.com' || h.endsWith('.baidu.com')) {
+        setStat('Opening ' + u + ' …');
+        frame.onload = function(){ setStat('Done'); pushHist(u); };
+        frame.src = '/api/ie/browse?u=' + encodeURIComponent(u);
+      } else {
+        window.open(u, '_blank');
+        setStat('This site refuses to load inside IE 6 — opened in your real browser.');
+      }
+      return;
+    }
     setStat('Opening ' + u + ' …');
     frame.onload = function(){ setStat('Done'); pushHist(u); };
     frame.src = u;
@@ -172,7 +188,9 @@ html,body { height:100%; }
     if (!s || s.indexOf('about:') === 0) return;
     setStat('Refreshing ' + s + ' …');
     frame.onload = function(){ setStat('Done'); };
-    frame.src = s.split('#')[0] + (s.indexOf('#') >= 0 ? '#ie-reload-' + Date.now() : '');
+    // cache-buster: proxy pages take a query param, internal pages a fragment
+    if (s.indexOf('/api/ie/browse') >= 0) frame.src = s + (s.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now();
+    else frame.src = s.split('#')[0] + '#ie-reload-' + Date.now();
   }
 
   // ===== menu bar model =====
@@ -194,7 +212,7 @@ html,body { height:100%; }
     ]},
     { label:'Favorites', items:[
       { label:'Read About This Site', act:'go', arg:'/about.txt' },
-      { label:"Website's History", act:'go', arg:'/static/website-history.md' },
+      { label:"Website's History", act:'go', arg:'/static/website-history.en.md' },
       { label:'Lucky Wallet', dis:true },
       { sep:true },
       { label:'Add to Favorites…', dis:true }
@@ -303,7 +321,11 @@ html,body { height:100%; }
   setInterval(function(){
     try {
       var cu = frame.contentWindow.location.href;
-      if (cu && cu.indexOf('about:') !== 0) addr.value = cu;
+      if (cu && cu.indexOf('about:') !== 0) {
+        // show the real URL when browsing through the IE proxy
+        var m = cu.match(/\/api\/ie\/browse\?u=([^&]+)/);
+        addr.value = m ? decodeURIComponent(m[1]) : cu;
+      }
     } catch(e){}
   }, 400);
 

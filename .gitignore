@@ -17,4 +17,5 @@ app/static/temp_screenshot.png
 # release artifacts / big binaries (hosted on the site, not in git)
 app/static/luckycard-electron-*
 app/static/WinDOS.bak.zip
+app/static/*.exe
 app/static/hugehard*

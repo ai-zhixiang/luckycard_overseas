@@ -5,15 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chinese Culture</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
+/* Root fills the window body (inset:0 escapes the body padding) so the button
+   bar is pinned at the bottom and NEVER falls below the fold, no matter how
+   long the topic text is. */
+.cc-root {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
   background: #ECE9D8;
   font-family: 'Tahoma', 'Segoe UI', sans-serif;
-  font-size: 12px;
-  overflow-y: auto;
-  color: #000;
+  font-size: 12px; color: #000;
+  overflow: hidden;
 }
-.wrap { padding: 14px 16px 16px; }
+.cc-scroll { flex: 1; overflow: auto; padding: 14px 16px 0; }
+.cc-foot {
+  flex: 0 0 auto;
+  padding: 8px 16px 8px;
+  background: #ECE9D8;
+  border-top: 1px solid #D4D0C8;
+  display: none;
+}
 /* 顶部横幅 */
 .banner {
   background: linear-gradient(180deg, #B3202C, #8E1520);
@@ -69,9 +79,7 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .err { color: #B00020; padding: 12px; text-align: center; }
 /* 底部工具条 */
-.toolbar {
-  margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;
-}
+.toolbar { display: flex; justify-content: flex-end; gap: 8px; }
 .xp-btn {
   background: linear-gradient(180deg, #fff 0%, #ECE9D8 100%);
   border: 1px solid #7F9DB9; border-radius: 3px;
@@ -80,25 +88,44 @@ body {
 .xp-btn:hover { background: linear-gradient(180deg, #F3E8C8, #ECE9D8); }
 .xp-btn:disabled { opacity: .55; cursor: default; }
 .foot-note {
-  margin-top: 10px; font-size: 10px; color: #999; text-align: right;
+  margin-top: 6px; font-size: 10px; color: #999; text-align: right;
   font-family: Tahoma, sans-serif;
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div id="status"><span class="spinner"></span>Fetching today's culture…</div>
+<div class="cc-root">
+  <div class="cc-scroll" id="ccScroll">
+    <div id="status"><span class="spinner"></span>Fetching today's culture…</div>
+  </div>
+  <div class="cc-foot" id="ccFoot">
+    <div class="toolbar" id="ccToolbar"></div>
+    <div class="foot-note">One topic per day &middot; facts from Wikipedia, written by DeepSeek</div>
+  </div>
 </div>
 
 <script>
 (function () {
-  var wrap = document.querySelector('.wrap');
+  var scroll = document.getElementById('ccScroll');
+  var foot = document.getElementById('ccFoot');
+  var toolbar = document.getElementById('ccToolbar');
+  // 记在 sessionStorage: 刷新页面(以及关窗再开)后还停在你选的那个主题上;
+  // 关掉标签页/浏览器重开 → 回到今日主题.
+  var KEY = 'lc_culture_off';
+
+  function off() {
+    var v = parseInt(sessionStorage.getItem(KEY) || '0', 10);
+    return (isNaN(v) || v < 0) ? 0 : v;
+  }
+  function setOff(n) {
+    try { sessionStorage.setItem(KEY, String(n)); } catch (e) {}
+  }
 
   function render(d) {
     var zh = (d.zh || '').replace(/</g, '&lt;');
     var en = (d.en || '').replace(/</g, '&lt;');
     var escT = (d.title_en || '').replace(/</g, '&lt;');
-    wrap.innerHTML =
+    scroll.innerHTML =
       '<div class="banner">' +
         '<div class="flag">&#127464;&#127475;</div>' +
         '<div class="titles">' +
@@ -112,36 +139,49 @@ body {
         '<div class="seg-zh">' + zh + '</div>' +
         '<div class="seg-en"><span class="seg-label">English</span><br>' + en + '</div>' +
       '</div>' +
-      '<div class="toolbar">' +
-        '<button class="xp-btn" id="btn-another">Another topic</button>' +
-      '</div>' +
-      '<div class="foot-note">One topic per day &middot; facts from Wikipedia, written by DeepSeek</div>';
-    document.getElementById('btn-another').onclick = load;
+      '<div style="height:14px"></div>';
+
+    toolbar.innerHTML =
+      (off() > 0 ? '<button class="xp-btn" id="btn-today">Today\'s topic</button>' : '') +
+      '<button class="xp-btn" id="btn-another">Another topic</button>';
+    foot.style.display = 'block';
+
+    // 每个按钮只绑一次点击 —— 不要用 document 级委托: 表单每次注入都会再加一个监听器,
+    // 一次点击跑两遍 load(), 两个响应抢着渲染, 结果就是"点了没换主题".
+    document.getElementById('btn-another').onclick = function () {
+      setOff(off() + 1);
+      load();
+    };
+    var tb = document.getElementById('btn-today');
+    if (tb) { tb.onclick = function () { setOff(0); load(); }; }
+    scroll.scrollTop = 0;
   }
 
   function fail(msg) {
-    wrap.innerHTML = '<div class="err">' + (msg || 'Failed to load') +
-      '<br><br><button class="xp-btn" onclick="location.reload()">Retry</button></div>';
+    foot.style.display = 'none';
+    scroll.innerHTML = '<div class="err">' + (msg || 'Failed to load') +
+      '<br><br><button class="xp-btn" id="btn-retry">Retry</button></div>';
+    var rb = document.getElementById('btn-retry');
+    if (rb) { rb.onclick = load; }
   }
 
   function load() {
-    wrap.innerHTML = '<div id="status"><span class="spinner"></span>Fetching culture…</div>';
-    fetch('/api/culture/today?offset=' + (window.__off || 0))
+    foot.style.display = 'none';
+    scroll.innerHTML = '<div id="status"><span class="spinner"></span>Fetching culture…</div>';
+    var want = off();
+    fetch('/api/culture/today?offset=' + want)
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
+        if (want !== off()) { return; }   // 用户已经点了别的主题, 丢弃这个迟到的响应
         if (res.ok && res.j && res.j.zh) { render(res.j); return; }
         fail((res.j && res.j.detail) || 'Empty result');
       })
-      .catch(function () { fail('Network error'); });
+      .catch(function () {
+        if (want !== off()) { return; }
+        fail('Network error');
+      });
   }
 
-  // 首次打开 = 今日主题(offset 0); Another topic 每次 +1 换一个主题
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'btn-another') {
-      window.__off = (window.__off || 0) + 1;
-      load();
-    }
-  });
   load();
 })();
 </script>

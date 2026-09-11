@@ -17,6 +17,9 @@
 
   var state = { has_session: false, kind: 'ip', name: 'Guest', user_id: null, free: { remaining: 3, limit: 3 }, balance: 0, costs: {} };
   var paypalLoaded = false;
+  // Stack of xpBox modal overlays (login / wallet / quota / notices), for
+  // XP-style "close the top-most dialog" (used by desktop Alt+F4).
+  var xpBoxes = [];
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
@@ -43,6 +46,10 @@
     var box = el('div', { style: 'width:' + (w || 460) + 'px;max-width:94vw;background:#ECE9D8;border:2px solid #0054E3;border-radius:8px 8px 0 0;box-shadow:4px 4px 18px rgba(0,0,0,.45);overflow:hidden;' });
     var tb = el('div', { style: 'background:linear-gradient(180deg,#0058E6 0%,#2E82F0 3%,#4090F0 8%,#1A6AE0 50%,#0058E6 95%,#0048C8 100%);padding:5px 8px;color:#fff;font-size:13px;font-weight:bold;text-shadow:1px 1px 1px rgba(0,0,0,.5);display:flex;align-items:center;' });
     tb.innerHTML = title;
+    var x = el('span', { title: 'Close', style: 'margin-left:auto;cursor:pointer;width:20px;height:20px;line-height:18px;text-align:center;font-weight:bold;font-size:13px;color:#fff;background:linear-gradient(180deg,#E0432F 0%,#B02018 100%);border:1px solid #8E1008;border-radius:3px;user-select:none;flex-shrink:0;' });
+    x.textContent = '\u00D7';
+    x.addEventListener('click', function (e) { e.stopPropagation(); ov.remove(); });
+    tb.appendChild(x);
     box.appendChild(tb);
     var body = el('div', { style: 'padding:16px 18px;color:#000;font-size:13px;line-height:1.55;max-height:78vh;overflow:auto;' });
     body.innerHTML = bodyHtml;
@@ -50,7 +57,20 @@
     ov.appendChild(box);
     ov.addEventListener('click', function (e) { if (e.target === ov) ov.remove(); });
     document.body.appendChild(ov);
+    xpBoxes.push(ov);
     return { ov: ov, body: body };
+  }
+
+  // Close the most recently shown xpBox overlay that is still on screen.
+  // Returns true if one was closed. (Keyboard/Alt+F4 closing of these dialogs
+  // is handled by the desktop app shell, not by page keydown listeners — the
+  // page can never see Alt+F4 in a real browser.)
+  function closeTopOverlay() {
+    for (var i = xpBoxes.length - 1; i >= 0; i--) {
+      var o = xpBoxes[i];
+      if (o && o.parentNode === document.body) { o.remove(); return true; }
+    }
+    return false;
   }
 
   function okBox(title, msg) {
@@ -82,7 +102,7 @@
     '<div id="lk-login-form" style="display:none;margin-top:10px">' +
     '  <div style="display:none" id="lk-f-nick"><label style="display:block;color:#333">Nickname</label><input id="lk-in-nick" class="lucky-input" style="width:100%" placeholder="nickname (optional)"></div>' +
     '  <label style="display:block;color:#333;margin-top:6px">Email</label><input id="lk-in-email" class="lucky-input" style="width:100%" placeholder="you@example.com">' +
-    '  <label style="display:block;color:#333;margin-top:6px">Password</label><input id="lk-in-pass" type="password" class="lucky-input" style="width:100%" placeholder="min 4 chars">' +
+    '  <label style="display:block;color:#333;margin-top:6px">Password</label><input id="lk-in-pass" type="password" class="lucky-input" style="width:100%" placeholder="min 8 chars">' +
     '  <div style="text-align:right;margin-top:10px">' +
     '    <button class="lucky-btn" id="lk-form-back" style="margin-right:8px">Back</button>' +
     '    <button class="lucky-btn lucky-btn-primary" id="lk-form-go">Log in</button>' +
@@ -348,6 +368,7 @@
     quotaBlocked: quotaBlocked,
     refreshStatus: refreshStatus,
     getState: function () { return state; },
+    _closeTopOverlay: closeTopOverlay,
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

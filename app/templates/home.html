@@ -8,7 +8,7 @@
     <!-- For crawlers / AI agents: full plain-text description at https://hicard.world/about.txt -->
     <link rel="alternate" type="text/plain" title="About hicard.world" href="/about.txt">
     <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
-    <link rel="stylesheet" href="/static/css/xp.css?v=32">
+    <link rel="stylesheet" href="/static/css/xp.css?v=38">
     <link rel="stylesheet" href="/static/css/bios.css?v=17">
 </head>
 <body class="xp-desktop">
@@ -22,7 +22,7 @@
 
     <!-- Desktop Icons -->
     <div class="xp-desktop-icons">
-        <div class="xp-icon" ondblclick="XPShell.openWindow('mycomputer','My Computer','<img src=&quot;/static/img/xp-computer_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/my-computer.html?v=3')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('mycomputer','My Computer','<img src=&quot;/static/img/xp-computer_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/my-computer.html?v=5')">
             <div class="xp-icon-img"><img src="/static/img/xp-computer_32.png?v=2" alt=""></div>
             <span>My Computer</span>
         </div>
@@ -50,7 +50,11 @@
             <div class="xp-icon-img"><img src="/static/img/file_unknown_32.png?v=2" alt=""></div>
             <span>Ad Space For Rent</span>
         </div>
-        <div class="xp-icon" ondblclick="XPShell.openWindow('ie','Internet Explorer','<img src=&quot;/static/img/xp-ie6_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/internet-explorer.html?v=1')">
+        <div class="xp-icon" ondblclick="Lucky.showWallet()">
+            <div class="xp-icon-img"><img src="/static/img/xp-users_32.png?v=2" alt=""></div>
+            <span>Pay for Points</span>
+        </div>
+        <div class="xp-icon" ondblclick="XPShell.openWindow('ie','Internet Explorer','<img src=&quot;/static/img/xp-ie6_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/internet-explorer.html?v=2')">
             <div class="xp-icon-img"><img src="/static/img/xp-ie6_32.png?v=2" alt=""></div>
             <span>Internet Explorer</span>
         </div>
@@ -58,11 +62,11 @@
             <div class="xp-icon-img"><img src="/static/img/xp-ie6_32.png?v=2" alt=""></div>
             <span>Source Code</span>
         </div>
-        <div class="xp-icon" ondblclick="XPShell.openWindow('stylizer','AI Stylizer','<img src=&quot;/static/img/xp-paint_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/ai-stylizer.html')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('stylizer','AI Stylizer','<img src=&quot;/static/img/xp-paint_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/ai-stylizer.html?v=2')">
             <div class="xp-icon-img"><img src="/static/img/xp-paint_32.png?v=2" alt=""></div>
             <span>AI Stylize</span>
         </div>
-        <div class="xp-icon" ondblclick="XPShell.openWindow('culture','Chinese Culture','<span style=&quot;font-size:14px&quot;>&#127464;&#127475;</span>','/static/forms/chinese-culture.html')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('culture','Chinese Culture','<span style=&quot;font-size:14px&quot;>&#127464;&#127475;</span>','/static/forms/chinese-culture.html?v=3')">
             <div class="xp-icon-img"><span style="font-size:24px;line-height:24px;display:block">&#127464;&#127475;</span></div>
             <span>Chinese Culture</span>
         </div>
@@ -70,7 +74,7 @@
             <div class="xp-icon-img"><img src="/static/img/xp-help_32.png" alt=""></div>
             <span>Minesweeper</span>
         </div>
-        <div class="xp-icon" ondblclick="XPShell.openWindow('history','Website&#39;s History','<img src=&quot;/static/img/xp-notepad_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/website-history.html?v=1')">
+        <div class="xp-icon" ondblclick="XPShell.openWindow('history','Website\'s History','<img src=&quot;/static/img/xp-notepad_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/website-history.html?v=3')">
             <div class="xp-icon-img"><img src="/static/img/xp-notepad_32.png?v=2" alt=""></div>
             <span>Website&#39;s History</span>
         </div>
@@ -135,11 +139,17 @@
                 <button class="xp-start-item" onclick="window.open('/win11lpc');XPShell.toggleStart()">
                     <span class="si-icon"><img src="/static/img/xp-cmd_32.png?v=2" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">_Win11LPC</span>
                 </button>
-                <button class="xp-start-item" onclick="XPShell.openWindow('ie','Internet Explorer','<img src=&quot;/static/img/xp-ie6_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/internet-explorer.html?v=1');XPShell.toggleStart()">
+                <button class="xp-start-item" onclick="XPShell.openWindow('ie','Internet Explorer','<img src=&quot;/static/img/xp-ie6_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/internet-explorer.html?v=2');XPShell.toggleStart()">
                     <span class="si-icon"><img src="/static/img/xp_ie6_48.png?v=2" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">Internet Explorer</span>
                 </button>
                 <button class="xp-start-item" onclick="(window.Lucky?Lucky.showWallet():alert('loading…'));XPShell.toggleStart()">
                     <span class="si-icon"><img src="/static/img/xp-users_32.png?v=2" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">Lucky Wallet</span>
+                </button>
+                <button class="xp-start-item" onclick="XPShell.openWindow('lcdesktop','Lucky Card Desktop','<img src=&quot;/static/img/xp-cmd_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/luckycard-desktop.html?v=1');XPShell.toggleStart()">
+                    <span class="si-icon"><img src="/static/img/xp-cmd_32.png?v=2" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">Lucky Card Desktop</span>
+                </button>
+                <button class="xp-start-item" onclick="XPShell.openWindow('crypto','Crypto Challenge','<img src=&quot;/static/img/xp_key_20.png?v=1&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/crypto-challenge.html?v=3');XPShell.toggleStart()">
+                    <span class="si-icon"><img src="/static/img/xp_key_32.png?v=1" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">Crypto Challenge</span>
                 </button>
                 <div class="xp-start-sep"></div>
                 <button class="xp-start-item xp-start-all">
@@ -157,7 +167,7 @@
                     <span class="si-icon"><img src="/static/img/my_music_32.png?v=2" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">My Music</span>
                 </button>
                 <div class="xp-start-sep"></div>
-                <button class="xp-start-item" onclick="XPShell.openWindow('mycomputer','My Computer','<img src=&quot;/static/img/xp-computer_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/my-computer.html?v=3');XPShell.toggleStart()">
+                <button class="xp-start-item" onclick="XPShell.openWindow('mycomputer','My Computer','<img src=&quot;/static/img/xp-computer_20.png?v=2&quot; style=&quot;width:20px;height:20px;vertical-align:middle&quot;>','/static/forms/my-computer.html?v=5');XPShell.toggleStart()">
                     <span class="si-icon"><img src="/static/img/my_computer_32.png?v=2" style="width:24px;height:24px;vertical-align:middle"></span><span class="si-label">My Computer</span>
                 </button>
                 <button class="xp-start-item" onclick="XPShell.openControlPanel();XPShell.toggleStart()">
@@ -211,8 +221,8 @@
         <div class="xp-tbm-item" data-action="properties">Properties</div>
     </div>
 
-    <script src="/static/js/xp.js?v=172"></script>
-    <script src="/static/js/lucky.js?v=3"></script>
+    <script src="/static/js/xp.js?v=179"></script>
+    <script src="/static/js/lucky.js?v=7"></script>
 
 <!-- Mobile view for small screens -->
 <style>
