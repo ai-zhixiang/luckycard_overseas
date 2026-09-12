@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     # The 2G server cannot feed a Chromium instance — keep OFF unless upgraded to 4G+.
     # Any cloud-browser code path MUST check this before launching a browser.
     ie_cloud_browser_enabled: bool = False
+    hicard_key_pepper: str = ""          # API key (lc-) HMAC pepper
 
     @property
     def paypal_client_id(self) -> str:
