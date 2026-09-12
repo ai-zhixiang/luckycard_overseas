@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Keys</title>
+<style>
+  body {
+    margin: 0; padding: 14px;
+    font-family: 'Tahoma', "Segoe UI", sans-serif;
+    font-size: 12px; color: #000;
+    background: #ECE9D8;
+  }
+  .hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .hdr img { width: 24px; height: 24px; }
+  .hdr h2 { margin: 0; font-size: 14px; }
+  .sub { color: #555; margin: 0 0 12px 0; line-height: 1.5; }
+
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .bar input {
+    flex: 1; padding: 5px 8px; font-size: 12px;
+    border: 1px solid #7F9DB9; font-family: inherit;
+  }
+  .btn {
+    padding: 5px 14px; font-size: 12px; cursor: pointer;
+    font-family: inherit; border: 1px solid #003C74;
+    background: linear-gradient(180deg,#fff,#ECE9D8);
+    border-radius: 3px;
+  }
+  .btn:hover { background: linear-gradient(180deg,#fff,#DCD8C8); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn-danger { border-color: #8B1B1B; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  th, td {
+    border: 1px solid #B5B5B5; padding: 6px 8px;
+    text-align: left; font-size: 12px;
+  }
+  th { background: #D4D0C8; font-weight: bold; }
+  tr:nth-child(even) td { background: #F7F7F7; }
+  .masked {
+    font-family: 'Consolas', monospace; font-size: 11px;
+    letter-spacing: -0.5px; color: #333;
+  }
+  .empty { padding: 24px; text-align: center; color: #777; }
+
+  /* 新 key 弹窗 */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35);
+    display: none; align-items: center; justify-content: center; z-index: 99;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #ECE9D8; border: 2px solid #0054E3;
+    border-radius: 6px 6px 0 0; width: 480px; max-width: 92vw;
+    box-shadow: 3px 3px 12px rgba(0,0,0,.5);
+  }
+  .modal-title {
+    background: linear-gradient(180deg,#0A246A 0%,#3A6EA5 8%,#6196CF 45%,#A6CAF0 100%);
+    color: #fff; font-weight: bold; padding: 5px 10px; font-size: 13px;
+    border-radius: 4px 4px 0 0;
+  }
+  .modal-body { padding: 16px; }
+  .warn {
+    background: #FFF8DC; border: 1px solid #D4B106;
+    padding: 8px 10px; margin-bottom: 12px; line-height: 1.5;
+  }
+  .keybox {
+    background: #fff; border: 1px solid #7F9DB9; padding: 10px;
+    font-family: 'Consolas', monospace; font-size: 13px;
+    word-break: break-all; user-select: all; margin-bottom: 12px;
+  }
+  .modal-foot { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <img src="/static/img/xp-keys_24.png" onerror="this.src='/static/img/xp-computer_32.png'">
+  <h2>API Keys</h2>
+</div>
+<p class="sub">
+  Use an API key to call Lucky Card's AI services from your own programs.<br>
+  Calls made with a key are billed in Lucky Points (poem 10, vision 10, art 15, stylize 15).
+</p>
+
+<div class="bar">
+  <input id="apikey-label" type="text" placeholder="Key name (optional, e.g. my-script)" maxlength="40">
+  <button class="btn" id="apikey-create-btn" onclick="ApiKeys.create()">Create Key</button>
+</div>
+
+<div id="apikey-msg" style="margin-bottom:8px;color:#8B1B1B;"></div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:38%">Key</th>
+      <th style="width:22%">Name</th>
+      <th style="width:18%">Created</th>
+      <th style="width:12%">Uses</th>
+      <th style="width:10%"></th>
+    </tr>
+  </thead>
+  <tbody id="apikey-rows">
+    <tr><td colspan="5" class="empty">Loading…</td></tr>
+  </tbody>
+</table>
+
+<!-- 新 key 弹窗 -->
+<div class="modal-bg" id="apikey-modal">
+  <div class="modal">
+    <div class="modal-title">API Key Created</div>
+    <div class="modal-body">
+      <div class="warn">
+        <b>Copy this key now.</b> It is shown <b>only once</b> and cannot be
+        retrieved later — we store only its hash.
+      </div>
+      <div class="keybox" id="apikey-newkey"></div>
+      <div class="modal-foot">
+        <button class="btn" onclick="ApiKeys.copy()">Copy</button>
+        <button class="btn" onclick="ApiKeys.closeModal()">I Saved It</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ApiKeys = (() => {
+  const msgEl   = () => document.getElementById('apikey-msg');
+  const rowsEl  = () => document.getElementById('apikey-rows');
+  let pendingKey = '';
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g,
+      c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const fmtDate = ts => {
+    if (!ts) return '—';
+    const d = new Date(ts * 1000);
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+
+  const say = (m, ok = false) => {
+    const el = msgEl();
+    el.textContent = m || '';
+    el.style.color = ok ? '#0B6B0B' : '#8B1B1B';
+  };
+
+  async function load() {
+    rowsEl().innerHTML = '<tr><td colspan="5" class="empty">Loading…</td></tr>';
+    try {
+      const r = await fetch('/api/apikey/list', { credentials: 'same-origin' });
+      if (r.status === 401) {
+        rowsEl().innerHTML =
+          '<tr><td colspan="5" class="empty">Please sign in first ' +
+          '(open <b>Lucky Card</b> from the tray or desktop to log in).</td></tr>';
+        return;
+      }
+      const d = await r.json();
+      const keys = d.keys || [];
+      if (!keys.length) {
+        rowsEl().innerHTML = '<tr><td colspan="5" class="empty">No API keys yet.</td></tr>';
+        return;
+      }
+      rowsEl().innerHTML = keys.map(k => `
+        <tr>
+          <td class="masked">${esc(k.key)}</td>
+          <td>${esc(k.label) || '<span style="color:#999">—</span>'}</td>
+          <td>${fmtDate(k.created)}</td>
+          <td>${k.uses || 0}</td>
+          <td><button class="btn btn-danger" onclick="ApiKeys.revoke('${esc(k.id)}')">Revoke</button></td>
+        </tr>`).join('');
+    } catch (e) {
+      rowsEl().innerHTML = '<tr><td colspan="5" class="empty">Failed to load.</td></tr>';
+    }
+  }
+
+  async function create() {
+    const btn = document.getElementById('apikey-create-btn');
+    btn.disabled = true;
+    say('');
+    try {
+      const r = await fetch('/api/apikey/create', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: (document.getElementById('apikey-label').value || '').trim() })
+      });
+      const d = await r.json();
+      if (!r.ok) { say(typeof d.detail === 'string' ? d.detail : 'Failed to create key.'); return; }
+      pendingKey = d.key;
+      document.getElementById('apikey-newkey').textContent = d.key;
+      document.getElementById('apikey-modal').classList.add('show');
+      document.getElementById('apikey-label').value = '';
+      load();
+    } catch (e) {
+      say('Failed to create key.');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function revoke(id) {
+    if (!confirm('Revoke this key? Programs using it will stop working immediately.')) return;
+    say('');
+    try {
+      const r = await fetch('/api/apikey/revoke', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (!r.ok) { const d = await r.json(); say(typeof d.detail === 'string' ? d.detail : 'Failed.'); return; }
+      say('Key revoked.', true);
+      load();
+    } catch (e) { say('Failed to revoke.'); }
+  }
+
+  function copy() {
+    const done = () => say('Copied to clipboard.', true);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(pendingKey).then(done).catch(() => fallback());
+    } else fallback();
+
+    function fallback() {
+      const ta = document.createElement('textarea');
+      ta.value = pendingKey;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('apikey-modal').classList.remove('show');
+    pendingKey = '';
+  }
+
+  load();
+  return { load, create, revoke, copy, closeModal };
+})();
+</script>
+</body>
+</html>
