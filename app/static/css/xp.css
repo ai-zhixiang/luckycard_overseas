@@ -423,6 +423,11 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
         justify-content: center; gap: 12px;
         padding: 20px 10px;
         z-index: 1;
+        /* 必须重置 PC 端的竖排锁高规则, 否则横排图标被 overflow:hidden 切掉 */
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        align-content: flex-start;
     }
     .xp-icon {
         width: 56px; padding: 6px 2px;
