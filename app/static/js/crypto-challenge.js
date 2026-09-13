@@ -20,11 +20,10 @@
     return r === 1 ? '1st' : r === 2 ? '2nd' : r === 3 ? '3rd' : String(r) + '.';
   }
 
-  var NAMES = {
-    Q1: 'Base64', Q2: 'Caesar', Q3: 'ROT13', Q4: 'boon-enc v1 (10 rounds)',
-    Q5: 'boon-enc v1 (8 rounds)', Q6: 'Vigenere', Q7: 'SHA-256 preimage',
-    Q8: 'boon-enc v1 (34 rounds) - FINAL BOSS'
-  };
+  // NOTE: no hardcoded challenge metadata here. Algo/hint come from
+  // /api/crypto/list (server-side data/crypto_challenges.json) only.
+  // Anything hardcoded in this file is world-readable — do not put
+  // algorithm names, round counts or answers here.
 
   // ───────────────────────── challenges tab ─────────────────────────
 
@@ -145,8 +144,7 @@
     var chips = '';
     for (var i = 0; i < (c.solved || []).length; i++) {
       var q = c.solved[i];
-      chips += '<div class="chip' + (q === 'Q8' ? ' boss' : '') + '"><b>' + esc(q) + '</b><span>' +
-        esc(NAMES[q] || 'cipher') + '</span></div>';
+      chips += '<div class="chip"><b>' + esc(q) + '</b><span>solved</span></div>';
     }
     var pct = Math.round((c.solved.length / Math.max(1, c.total_challenges)) * 100);
     return '<div class="cert">' +
