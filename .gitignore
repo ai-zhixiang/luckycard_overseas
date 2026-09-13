@@ -9,6 +9,10 @@ __pycache__/
 /data/
 app/data/
 
+# challenge-authoring tools — contain the boon-enc algorithm + recipe helpers.
+# NOT part of the site; must never be public (would hand crackers the transform set).
+tools/
+
 # user-generated content
 app/static/uploads/
 app/static/stylized/
