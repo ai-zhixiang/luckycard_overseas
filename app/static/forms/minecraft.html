@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minecraft 1.12 - Lucky Card</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:100%; height:100%; overflow:hidden; background:#000; }
+  body { font-family:Tahoma, 'Segoe UI', sans-serif; color:#fff; }
+
+  #game {
+    display:block; width:100%; height:100%; border:0;
+    background:#000;
+  }
+
+  /* XP-style toolbar strip at the very top */
+  #bar {
+    position:fixed; top:0; left:0; right:0; height:28px; z-index:10;
+    background:linear-gradient(#3f6fd8, #2b55b8);
+    border-bottom:1px solid #1a3a8a;
+    display:flex; align-items:center; gap:8px; padding:0 8px;
+    font-size:11px;
+  }
+  #bar .t { font-weight:bold; text-shadow:1px 1px 0 rgba(0,0,0,.4); }
+  #bar .sp { flex:1; }
+  #bar button {
+    font:inherit; padding:2px 10px; cursor:pointer;
+    border:1px solid #1a3a8a; border-radius:3px;
+    background:linear-gradient(#fff,#d8d8d8); color:#000;
+  }
+  #bar button:hover { background:linear-gradient(#fff,#c0c8e0); }
+  #bar button:active { background:#b0b8d0; }
+
+  #frame-wrap { position:fixed; top:28px; left:0; right:0; bottom:0; }
+  #frame-wrap iframe { width:100%; height:100%; border:0; display:block; background:#000; }
+
+  /* overlay shown while the wasm payload loads (~18 MB, first visit) */
+  #boot {
+    position:fixed; top:28px; left:0; right:0; bottom:0; z-index:20;
+    background:#000; color:#ddd;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    font-size:13px; text-align:center; padding:20px;
+  }
+  #boot .hint { color:#888; font-size:11px; max-width:420px; line-height:1.6; }
+  #boot .bar { width:260px; height:14px; border:1px solid #555; background:#111; }
+  #boot .bar i { display:block; height:100%; width:0%; background:#4caf50; transition:width .2s; }
+
+  /* fullscreen: let the game fill the screen, drop the bar */
+  :fullscreen #bar { display:none; }
+  :-webkit-full-screen #bar { display:none; }
+  :fullscreen #frame-wrap { top:0; }
+  :-webkit-full-screen #frame-wrap { top:0; }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <span class="t">Minecraft 1.12 &mdash; running in your browser</span>
+    <span class="sp"></span>
+    <button id="btn-fs" type="button">Fullscreen</button>
+  </div>
+
+  <div id="frame-wrap">
+    <iframe id="game"
+            src="/static/eaglercraft/index.html"
+            allow="fullscreen; pointer-lock; gamepad; autoplay; cross-origin-isolated"
+            allowfullscreen
+            title="Minecraft 1.12"></iframe>
+  </div>
+
+  <div id="boot">
+    <div><b>Loading Minecraft 1.12&hellip;</b></div>
+    <div class="bar"><i id="boot-bar"></i></div>
+    <div class="hint">First visit downloads ~18&nbsp;MB of game assets, then it is cached.
+      Singleplayer works instantly. Click the game area once, then press <b>Esc</b> to
+      release the mouse. Use <b>Fullscreen</b> above for the best experience.</div>
+  </div>
+
+<script>
+(function () {
+  var boot = document.getElementById('boot');
+  var bar = document.getElementById('boot-bar');
+  var fr = document.getElementById('game');
+  var pct = 0;
+
+  // The iframe gives no reliable progress events, so animate a rough bar
+  // while we wait for the child to signal readiness via postMessage.
+  var tick = setInterval(function () {
+    pct = Math.min(pct + Math.random() * 7, 92);
+    bar.style.width = pct + '%';
+  }, 300);
+
+  function hide() {
+    clearInterval(tick);
+    bar.style.width = '100%';
+    setTimeout(function () { boot.style.display = 'none'; }, 250);
+  }
+
+  // eaglercraft posts {type:"eaglercraftXInit"} style messages; also accept
+  // anything from the same origin that means "alive".
+  window.addEventListener('message', function (e) {
+    if (e.origin !== window.location.origin) return;
+    var d = e.data;
+    if (typeof d === 'string' && d.toLowerCase().indexOf('init') >= 0) hide();
+    else if (d && typeof d === 'object' && (d.type || '').toLowerCase().indexOf('init') >= 0) hide();
+  });
+
+  // Fallback: once the child window has loaded, give it a few seconds.
+  fr.addEventListener('load', function () { setTimeout(hide, 6000); });
+
+  var btn = document.getElementById('btn-fs');
+  btn.addEventListener('click', function () {
+    var el = document.documentElement;
+    if (document.fullscreenElement) { document.exitFullscreen(); }
+    else if (el.requestFullscreen) { el.requestFullscreen().catch(function () {}); }
+  });
+  document.addEventListener('fullscreenchange', function () {
+    btn.textContent = document.fullscreenElement ? 'Exit Fullscreen' : 'Fullscreen';
+  });
+})();
+</script>
+</body>
+</html>
