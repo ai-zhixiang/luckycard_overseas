@@ -90,7 +90,7 @@ async def login(request: Request, token: str = Form(...)):
         else:
             rec = [1, time.time()]
         _FAILS[ip] = rec
-        raise HTTPException(403, "Invalid token")
+        raise HTTPException(401, "Invalid token")
     _FAILS.pop(_client_ip(request), None)  # 成功登录清除失败记录
     sig = make_cookie_sig("1")
     resp = JSONResponse({"status": "ok", "admin": True})

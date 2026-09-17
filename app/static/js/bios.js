@@ -220,13 +220,13 @@
             var sColor = (_settings.bootDevice===0 && _settings.gpuAccel===1 && _settings.luckShield===1) ? '#0f0' : '#ff0';
             content =
                 '<div style="padding:8px 0"><span style="color:#fff">Exit Options</span></div>' +
-                (changed ? '<div style="color:#ff0;font-size:11px;margin-bottom:8px">⚠ Settings have been changed from defaults</div>' : '') +
+                (changed ? '<div style="color:#ff0;font-size:11px;margin-bottom:8px">! Settings have been changed from defaults</div>' : '') +
                 '<table style="width:100%;color:#fff;font-size:13px;border-collapse:collapse">' +
                 '<tr id="exitSave" class="setup-clickable" style="cursor:pointer"><td style="padding:5px 8px;color:'+sColor+'">▶ Save & Exit Setup</td><td style="padding:3px 8px;color:#aaa">Write changes to CMOS and boot</td></tr>' +
                 '<tr id="exitDiscard" class="setup-clickable" style="cursor:pointer"><td style="padding:5px 8px;color:#aaa">▶ Exit Without Saving</td><td style="padding:3px 8px;color:#888">Discard changes and boot</td></tr>' +
                 '<tr id="exitDefaults" class="setup-clickable" style="cursor:pointer"><td style="padding:5px 8px;color:#aaa">▶ Load Optimized Defaults</td><td style="padding:3px 8px;color:#888">Restore factory settings</td></tr>' +
                 '</table>' +
-                '<div style="margin-top:16px;color:#0f0;font-size:12px">► Press Enter to Save &amp; Exit</div>';
+                '<div style="margin-top:16px;color:#0f0;font-size:12px">► ' + (_isMobile ? 'Tap Exit (Save) to save' : 'Press Enter to Save &amp; Exit') + '</div>';
         }
 
         var h = '<div class="setup-container">';
@@ -239,7 +239,9 @@
         h += '<div class="setup-body">'+content+'</div>';
         h += '<div class="setup-footer">';
         if (_isMobile) {
-            h += '<span>◀ Swipe ▶</span><span class="setup-boot-btn" id="setupBootBtn">🟢 BOOT</span>';
+            h += '<span>◀ Swipe ▶</span>'
+              +  '<span class="setup-boot-btn" id="setupExitBtn">Exit (Save)</span>'
+              +  '<span class="setup-boot-btn" id="setupDiscardBtn">Exit (Discard)</span>';
         } else {
             h += '<span>← → Tab</span><span>Click to Change</span><span>+/- Boot Order</span><span>Enter Boot</span><span>ESC Exit</span>';
         }
@@ -284,6 +286,16 @@
 
         var bootBtn = document.getElementById('setupBootBtn');
         if (bootBtn) bootBtn.onclick = function() { exitSetupAndBoot(true); };
+
+        var exitBtn = document.getElementById('setupExitBtn');
+        if (exitBtn) exitBtn.onclick = function() { exitSetupAndBoot(true); };
+
+        var discardBtnMobile = document.getElementById('setupDiscardBtn');
+        if (discardBtnMobile) discardBtnMobile.onclick = function() {
+            _settings = JSON.parse(JSON.stringify(_DEFAULTS));
+            clearSettings();
+            exitSetupAndBoot(false);
+        };
 
         // Mobile swipe
         if (_isMobile) {
@@ -548,7 +560,7 @@
                 h += '<div style="padding:4px 0;'+hl+'"><span style="color:#aaa;margin-right:12px">['+opt.key+']</span>' + opt.label + '</div>';
                 h += '<div style="color:#666;font-size:11px;padding-left:30px;margin-bottom:6px">' + opt.desc + '</div>';
             }
-            h += '<div style="margin-top:20px;color:#aaa;font-size:12px">Use ↑ and ↓ to highlight. Enter to choose. Auto starts in ' + (F8_MENU_TIMEOUT/1000) + 's...</div>';
+            h += '<div style="margin-top:20px;color:#aaa;font-size:12px">' + (_isMobile ? 'Tap to choose. ' : 'Use ↑ and ↓ to highlight. Enter to choose. ') + 'Auto starts in ' + (F8_MENU_TIMEOUT/1000) + 's...</div>';
             h += '</div>';
             f8Layer.innerHTML = h;
 
@@ -642,8 +654,37 @@
         var sp = document.createElement('div');
         sp.className = 'bios-line bios-setup-prompt';
         if (_isMobile) {
-            sp.textContent = 'Tap = SETUP  |  Hold = Boot Menu';
+            // 移动端：不用 F8/DEL 术语，直接给可点的两个按钮
+            sp.innerHTML = '';
             sp.style.cursor = 'pointer'; sp.style.fontSize = '14px'; sp.style.padding = '8px 0';
+
+            var btnSetup = document.createElement('div');
+            btnSetup.textContent = '[ Enter SETUP ]';
+            btnSetup.style.cssText = 'display:inline-block;margin:0 8px 6px 0;padding:6px 14px;'
+                + 'border:1px solid #0f0;color:#0f0;cursor:pointer;';
+            btnSetup.addEventListener('touchend', function(ev) {
+                ev.preventDefault(); ev.stopPropagation();
+                if (setupPhase && !setupScreen) { clearPrompt(); openSetup(); }
+            });
+
+            var btnBoot = document.createElement('div');
+            btnBoot.textContent = '[ Boot Menu ]';
+            btnBoot.style.cssText = 'display:inline-block;margin:0 8px 6px 0;padding:6px 14px;'
+                + 'border:1px solid #0f0;color:#0f0;cursor:pointer;';
+            btnBoot.addEventListener('touchend', function(ev) {
+                ev.preventDefault(); ev.stopPropagation();
+                if (setupPhase && !setupScreen) { clearPrompt(); showF8Menu(); }
+            });
+
+            sp.appendChild(btnSetup);
+            sp.appendChild(btnBoot);
+
+            var hint = document.createElement('div');
+            hint.textContent = '(or tap anywhere to enter Boot Menu)';
+            hint.style.cssText = 'font-size:11px;color:#0a0;';
+            sp.appendChild(hint);
+
+            // 触屏兜底：点屏幕任意处 = Boot Menu
             scr.addEventListener('touchstart', onTouchStart);
             scr.addEventListener('touchend', onTouchEnd);
         } else {
@@ -653,7 +694,11 @@
 
         var f8p = document.createElement('div');
         f8p.className = 'bios-line';
-        f8p.textContent = 'Press F8 to choose Operating System.';
+        if (_isMobile) {
+            f8p.textContent = 'Tap [ Boot Menu ] to choose Operating System.';
+        } else {
+            f8p.textContent = 'Press F8 to choose Operating System.';
+        }
         biosLayer.appendChild(f8p);
 
         _setupTimeout = setTimeout(function(){ stopPromptAndBoot(); }, SETUP_KEY_TIMEOUT);

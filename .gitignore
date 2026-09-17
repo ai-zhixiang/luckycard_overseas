@@ -4,6 +4,9 @@ __pycache__/
 .env
 # secrets & backups
 .env.bak-*
+*.bak
+*.bak.*
+*.bak.*_*
 
 # runtime data (wallet/quota ledger, prefs, db) — never public
 /data/

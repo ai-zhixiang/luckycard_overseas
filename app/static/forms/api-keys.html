@@ -70,6 +70,57 @@
     word-break: break-all; user-select: all; margin-bottom: 12px;
   }
   .modal-foot { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── API 文档区（XP 风格折叠面板） ── */
+  .docs { margin-top: 18px; border: 1px solid #B5B5B5; background: #fff; }
+  .docs-head {
+    background: #D4D0C8; border-bottom: 1px solid #B5B5B5;
+    padding: 6px 10px; font-weight: bold; font-size: 12px;
+    display: flex; align-items: center; gap: 6px; user-select: none; cursor: pointer;
+  }
+  .docs-head .arrow { font-family: 'Consolas', monospace; font-size: 11px; width: 10px; }
+  .docs-body { display: none; padding: 0; }
+  .docs-body.open { display: block; }
+  .doc-sec { border-bottom: 1px solid #E4E4E4; padding: 10px 12px; }
+  .doc-sec:last-child { border-bottom: none; }
+  .doc-sec h4 { margin: 0 0 6px 0; font-size: 12px; }
+  .ep {
+    display: inline-block; font-family: 'Consolas', monospace; font-size: 11px;
+    font-weight: bold; padding: 1px 6px; border-radius: 2px; margin-right: 6px;
+    color: #fff; vertical-align: middle;
+  }
+  .ep.get  { background: #1B6B1B; }
+  .ep.post { background: #003C74; }
+  code, pre {
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+  pre {
+    background: #1E1E1E; color: #DDD; border: 1px solid #7F9DB9;
+    padding: 8px 10px; margin: 6px 0 0 0; font-size: 11px;
+    overflow-x: auto; line-height: 1.5; position: relative;
+  }
+  pre .c { color: #6A9955; }
+  pre .s { color: #CE9178; }
+  pre .k { color: #9CDCFE; }
+  .copy-btn {
+    position: absolute; top: 4px; right: 4px;
+    font-size: 10px; padding: 2px 7px; cursor: pointer;
+    background: #3C3C3C; color: #DDD; border: 1px solid #666;
+    border-radius: 2px; font-family: 'Tahoma', sans-serif;
+  }
+  .copy-btn:hover { background: #505050; }
+  table.params { width: 100%; border-collapse: collapse; margin: 6px 0 0 0; }
+  table.params th, table.params td {
+    border: 1px solid #D5D5D5; padding: 4px 7px; font-size: 11px; text-align: left;
+  }
+  table.params th { background: #F0F0F0; font-weight: bold; }
+  table.params td code { background: #F5F5F5; padding: 1px 4px; font-size: 11px; }
+  .note {
+    background: #FFF8DC; border: 1px solid #D4B106;
+    padding: 6px 9px; margin: 6px 0 0 0; font-size: 11px; line-height: 1.55;
+  }
+  .doc-sec .desc { font-size: 11px; color: #444; line-height: 1.55; margin: 0 0 4px 0; }
+  .cost { font-size: 11px; color: #8B1B1B; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -104,6 +155,149 @@
     <tr><td colspan="5" class="empty">Loading…</td></tr>
   </tbody>
 </table>
+
+<!-- ══════════ API 文档 ══════════ -->
+<div class="docs">
+  <div class="docs-head" onclick="ApiDocs.toggle()">
+    <span class="arrow" id="docs-arrow">▶</span>
+    <span>API Documentation — How to call</span>
+  </div>
+  <div class="docs-body" id="docs-body">
+
+    <div class="doc-sec">
+      <h4>Authentication</h4>
+      <p class="desc">
+        Every API call must include your key in the <code>X-API-Key</code> request header.
+        Keys start with <code>lc-</code>. Keep them secret — anyone with the key can spend your points.
+      </p>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>X-API-Key: lc-0123456789abcdef0123456789abcdef</pre>
+      <div class="note">
+        <b>Endpoint:</b> <code>https://hicard.world</code><br>
+        <b>Free daily quota:</b> 3 AI operations per IP. Calls made with an API key are billed to your wallet (no free quota used).
+      </div>
+    </div>
+
+    <div class="doc-sec">
+      <h4><span class="ep get">GET</span>/api/apikey/verify</h4>
+      <p class="desc">Check whether a key is valid. Does <b>not</b> count as a use and does <b>not</b> charge points.</p>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>curl https://hicard.world/api/apikey/verify \
+  -H "X-API-Key: lc-your-key-here"</pre>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>{
+  "valid": true,
+  "uid": "u_8f3a...",
+  "label": "my-script",
+  "balance": 240
+}</pre>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>import requests
+
+r = requests.get(
+    "https://hicard.world/api/apikey/verify",
+    headers={"X-API-Key": "lc-your-key-here"},
+    timeout=15,
+)
+print(r.status_code, r.json())   # 200 + {"valid": true, ...}  (401 = bad key)</pre>
+    </div>
+
+    <div class="doc-sec">
+      <h4><span class="ep get">GET</span>/api/v1/balance</h4>
+      <p class="desc">Query the balance of the account that owns this key. <b>Free</b> — no points charged.</p>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>curl https://hicard.world/api/v1/balance \
+  -H "X-API-Key: lc-your-key-here"</pre>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>{
+  "uid": "u_8f3a...",
+  "label": "my-script",
+  "balance": 240,
+  "prices": { "poem": 10, "vision": 10, "art": 15, "stylize": 15 }
+}</pre>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>import requests
+
+r = requests.get(
+    "https://hicard.world/api/v1/balance",
+    headers={"X-API-Key": "lc-your-key-here"},
+    timeout=15,
+)
+d = r.json()
+print(f"balance: {d['balance']} points")
+print(f"prices: {d['prices']}")</pre>
+    </div>
+
+    <div class="doc-sec">
+      <h4><span class="ep post">POST</span>/api/v1/poem <span class="cost">− 10 points</span></h4>
+      <p class="desc">Generate a personalized poem. The recipient name is always woven into the text.
+        On failure the points are <b>refunded automatically</b>.</p>
+      <table class="params">
+        <tr><th style="width:24%">Field</th><th style="width:16%">Type</th><th>Description</th></tr>
+        <tr><td><code>recipient</code></td><td>string</td><td>Who the poem is for (e.g. <code>Mom</code>)</td></tr>
+        <tr><td><code>occasion</code></td><td>string</td><td>Occasion (e.g. <code>birthday</code>, <code>New Year</code>)</td></tr>
+        <tr><td><code>message</code></td><td>string</td><td>Your own note, woven into the poem</td></tr>
+      </table>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>curl -X POST https://hicard.world/api/v1/poem \
+  -H "X-API-Key: lc-your-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{"recipient":"Mom","occasion":"birthday","message":"thank you for everything"}'</pre>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>{
+  "poem": "For Mom, on this birthday bright...",
+  "charged": 10,
+  "balance": 230
+}</pre>
+      <p class="desc" style="margin-top:10px;"><b>Python</b> (requests):</p>
+      <pre><button class="copy-btn" onclick="ApiDocs.copy(this)">Copy</button>import requests
+
+API_KEY = "lc-your-key-here"
+BASE = "https://hicard.world"
+
+r = requests.post(
+    f"{BASE}/api/v1/poem",
+    headers={"X-API-Key": API_KEY},
+    json={
+        "recipient": "Mom",
+        "occasion": "birthday",
+        "message": "thank you for everything",
+    },
+    timeout=60,
+)
+
+if r.status_code == 401:
+    print("Invalid API key — check the X-API-Key header")
+elif r.status_code == 402:
+    d = r.json()
+    print(f"Not enough points: need {d['cost']}, have {d['balance']}")
+else:
+    r.raise_for_status()
+    d = r.json()
+    print(d["poem"])
+    print(f"charged {d['charged']}, balance {d['balance']}")</pre>
+    </div>
+
+    <div class="doc-sec">
+      <h4>Errors</h4>
+      <table class="params">
+        <tr><th style="width:12%">Code</th><th>Meaning</th></tr>
+        <tr><td><code>401</code></td><td>Missing or invalid API key</td></tr>
+        <tr><td><code>402</code></td><td>Insufficient Lucky Points — recharge at <b>My Wallet</b></td></tr>
+        <tr><td><code>429</code></td><td>Rate limited — slow down</td></tr>
+        <tr><td><code>502</code></td><td>Upstream AI service failed — <b>points refunded</b></td></tr>
+      </table>
+      <div class="note">
+        A <code>402</code> response body includes <code>cost</code> and <code>balance</code> so your
+        program can handle low balance gracefully.
+      </div>
+    </div>
+
+    <div class="doc-sec">
+      <h4>Full Reference</h4>
+      <p class="desc">
+        All endpoints are also available as an interactive reference (Swagger UI),
+        where you can try calls directly from the browser.
+      </p>
+      <p style="margin:8px 0 0 0;">
+        <a href="/docs" target="_blank" rel="noopener" class="btn" style="text-decoration:none;display:inline-block;">Open Swagger UI →</a>
+        <a href="/openapi.json" target="_blank" rel="noopener" class="btn" style="text-decoration:none;display:inline-block;margin-left:6px;">OpenAPI JSON</a>
+      </p>
+    </div>
+
+  </div>
+</div>
 
 <!-- 新 key 弹窗 -->
 <div class="modal-bg" id="apikey-modal">
@@ -238,6 +432,46 @@ const ApiKeys = (() => {
 
   load();
   return { load, create, revoke, copy, closeModal };
+})();
+
+/* ── API 文档：折叠 + 代码复制 ── */
+const ApiDocs = (() => {
+  let open = false;
+
+  function toggle() {
+    open = !open;
+    document.getElementById('docs-body').classList.toggle('open', open);
+    document.getElementById('docs-arrow').textContent = open ? '▼' : '▶';
+  }
+
+  function copy(btn) {
+    const pre = btn.parentElement;
+    // 取文本时排除按钮自身
+    const clone = pre.cloneNode(true);
+    clone.querySelectorAll('.copy-btn').forEach(b => b.remove());
+    const text = clone.textContent;
+
+    const done = () => {
+      const old = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(() => { btn.textContent = old; }, 1200);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallback());
+    } else fallback();
+
+    function fallback() {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  return { toggle, copy };
 })();
 </script>
 </body>
