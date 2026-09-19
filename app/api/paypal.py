@@ -174,32 +174,33 @@ async def capture_paypal_order(paypal_order_id: str, db: AsyncSession = Depends(
 # ─────────────────────────────────────────────
 # 3. Verify Webhook Signature
 # ─────────────────────────────────────────────
-def verify_paypal_webhook(
+async def verify_paypal_webhook(
     headers: dict, body: bytes, webhook_id: str
 ) -> bool:
-    """Verify PayPal webhook using their POST verification API"""
+    """Verify PayPal webhook using their POST verification API (async — 勿阻塞事件循环)"""
     import httpx
-    token = httpx.post(
-        f"{PAYPAL_API}/v1/oauth2/token",
-        data={"grant_type": "client_credentials"},
-        auth=(settings.paypal_client_id, settings.paypal_client_secret),
-    ).json()["access_token"]
+    async with httpx.AsyncClient(timeout=15) as client:
+        token = (await client.post(
+            f"{PAYPAL_API}/v1/oauth2/token",
+            data={"grant_type": "client_credentials"},
+            auth=(settings.paypal_client_id, settings.paypal_client_secret),
+        )).json()["access_token"]
 
-    verification = {
-        "auth_algo": headers.get("paypal-auth-algo", ""),
-        "cert_url": headers.get("paypal-cert-url", ""),
-        "transmission_id": headers.get("paypal-transmission-id", ""),
-        "transmission_sig": headers.get("paypal-transmission-sig", ""),
-        "transmission_time": headers.get("paypal-transmission-time", ""),
-        "webhook_id": webhook_id,
-        "webhook_event": json.loads(body.decode()),
-    }
+        verification = {
+            "auth_algo": headers.get("paypal-auth-algo", ""),
+            "cert_url": headers.get("paypal-cert-url", ""),
+            "transmission_id": headers.get("paypal-transmission-id", ""),
+            "transmission_sig": headers.get("paypal-transmission-sig", ""),
+            "transmission_time": headers.get("paypal-transmission-time", ""),
+            "webhook_id": webhook_id,
+            "webhook_event": json.loads(body.decode()),
+        }
 
-    resp = httpx.post(
-        f"{PAYPAL_API}/v1/notifications/verify-webhook-signature",
-        json=verification,
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-    )
+        resp = await client.post(
+            f"{PAYPAL_API}/v1/notifications/verify-webhook-signature",
+            json=verification,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        )
     return resp.json().get("verification_status") == "SUCCESS"
 
 
@@ -213,9 +214,11 @@ async def paypal_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     headers_dict = dict(request.headers)
 
     webhook_id = settings.paypal_webhook_id
-    if webhook_id:
-        if not verify_paypal_webhook(headers_dict, body, webhook_id):
-            raise HTTPException(401, "Invalid webhook signature")
+    # fail-closed: 没配 webhook_id 就直接拒绝, 绝不放行未验签的事件
+    if not webhook_id:
+        raise HTTPException(503, "Webhook not configured")
+    if not await verify_paypal_webhook(headers_dict, body, webhook_id):
+        raise HTTPException(401, "Invalid webhook signature")
 
     event = json.loads(body)
     event_type = event.get("event_type", "")
@@ -235,7 +238,9 @@ async def paypal_webhook(request: Request, db: AsyncSession = Depends(get_db)):
             except ValueError:
                 amt = 0.0
             from .. import quota as q
-            q.add_points(uid, amt, note=f"PayPal 充值 ${amt:.2f} (webhook)")
+            # 幂等键: capture_id 非空则用它, 否则退化成 order_id — 同一笔付款只入账一次
+            once = f"pp:{capture_id or paypal_order_id}"
+            q.add_points(uid, amt, note=f"PayPal 充值 ${amt:.2f} (webhook)", once_key=once)
             result = await db.execute(
                 select(PaymentTransaction).where(PaymentTransaction.gateway_order_id == paypal_order_id)
             )

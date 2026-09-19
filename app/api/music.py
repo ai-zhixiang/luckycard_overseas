@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
+from pathlib import Path
 import os
 
 router = APIRouter()
@@ -45,7 +46,12 @@ async def list_music():
 
 @router.get("/music/play/{filename}")
 async def play_music(filename: str):
-    filepath = os.path.join(MUSIC_DIR, filename)
-    if not os.path.exists(filepath):
-        return {"error": "not found"}, 404
-    return FileResponse(filepath, media_type="audio/mpeg", filename=filename)
+    # 只取 basename, 并校验解析后仍在 MUSIC_DIR 内 —— 防 ../ 读任意文件
+    safe = os.path.basename(filename or "")
+    if not safe or safe != filename:
+        raise HTTPException(400, "非法文件名")
+    root = Path(MUSIC_DIR).resolve()
+    filepath = (root / safe).resolve()
+    if root not in filepath.parents or not filepath.is_file():
+        raise HTTPException(404, "not found")
+    return FileResponse(filepath, media_type="audio/mpeg", filename=safe)

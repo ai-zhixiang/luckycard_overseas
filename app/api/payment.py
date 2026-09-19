@@ -1,5 +1,6 @@
 import hmac, hashlib, json, time, uuid
 from datetime import datetime, timedelta
+import httpx
 from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

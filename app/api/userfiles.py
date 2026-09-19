@@ -18,6 +18,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
+from starlette.background import BackgroundTask
 
 from .auth import client_ip, identity_from
 
@@ -65,6 +66,14 @@ def _note_create(request: Request) -> None:
         _BANS[ip] = now + BAN_SECONDS
         dq.clear()
         raise HTTPException(403, "Too many file creations in a short time — this IP has been banned for 30 days.")
+
+
+def _safe_unlink(p) -> None:
+    """后台任务: 删掉临时文件, 失败也不影响响应."""
+    try:
+        Path(p).unlink(missing_ok=True)
+    except Exception:
+        pass
 
 
 def _account_dir(request: Request) -> Path:
@@ -344,4 +353,8 @@ def userfiles_zip(request: Request):
             if p.name == META_NAME or not p.is_file():
                 continue
             zf.write(p, _rel(p, root))
-    return FileResponse(tmp, filename="MyDocuments.zip", media_type="application/zip")
+    # FileResponse 发完立刻删掉临时包, 不留垃圾 (否则 /tmp 会被反复拉取塞满)
+    return FileResponse(
+        tmp, filename="MyDocuments.zip", media_type="application/zip",
+        background=BackgroundTask(_safe_unlink, tmp),
+    )

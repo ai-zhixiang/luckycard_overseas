@@ -16,6 +16,8 @@ import httpx
 
 app = FastAPI(title="Lucky Card", version="1.0.0")
 
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024   # /api/upload 单文件上限 20MB
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,6 +34,11 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404 and not request.url.path.startswith("/api"):
         return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+@app.get("/404", include_in_schema=False)
+async def error_404_page(request: Request):
+    """nginx error_page 内部跳转目标 — 与 /123 等路径同一个 XP 风格 404 页。"""
+    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 
 app.include_router(cards.router, prefix="/api", tags=["cards"])
 app.include_router(music.router, prefix="/api", tags=["music"])
@@ -281,14 +288,27 @@ async def _card_art_impl(text: str, style: str, card_id: str):
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
-    """Simple file upload endpoint."""
-    import aiofiles
-    save_dir = Path("/home/ubuntu/uploads")
+    """Simple file upload endpoint. 文件名净化 + 大小上限, 禁止目录穿越."""
+    save_dir = Path("/home/ubuntu/uploads").resolve()
     save_dir.mkdir(exist_ok=True)
-    save_path = save_dir / (file.filename or "upload.zip")
+    # 只取 basename, 剥掉任何 ../ 与前导斜杠
+    safe_name = Path(file.filename or "upload.bin").name.strip() or "upload.bin"
+    if safe_name in (".", "..") or "/" in safe_name or "\\" in safe_name:
+        raise HTTPException(400, "非法文件名")
+    if len(safe_name) > 120:
+        raise HTTPException(400, "文件名过长")
     content = await file.read()
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"文件超过 {MAX_UPLOAD_BYTES // 1024 // 1024}MB 上限")
+    save_path = (save_dir / safe_name).resolve()
+    # 兜底: 解析后必须仍在 save_dir 内
+    if save_dir not in save_path.parents:
+        raise HTTPException(400, "非法路径")
     with open(save_path, "wb") as f:
         f.write(content)
+    if save_path.stat().st_size == 0:
+        save_path.unlink(missing_ok=True)
+        raise HTTPException(400, "空文件")
     return {"status": "ok", "path": str(save_path), "size": len(content)}
 
 @app.get("/about.txt")

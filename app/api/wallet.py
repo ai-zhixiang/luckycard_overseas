@@ -162,7 +162,10 @@ async def recharge_capture(paypal_order_id: str, request: Request, db: AsyncSess
     if not uid:
         raise HTTPException(400, "订单缺少充值标识")
 
-    res = quota.add_points(uid, amount_usd, note=f"PayPal 充值 ${amount_usd:.2f}")
+    # 幂等键与 webhook 一致: capture 与 webhook 谁先到都只入账一次
+    capture_id = data.get("id", "") or ""
+    once = f"pp:{capture_id or paypal_order_id}"
+    res = quota.add_points(uid, amount_usd, note=f"PayPal 充值 ${amount_usd:.2f}", once_key=once)
 
     result = await db.execute(select(PaymentTransaction).where(
         PaymentTransaction.gateway_order_id == paypal_order_id
