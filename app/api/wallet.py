@@ -130,7 +130,17 @@ async def recharge_create(data: dict, request: Request, db: AsyncSession = Depen
 
 @router.post("/wallet/recharge/capture/{paypal_order_id}")
 async def recharge_capture(paypal_order_id: str, request: Request, db: AsyncSession = Depends(get_db)):
-    """Capture an approved recharge order → credit Lucky Points."""
+    """Capture an approved recharge order → credit Lucky Points.
+
+    鉴权: 订单必须属于当前登录用户 (原先无鉴权, 任何人可代为 capture)。
+    """
+    uid_caller = _require_user(request)
+    own = await db.execute(select(PaymentTransaction).where(
+        PaymentTransaction.gateway_order_id == paypal_order_id,
+        PaymentTransaction.user_id == uid_caller,
+    ))
+    if own.scalar_one_or_none() is None:
+        raise HTTPException(403, "订单不存在或不属于当前用户")
     from .paypal import _paypal_token, PAYPAL_API
     import httpx
     token = await _paypal_token()

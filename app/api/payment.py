@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..config import settings
 from ..models import User, PaymentTransaction
+from .auth import identity_from
 
 router = APIRouter()
 LS_API_BASE = "https://api.lemonsqueezy.com/v1"
@@ -32,74 +33,15 @@ def _ls_headers() -> dict:
 @router.post("/payment/checkout")
 async def create_checkout(data: dict, db: AsyncSession = Depends(get_db)):
     """
-    Create a Lemon Squeezy checkout session for Premium membership ($9.9/month).
-    Expects: {"user_id": "xxx", "email": "optional@email.com", "return_url": "https://hicard.world"}
+    Lemon Squeezy 结账 —— 【已停用】。
+    本站仅使用 PayPal 收款（见 /api/payment/paypal/*）。LS 密钥从未配置，
+    此端点保留仅为兼容旧调用，一律返回 410 提示改走 PayPal。
     """
-    user_id = data.get("user_id")
-    email = data.get("email", "")
-    return_url = data.get("return_url", "https://hicard.world")
+    raise HTTPException(
+        status_code=410,
+        detail="Lemon Squeezy 通道已停用，请使用 PayPal 支付（/api/payment/paypal/*）",
+    )
 
-    if not user_id:
-        raise HTTPException(status_code=400, detail="user_id required")
-
-    # Fetch user from DB
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Build checkout data for Lemon Squeezy
-    checkout_data = {
-        "data": {
-            "type": "checkouts",
-            "attributes": {
-                "checkout_data": {
-                    "email": email or (user.email or ""),
-                    "name": user.nickname or "Lucky Card User",
-                    "custom": {
-                        "user_id": user_id,
-                    },
-                    "product_options": {
-                        "redirect_url": return_url,
-                    },
-                },
-                "preview": False,
-            },
-            "relationships": {
-                "store": {
-                    "data": {
-                        "type": "stores",
-                        "id": settings.ls_store_id,
-                    }
-                },
-                "variant": {
-                    "data": {
-                        "type": "variants",
-                        "id": str(settings.ls_premium_variant_id),
-                    }
-                },
-            },
-        }
-    }
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            f"{LS_API_BASE}/checkouts",
-            json=checkout_data,
-            headers=_ls_headers(),
-            timeout=15,
-        )
-
-    if resp.status_code != 201:
-        detail = resp.text[:500]
-        raise HTTPException(status_code=502, detail=f"Lemon Squeezy error: {detail}")
-
-    data = resp.json()
-    checkout_url = data.get("data", {}).get("attributes", {}).get("url", "")
-    if not checkout_url:
-        raise HTTPException(status_code=502, detail="No checkout URL returned")
-
-    return {"url": checkout_url}
 
 
 # ─────────────────────────────────────────────
@@ -278,23 +220,26 @@ async def payment_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 # 4. Check premium status
 # ─────────────────────────────────────────────
 @router.get("/payment/premium-status/{user_id}")
-async def premium_status(user_id: str, db: AsyncSession = Depends(get_db)):
+async def premium_status(user_id: str, request: Request, db: AsyncSession = Depends(get_db)):
+    """查询会员状态。仅允许查询自己；过期判定为只读，不再写库。
+
+    (原先无鉴权可遍历任意 user_id 泄露会员信息, 且 GET 会改 is_premium 造成状态回退)
+    """
+    ident = identity_from(request)
+    if ident.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="只能查询自己的会员状态")
+
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    is_active = False
-    if user.is_premium and user.premium_until:
-        is_active = datetime.utcnow() < user.premium_until
-        if not is_active:
-            user.is_premium = False
-            await db.commit()
+    # 只读判定: 到期即视为非会员, 但不落库 (落库交给 webhook / 定时任务)
+    is_active = bool(user.is_premium and user.premium_until and datetime.utcnow() < user.premium_until)
 
     return {
         "is_premium": is_active,
         "premium_until": user.premium_until.isoformat() if user.premium_until else None,
-        "ls_customer_id": user.ls_customer_id,
     }
 
 

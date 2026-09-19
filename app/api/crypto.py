@@ -76,6 +76,15 @@ def _ip_key(request: Request) -> str:
     return identity_from(request)["key"]  # ip:<addr> 或 user:<id>
 
 
+def _rate_key(request: Request) -> str:
+    """限流用 key: 恒按真实 IP, 不随 cookie/登录状态变化。
+
+    (原实现用 identity key, 攻击者清掉 cookie 即从 user:<id> 变回 ip:<addr>,
+     计数被重置 → 可无限提交做字典攻击)
+    """
+    return f"ip:{client_ip(request)}"
+
+
 def _check_attempts(ipk: str, qid: str) -> int:
     """返回剩余可提交次数; 超限抛 429。"""
     now = time.time()
@@ -140,11 +149,13 @@ def crypto_submit(body: SubmitIn, request: Request):
     if qid in mine:
         return {"ok": True, "already": True, "qid": qid}
 
-    remaining = _check_attempts(ipk, qid)
+    remaining = _check_attempts(_rate_key(request), qid)
     digest = hashlib.sha256(answer.encode("utf-8")).hexdigest()
-    _record_attempt(ipk, qid)
+    _record_attempt(_rate_key(request), qid)
 
-    if digest == ch.get("sha256", ""):
+    # 时序安全比较 (原为 == 字符串比较)
+    import hmac as _hmac
+    if _hmac.compare_digest(digest, str(ch.get("sha256", ""))):
         mine.add(qid)
         solved[ipk] = sorted(mine)
         _save_solved(solved)

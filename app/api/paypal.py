@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..config import settings
 from ..models import User, PaymentTransaction
+from .auth import identity_from
 
 router = APIRouter()
 PAYPAL_API = settings.paypal_api_base
@@ -37,13 +38,18 @@ async def _paypal_token() -> str:
 # 1. Create Order
 # ─────────────────────────────────────────────
 @router.post("/payment/paypal/create-order")
-async def create_paypal_order(data: dict, db: AsyncSession = Depends(get_db)):
+async def create_paypal_order(data: dict, request: Request, db: AsyncSession = Depends(get_db)):
     """Create a PayPal order for Premium ($9.9/month)
-    Expects: {"user_id": "xxx"}
+
+    鉴权: 只能为自己下单 —— user_id 必须与当前会话一致 (原先任意 user_id 可下单)。
     """
-    user_id = data.get("user_id")
-    if not user_id:
-        raise HTTPException(400, "user_id required")
+    ident = identity_from(request)
+    uid = ident.get("user_id")
+    if not uid:
+        raise HTTPException(401, "请先登录")
+    user_id = data.get("user_id") or uid
+    if user_id != uid:
+        raise HTTPException(403, "只能为自己下单")
 
     # Verify user exists
     result = await db.execute(select(User).where(User.id == user_id))
@@ -108,8 +114,23 @@ async def create_paypal_order(data: dict, db: AsyncSession = Depends(get_db)):
 # 2. Capture Order (after buyer approves)
 # ─────────────────────────────────────────────
 @router.post("/payment/paypal/capture-order/{paypal_order_id}")
-async def capture_paypal_order(paypal_order_id: str, db: AsyncSession = Depends(get_db)):
-    """Capture an approved PayPal order"""
+async def capture_paypal_order(paypal_order_id: str, request: Request, db: AsyncSession = Depends(get_db)):
+    """Capture an approved PayPal order
+
+    鉴权: 订单必须属于当前登录用户 (原先无鉴权, 任何人 capture 他人订单即可激活会员)。
+    """
+    ident = identity_from(request)
+    uid = ident.get("user_id")
+    if not uid:
+        raise HTTPException(401, "请先登录")
+    # 订单归属校验: 该 paypal_order_id 必须属于当前用户
+    own = await db.execute(select(PaymentTransaction).where(
+        PaymentTransaction.gateway_order_id == paypal_order_id,
+        PaymentTransaction.user_id == uid,
+    ))
+    if own.scalar_one_or_none() is None:
+        raise HTTPException(403, "订单不存在或不属于当前用户")
+
     token = await _paypal_token()
     import httpx
     async with httpx.AsyncClient(timeout=15) as client:

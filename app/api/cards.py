@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from ..database import get_db
 from ..models import GreetingCard
 from ..config import settings
+from .auth import identity_from
 import httpx
 import uuid
 import json
@@ -12,6 +13,7 @@ import re
 import os
 import base64
 import shutil
+import html
 
 router = APIRouter()
 
@@ -355,7 +357,7 @@ async def _create_card_impl(data: dict, db: AsyncSession):
 
 
 @router.get("/cards/{card_id}")
-async def view_card(card_id: str, db: AsyncSession = Depends(get_db)):
+async def view_card(card_id: str, request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(GreetingCard).where(GreetingCard.id == card_id)
     )
@@ -363,8 +365,18 @@ async def view_card(card_id: str, db: AsyncSession = Depends(get_db)):
     if not card:
         raise HTTPException(status_code=404, detail="Card not found")
 
-    # Increment view count
-    card.view_count = (card.view_count or 0) + 1
+    # 非公开卡片仅作者本人可读 (原先任意 id 均可读全文)
+    if not card.is_public:
+        ident = identity_from(request)
+        if ident.get("user_id") != card.user_id:
+            raise HTTPException(status_code=403, detail="Card is private")
+
+    # 原子自增, 避免并发丢计数
+    await db.execute(
+        update(GreetingCard)
+        .where(GreetingCard.id == card_id)
+        .values(view_count=func.coalesce(GreetingCard.view_count, 0) + 1)
+    )
     await db.commit()
 
     return {
@@ -392,9 +404,12 @@ async def card_share_page(card_id: str, db: AsyncSession = Depends(get_db)):
         return HTMLResponse("<h1>Card not found</h1>", status_code=404)
 
     poem_first = card.poem.split('\n')[0][:80] if card.poem else ""
-    title = f"💌 A card from {card.sender_name}"
-    recipient = card.recipient_name or "You"
-    sender = card.sender_name or "Someone"
+    recipient_raw = card.recipient_name or "You"
+    sender_raw = card.sender_name or "Someone"
+    # 转义后再插入 HTML/属性, 防存储型 XSS (原先 recipient/sender 未转义)
+    recipient = html.escape(str(recipient_raw))
+    sender = html.escape(str(sender_raw))
+    title = f"💌 A card from {sender_raw}"
     poem_html = card.poem.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     poem_lines = poem_html.split('\n')
     poem_block = '<br>'.join([f'<span class="pl">{l}</span>' for l in poem_lines])
@@ -404,14 +419,15 @@ async def card_share_page(card_id: str, db: AsyncSession = Depends(get_db)):
     if card.music_id:
         music_file = f"/api/music/play/{card.music_id}.mp3"
 
-    html = f"""<!DOCTYPE html>
+    # title/poem_first 同样需转义后进 <title> 与 meta 属性
+    page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title}</title>
-    <meta property="og:title" content="{title}">
-    <meta property="og:description" content="{poem_first}">
+    <title>{html.escape(title)}</title>
+    <meta property="og:title" content="{html.escape(title, quote=True)}">
+    <meta property="og:description" content="{html.escape(poem_first, quote=True)}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://hicard.world/card/{card_id}">
     <meta property="og:image" content="https://hicard.world{art_url if art_url else '/static/img/card-og-default.png'}">
@@ -584,4 +600,4 @@ async def card_share_page(card_id: str, db: AsyncSession = Depends(get_db)):
     </script>
 </body>
 </html>"""
-    return HTMLResponse(html)
+    return HTMLResponse(page)
